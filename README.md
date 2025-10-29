@@ -1,6 +1,30 @@
-# Agent Memory Platform
+# MemLayer - Agent Memory Platform
 
-A professional AI Agent memory system platform providing comprehensive memory management capabilities including short-term memory, long-term memory (episodic, semantic, procedural), and advanced memory management features.
+<div align="center">
+
+**Professional AI Agent Memory System Platform**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+
+A comprehensive memory system for AI Agents with episodic, semantic, and procedural memory support, featuring vector search, knowledge graphs, RAG, and reflection mechanisms.
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#️-architecture)
+
+</div>
+
+---
+
+## 📖 About
+
+MemLayer is a professional-grade memory platform for AI Agents, inspired by cognitive science and implementing the complete memory architecture described in modern AI research. It provides:
+
+- **Multi-type Memory System**: Short-term, episodic, semantic, and procedural memory
+- **Advanced Retrieval**: Vector search, knowledge graphs, and hybrid strategies
+- **RAG Support**: Both standard and agentic RAG workflows
+- **Reflection Mechanism**: LLM-powered insight generation from experiences
+- **Production-Ready**: Full authentication, monitoring, and scalability
 
 ## 🌟 Features
 
