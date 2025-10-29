@@ -1,0 +1,78 @@
+// Prisma schema for Agent Memory Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  config    Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  sessions     Session[]
+  memoryIndex  MemoryIndex[]
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("agents")
+}
+
+model Session {
+  id        String    @id @default(uuid()) @db.Uuid
+  agentId   String    @map("agent_id") @db.Uuid
+  startedAt DateTime  @default(now()) @map("started_at") @db.Timestamp(6)
+  endedAt   DateTime? @map("ended_at") @db.Timestamp(6)
+  metadata  Json      @default("{}")
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([startedAt(sort: Desc)])
+  @@map("sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  agentId   String?  @map("agent_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  resource  String   @db.VarChar(255)
+  timestamp DateTime @default(now()) @db.Timestamp(6)
+  ipAddress String?  @map("ip_address") @db.Inet
+  details   Json     @default("{}")
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([timestamp(sort: Desc)])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model MemoryIndex {
+  id              String    @id @default(uuid()) @db.Uuid
+  agentId         String    @map("agent_id") @db.Uuid
+  memoryType      String    @map("memory_type") @db.VarChar(50)
+  storageLocation String    @map("storage_location") @db.VarChar(255)
+  importance      Decimal?  @db.Decimal(3, 2)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  accessedAt      DateTime? @map("accessed_at") @db.Timestamp(6)
+  accessCount     Int       @default(0) @map("access_count")
+  metadata        Json      @default("{}")
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([memoryType])
+  @@index([importance(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([accessedAt(sort: Desc)])
+  @@map("memory_index")
+}

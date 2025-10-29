@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [-] 1. 项目初始化与基础设施搭建
+- [x] 1. 项目初始化与基础设施搭建
   - 创建 monorepo 项目结构（使用 pnpm workspace）
   - 配置 TypeScript 编译选项和 ESLint/Prettier
   - 设置 Docker 和 docker-compose 开发环境
@@ -8,32 +8,32 @@
   - 初始化 Git 仓库和 .gitignore
   - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 2. 数据库与存储层设置
-  - [ ] 2.1 配置 PostgreSQL 数据库
+- [x] 2. 数据库与存储层设置
+  - [x] 2.1 配置 PostgreSQL 数据库
     - 编写数据库初始化脚本（agents, sessions, audit_logs, memory_index 表）
     - 创建数据库迁移工具配置（使用 Prisma 或 TypeORM）
     - 实现数据库连接池管理
     - _Requirements: 14.5, 10.1_
   
-  - [ ] 2.2 集成向量数据库（Qdrant）
+  - [x] 2.2 集成向量数据库（Qdrant）
     - 配置 Qdrant Docker 容器
     - 创建 episodic_memories、semantic_memories、reflections 集合
     - 实现向量数据库客户端封装
     - _Requirements: 2.2, 3.1_
   
-  - [ ] 2.3 集成知识图谱数据库（Neo4j）
+  - [x] 2.3 集成知识图谱数据库（Neo4j）
     - 配置 Neo4j Docker 容器
     - 定义节点和关系类型的 Cypher 脚本
     - 实现 Neo4j 客户端封装
     - _Requirements: 5.1, 5.2_
   
-  - [ ] 2.4 配置 Redis 缓存层
+  - [x] 2.4 配置 Redis 缓存层
     - 配置 Redis Docker 容器
     - 实现 Redis 客户端和连接管理
     - 设置缓存过期策略
     - _Requirements: 1.2, 12.4_
 
-- [ ] 3. 核心数据模型与类型定义
+- [-] 3. 核心数据模型与类型定义
   - 定义 TypeScript 接口（BaseMemory, EpisodicMemoryRecord, SemanticMemoryRecord 等）
   - 创建数据验证 schema（使用 Zod 或 Joi）
   - 实现数据模型工厂函数
