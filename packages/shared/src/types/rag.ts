@@ -34,3 +34,6 @@ export interface AgenticRAGResult extends RAGResult {
   steps: AgenticRAGStep[];
   finalReasoning: string;
 }
+
+// Export for convenience
+export type { SearchResult } from './memory';
