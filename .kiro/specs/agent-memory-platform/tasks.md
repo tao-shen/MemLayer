@@ -174,26 +174,26 @@
     - 赋予高重要性权重
     - _Requirements: 7.3, 7.4_
 
-- [ ] 10. Memory Service（核心记忆服务）实现
-  - [ ] 10.1 实现记忆写入协调器
+- [x] 10. Memory Service（核心记忆服务）实现
+  - [x] 10.1 实现记忆写入协调器
     - 路由到对应的记忆引擎
     - 触发嵌入生成
     - 执行数据验证
     - _Requirements: 2.1, 2.3_
   
-  - [ ] 10.2 实现记忆读取协调器
+  - [x] 10.2 实现记忆读取协调器
     - 协调多引擎检索
     - 实现结果聚合
     - 添加缓存层
     - _Requirements: 3.5_
   
-  - [ ] 10.3 实现会话管理器
+  - [x] 10.3 实现会话管理器
     - 创建和销毁会话
     - 管理会话生命周期
     - 实现会话超时机制
     - _Requirements: 1.5_
   
-  - [ ] 10.4 实现 Memory Service API
+  - [x] 10.4 实现 Memory Service API
     - storeMemory: 存储记忆
     - retrieveMemories: 检索记忆
     - updateMemory: 更新记忆
@@ -201,14 +201,14 @@
     - getSessionMemories: 获取会话记忆
     - _Requirements: 4.1, 4.4, 4.5_
 
-- [ ] 11. Management Service（管理服务）实现
-  - [ ] 11.1 实现智能过滤器
+- [x] 11. Management Service（管理服务）实现
+  - [x] 11.1 实现智能过滤器
     - 创建过滤规则引擎
     - 支持多种过滤条件（重要性、内容、元数据）
     - 实现规则配置 API
     - _Requirements: 9.1_
   
-  - [ ] 11.2 实现遗忘调度器
+  - [x] 11.2 实现遗忘调度器
     - 创建后台调度任务
     - 实现时间基础遗忘策略
     - 实现访问基础遗忘策略
@@ -216,19 +216,19 @@
     - 支持归档功能
     - _Requirements: 9.2, 9.3_
   
-  - [ ] 11.3 实现记忆整合引擎
+  - [x] 11.3 实现记忆整合引擎
     - 实现记忆摘要生成（调用 LLM）
     - 批量处理历史记忆
     - 替换详细记录为摘要
     - _Requirements: 9.4_
   
-  - [ ] 11.4 实现记忆统计与分析
+  - [x] 11.4 实现记忆统计与分析
     - 计算记忆统计指标
     - 生成分析报告
     - 实现数据导出功能
     - _Requirements: 9.5, 13.5_
   
-  - [ ] 11.5 实现数据管理 API
+  - [x] 11.5 实现数据管理 API
     - setFilterRules: 配置过滤规则
     - setForgettingPolicy: 配置遗忘策略
     - consolidateMemories: 执行整合
