@@ -1,0 +1,122 @@
+openapi: 3.0.0
+info:
+  title: Agent Memory Platform API
+  version: 1.0.0
+  description: Professional AI Agent Memory System API
+servers:
+  - url: http://localhost:3000/v1
+    description: Development server
+paths:
+  /agents:
+    post:
+      summary: Create agent
+      tags: [Agents]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreate'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+  /agents/{agentId}/memories:
+    post:
+      summary: Store memory
+      tags: [Memories]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryInput'
+      responses:
+        '201':
+          description: Memory stored
+    get:
+      summary: Retrieve memories
+      tags: [Memories]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Memories retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Memory'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AgentCreate:
+      type: object
+      required:
+        - userId
+        - name
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    MemoryInput:
+      type: object
+      required:
+        - content
+        - type
+      properties:
+        content:
+          type: string
+        type:
+          type: string
+          enum: [short-term, episodic, semantic]
+    Memory:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        score:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
