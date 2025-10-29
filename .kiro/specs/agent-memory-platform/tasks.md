@@ -237,67 +237,67 @@
     - purgeMemories: 清除所有记忆
     - _Requirements: 10.5_
 
-- [ ] 12. API Gateway 实现
-  - [ ] 12.1 实现认证中间件
+- [x] 12. API Gateway 实现
+  - [x] 12.1 实现认证中间件
     - JWT token 验证
     - Token 刷新机制
     - API key 验证
     - _Requirements: 10.1, 10.3_
   
-  - [ ] 12.2 实现授权中间件
+  - [x] 12.2 实现授权中间件
     - RBAC 权限检查
     - 资源访问控制
     - Agent 隔离验证
     - _Requirements: 10.3, 13.3_
   
-  - [ ] 12.3 实现限流中间件
+  - [x] 12.3 实现限流中间件
     - Token bucket 算法实现
     - 基于用户/IP 的限流
     - 限流配置管理
     - _Requirements: 12.3_
   
-  - [ ] 12.4 实现请求路由器
+  - [x] 12.4 实现请求路由器
     - 基于路径的服务路由
     - 负载均衡
     - 健康检查
     - _Requirements: 11.1_
   
-  - [ ] 12.5 实现 API 版本控制
+  - [x] 12.5 实现 API 版本控制
     - URL 版本前缀（/v1）
     - 版本兼容性处理
     - _Requirements: 11.4_
 
-- [ ] 13. RESTful API 端点实现
-  - [ ] 13.1 实现短期记忆 API
+- [x] 13. RESTful API 端点实现
+  - [x] 13.1 实现短期记忆 API
     - POST /v1/agents/:agentId/stm - 添加到短期记忆
     - GET /v1/agents/:agentId/stm - 获取短期记忆
     - DELETE /v1/agents/:agentId/stm - 清空短期记忆
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.2 实现情景记忆 API
+  - [x] 13.2 实现情景记忆 API
     - POST /v1/agents/:agentId/episodic - 记录情景事件
     - GET /v1/agents/:agentId/episodic - 检索情景记忆
     - GET /v1/agents/:agentId/episodic/:id - 获取单条记忆
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.3 实现语义记忆 API
+  - [x] 13.3 实现语义记忆 API
     - POST /v1/agents/:agentId/semantic/facts - 存储事实
     - POST /v1/agents/:agentId/semantic/entities - 添加实体
     - POST /v1/agents/:agentId/semantic/relations - 添加关系
     - GET /v1/agents/:agentId/semantic/query - 查询知识
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.4 实现 RAG API
+  - [x] 13.4 实现 RAG API
     - POST /v1/agents/:agentId/rag/retrieve - RAG 检索
     - POST /v1/agents/:agentId/rag/agentic - Agentic RAG
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.5 实现反思 API
+  - [x] 13.5 实现反思 API
     - POST /v1/agents/:agentId/reflect - 触发反思
     - GET /v1/agents/:agentId/reflections - 获取反思历史
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.6 实现管理 API
+  - [x] 13.6 实现管理 API
     - PUT /v1/agents/:agentId/config/filters - 配置过滤规则
     - PUT /v1/agents/:agentId/config/forgetting - 配置遗忘策略
     - POST /v1/agents/:agentId/consolidate - 执行整合
@@ -306,14 +306,14 @@
     - DELETE /v1/agents/:agentId/memories - 清除记忆
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 13.7 实现 Agent 管理 API
+  - [x] 13.7 实现 Agent 管理 API
     - POST /v1/agents - 创建 Agent
     - GET /v1/agents/:agentId - 获取 Agent 信息
     - PUT /v1/agents/:agentId - 更新 Agent 配置
     - DELETE /v1/agents/:agentId - 删除 Agent
     - _Requirements: 11.1, 11.2, 13.1_
   
-  - [ ] 13.8 实现会话管理 API
+  - [x] 13.8 实现会话管理 API
     - POST /v1/agents/:agentId/sessions - 创建会话
     - GET /v1/agents/:agentId/sessions/:sessionId - 获取会话
     - DELETE /v1/agents/:agentId/sessions/:sessionId - 结束会话
