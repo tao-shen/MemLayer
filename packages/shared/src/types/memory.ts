@@ -73,6 +73,43 @@ export interface MemoryQuery {
   offset?: number;
 }
 
+// Episodic event
+export interface EpisodicEvent {
+  agentId: string;
+  content: string;
+  eventType: EventType;
+  timestamp?: Date;
+  context?: Record<string, any>;
+}
+
+// Episodic query
+export interface EpisodicQuery {
+  agentId: string;
+  queryText?: string;
+  timeRange?: {
+    start: Date;
+    end: Date;
+  };
+  minImportance?: number;
+  topK?: number;
+  weights?: {
+    recency: number;
+    importance: number;
+    relevance: number;
+  };
+}
+
+// Episodic memory result
+export interface EpisodicMemory {
+  id: string;
+  content: string;
+  importance: number;
+  timestamp: Date;
+  recencyScore: number;
+  relevanceScore: number;
+  compositeScore: number;
+}
+
 // Retrieval query
 export interface RetrievalQuery {
   agentId: string;
