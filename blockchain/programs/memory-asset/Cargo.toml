@@ -1,0 +1,27 @@
+[package]
+name = "memory-asset"
+version = "0.1.0"
+description = "Solana program for managing memory assets as compressed NFTs"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "memory_asset"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"
+mpl-bubblegum = "1.0.1"
+spl-account-compression = "0.2.0"
+solana-program = "~1.17"
+
+[dev-dependencies]
+solana-program-test = "~1.17"
+solana-sdk = "~1.17"

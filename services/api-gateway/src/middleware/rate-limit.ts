@@ -95,6 +95,15 @@ export function keyByAPIKey(req: Request): string {
 }
 
 /**
+ * Key generator by wallet address
+ */
+export function keyByWallet(req: Request): string {
+  const wallet = (req as any).wallet;
+  const walletAddress = wallet?.address || req.headers['x-wallet-address'];
+  return (walletAddress as string) || getDefaultKey(req);
+}
+
+/**
  * Preset rate limiters
  */
 export const rateLimiters = {
@@ -121,5 +130,26 @@ export const rateLimiters = {
     windowMs: 60000,
     maxRequests: 100,
     keyGenerator: keyByUser,
+  }),
+
+  // By wallet: 50 requests per minute per wallet
+  byWallet: rateLimiter({
+    windowMs: 60000,
+    maxRequests: 50,
+    keyGenerator: keyByWallet,
+  }),
+
+  // Blockchain operations: 20 requests per minute per wallet
+  blockchainOps: rateLimiter({
+    windowMs: 60000,
+    maxRequests: 20,
+    keyGenerator: keyByWallet,
+  }),
+
+  // Minting operations: 10 requests per minute per wallet
+  minting: rateLimiter({
+    windowMs: 60000,
+    maxRequests: 10,
+    keyGenerator: keyByWallet,
   }),
 };
