@@ -1,0 +1,31 @@
+[package]
+name = "memory-platform-sdk"
+version = "0.1.0"
+edition = "2021"
+authors = ["Memory Platform Team"]
+description = "Rust SDK for Memory Platform blockchain integration"
+license = "MIT"
+repository = "https://github.com/your-org/memory-platform"
+
+[dependencies]
+anchor-client = "0.29"
+anchor-lang = "0.29"
+solana-sdk = "1.17"
+solana-client = "1.17"
+solana-program = "1.17"
+mpl-bubblegum = "1.0"
+spl-account-compression = "0.2"
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bs58 = "0.5"
+reqwest = { version = "0.11", features = ["json"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[lib]
+name = "memory_platform_sdk"
+path = "src/lib.rs"
