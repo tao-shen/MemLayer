@@ -203,14 +203,14 @@ export async function scan(
   count?: number
 ): Promise<[string, string[]]> {
   const client = getRedisClient();
-  const args: any[] = [cursor];
-  if (pattern) {
-    args.push('MATCH', pattern);
+  if (pattern && count) {
+    return await client.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+  } else if (pattern) {
+    return await client.scan(cursor, 'MATCH', pattern);
+  } else if (count) {
+    return await client.scan(cursor, 'COUNT', count);
   }
-  if (count) {
-    args.push('COUNT', count);
-  }
-  return await client.scan(...args);
+  return await client.scan(cursor);
 }
 
 // Increment/Decrement

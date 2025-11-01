@@ -196,7 +196,7 @@ export class AgenticRAG {
   private async refineRetrieval(
     agentId: string,
     originalQuery: string,
-    previousStep: AgenticRAGStep,
+    _previousStep: AgenticRAGStep,
     topK: number
   ): Promise<AgenticRAGStep> {
     // Expand search with relaxed filters

@@ -8,7 +8,7 @@ import apiRoutes from './routes';
 
 const logger = createLogger('APIGateway');
 
-const app = express();
+const app: express.Application = express();
 const port = process.env.PORT || 3000;
 
 // Security middleware

@@ -4,7 +4,7 @@ import { asyncHandler } from '../middleware/error-handler';
 import { getStandardRAG } from '../../../retrieval-service/src/rag/standard-rag';
 import { getAgenticRAG } from '../../../retrieval-service/src/rag/agentic-rag';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 // POST /v1/agents/:agentId/rag/retrieve
 router.post('/retrieve', authenticateJWT, asyncHandler(async (req: any, res: any) => {

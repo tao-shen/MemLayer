@@ -52,7 +52,7 @@ export class CostEstimator implements ICostEstimator {
       });
 
       return totalCost;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to estimate Solana transaction cost', {
         memoryCount,
         error: error.message,
@@ -80,7 +80,7 @@ export class CostEstimator implements ICostEstimator {
       });
 
       return costInWinston;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to estimate Arweave storage cost', {
         dataSize,
         error: error.message,
@@ -159,7 +159,7 @@ export class CostEstimator implements ICostEstimator {
       });
 
       return estimate;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to estimate total cost', {
         memoryCount,
         dataSize,
@@ -190,7 +190,7 @@ export class CostEstimator implements ICostEstimator {
         solana: solanaFee,
         arweave: arweaveFee,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get current network fees', {
         error: error.message,
       });

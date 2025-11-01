@@ -462,7 +462,7 @@ export class BatchOptimizer extends EventEmitter {
         if (sizeChange >= 5 || timeoutChange >= 1000) {
           this.applyOptimization(recommendation);
         }
-      } catch (error) {
+      } catch (error: any) {
         logger.error('Error in optimization loop', { error: error.message });
       }
     }, this.config.optimizationInterval);

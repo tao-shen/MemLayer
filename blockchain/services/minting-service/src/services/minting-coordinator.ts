@@ -156,7 +156,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       const duration = Date.now() - startTime;
       context.error = error as Error;
 
@@ -222,7 +222,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
 
           const result = await this.coordinateMint(mintRequest);
           results.push(result);
-        } catch (error) {
+        } catch (error: any) {
           logger.error('Failed to mint memory in batch', {
             batchId,
             index: i,
@@ -273,7 +273,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       this.emit('batch:completed', batchResult);
 
       return batchResult;
-    } catch (error) {
+    } catch (error: any) {
       const duration = Date.now() - startTime;
       logger.error('Batch mint coordination failed', {
         batchId,
@@ -341,7 +341,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       this.activeContexts.delete(requestId);
 
       logger.info('Rollback completed', { requestId });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Rollback failed', {
         requestId,
         error: error.message,
@@ -415,7 +415,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       });
 
       return encrypted;
-    } catch (error) {
+    } catch (error: any) {
       throw new MintingError(
         MintingErrorCode.ENCRYPTION_FAILED,
         `Encryption failed: ${error.message}`,
@@ -481,7 +481,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       });
 
       return uploadResult.id;
-    } catch (error) {
+    } catch (error: any) {
       throw new MintingError(
         MintingErrorCode.ARWEAVE_UPLOAD_FAILED,
         `Arweave upload failed: ${error.message}`,
@@ -551,7 +551,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
       });
 
       return { assetId, signature };
-    } catch (error) {
+    } catch (error: any) {
       throw new MintingError(
         MintingErrorCode.TRANSACTION_FAILED,
         `Minting failed: ${error.message}`,
@@ -585,7 +585,7 @@ export class MintingCoordinator extends EventEmitter implements IMintingCoordina
         signature,
         duration,
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new MintingError(
         MintingErrorCode.TRANSACTION_FAILED,
         `Transaction confirmation failed: ${error.message}`,

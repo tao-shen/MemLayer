@@ -108,7 +108,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
       });
 
       return job.id.toString();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to add job to queue', {
         jobType,
         error: error.message,
@@ -157,7 +157,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to process job', {
         jobId,
         error: error.message,
@@ -194,7 +194,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
         processedOn: job.processedOn,
         finishedOn: job.finishedOn,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get job status', {
         jobId,
         error: error.message,
@@ -229,7 +229,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
         state,
       });
       return false;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to cancel job', {
         jobId,
         error: error.message,
@@ -258,9 +258,9 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
         completed: counts.completed || 0,
         failed: counts.failed || 0,
         delayed: counts.delayed || 0,
-        paused: counts.paused || 0,
+        paused: (counts as any).paused || 0,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get queue stats', {
         error: error.message,
       });
@@ -336,7 +336,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
 
       const failedCleaned = await this.queue.clean(7 * 24 * 3600 * 1000, 'failed');
       logger.info('Cleaned old failed jobs', { count: failedCleaned.length });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to clean old jobs', {
         error: error.message,
       });
@@ -356,7 +356,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
           await job.retry();
           retriedCount++;
           logger.debug('Retried failed job', { jobId: job.id });
-        } catch (error) {
+        } catch (error: any) {
           logger.warn('Failed to retry job', {
             jobId: job.id,
             error: error.message,
@@ -370,7 +370,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
       });
 
       return retriedCount;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to retry failed jobs', {
         error: error.message,
       });
@@ -421,7 +421,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       const duration = Date.now() - startTime;
 
       logger.error('Job failed', {
@@ -534,7 +534,7 @@ export class QueueProcessor extends EventEmitter implements IQueueProcessor {
     try {
       await this.queue.isReady();
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Queue health check failed', {
         error: error.message,
       });

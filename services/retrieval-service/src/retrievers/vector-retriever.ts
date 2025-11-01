@@ -1,6 +1,6 @@
 import * as vectorDb from '@agent-memory/vector-db';
 import { SearchResult, createLogger } from '@agent-memory/shared';
-import { getEmbeddingClient } from '../../../embedding-service/src/client';
+import { getEmbeddingClient } from '@agent-memory/shared';
 
 const logger = createLogger('VectorRetriever');
 

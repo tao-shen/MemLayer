@@ -106,7 +106,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return transaction;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to build mint transaction', {
         walletAddress,
         error: error.message,
@@ -178,7 +178,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return transaction;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to build batch mint transaction', {
         walletAddress,
         itemCount: items.length,
@@ -208,7 +208,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return transaction;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to sign transaction', {
         error: error.message,
       });
@@ -245,7 +245,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return signature;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to send and confirm transaction', {
         error: error.message,
       });
@@ -289,7 +289,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return fee;
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Failed to calculate priority fee, using default', {
         error: error.message,
       });
@@ -314,7 +314,7 @@ export class TransactionBuilder implements ITransactionBuilder {
         confirmationStatus: status.value.confirmationStatus || 'processed',
         err: status.value.err,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get transaction status', {
         signature,
         error: error.message,
@@ -336,7 +336,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       }
 
       return fee.value;
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Failed to estimate transaction fee', {
         error: error.message,
       });
@@ -394,7 +394,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       });
 
       return instruction;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to build mint instruction: ${error.message}`);
     }
   }
@@ -433,7 +433,7 @@ export class TransactionBuilder implements ITransactionBuilder {
         p75: avgFee * 1.5,
         max: avgFee * 3,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Failed to get recent priority fees', {
         error: error.message,
       });
@@ -465,7 +465,7 @@ export class TransactionBuilder implements ITransactionBuilder {
         // Note: You would need to add bs58 library for this
         throw new Error('Base58 format not yet supported, use JSON array or hex');
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to parse private key: ${error.message}`);
     }
   }
@@ -518,7 +518,7 @@ export class TransactionBuilder implements ITransactionBuilder {
       const version = await this.connection.getVersion();
       logger.debug('Solana connection healthy', { version });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Solana connection unhealthy', {
         error: error.message,
       });

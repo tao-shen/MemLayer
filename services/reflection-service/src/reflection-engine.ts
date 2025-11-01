@@ -1,14 +1,13 @@
 import {
   Reflection,
   ReflectionContext,
-  ReflectionRecord,
   createLogger,
 } from '@agent-memory/shared';
 import { getPrismaClient } from '@agent-memory/database';
 import * as vectorDb from '@agent-memory/vector-db';
 import * as cache from '@agent-memory/cache';
 import OpenAI from 'openai';
-import { getEmbeddingClient } from '../../embedding-service/src/client';
+import { getEmbeddingClient } from '@agent-memory/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('ReflectionEngine');

@@ -10,7 +10,7 @@ import {
 import * as kg from '@agent-memory/knowledge-graph';
 import * as vectorDb from '@agent-memory/vector-db';
 import { getPrismaClient } from '@agent-memory/database';
-import { getEmbeddingClient } from '../../../embedding-service/src/client';
+import { getEmbeddingClient } from '@agent-memory/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('SemanticMemoryEngine');
@@ -277,7 +277,7 @@ export class SemanticMemoryEngine {
         resultCount: results.length,
       });
 
-      return results.map((r) => ({
+      return results.map((r: any) => ({
         id: r.id,
         content: r.payload.content as string,
         score: r.score,

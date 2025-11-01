@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error-handler';
 import { getReflectionEngine } from '../../../reflection-service/src/reflection-engine';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 // POST /v1/agents/:agentId/reflections
 router.post('/', authenticateJWT, asyncHandler(async (req: any, res: any) => {

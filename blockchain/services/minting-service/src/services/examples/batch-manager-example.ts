@@ -56,7 +56,7 @@ async function exampleBasicBatch() {
     // Get batch stats
     const stats = batchManager.getBatchStats();
     console.log('Batch stats:', stats);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error:', error);
   }
 
@@ -287,7 +287,7 @@ async function exampleErrorHandling() {
     } as MintRequest;
 
     await batchManager.addToBatch(invalidRequest);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding to batch:', error.message);
   }
 

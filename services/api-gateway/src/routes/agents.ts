@@ -5,7 +5,7 @@ import { asyncHandler } from '../middleware/error-handler';
 import { getPrismaClient } from '@agent-memory/database';
 import { validate, agentConfigSchema } from '@agent-memory/shared';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * Create agent

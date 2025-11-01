@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error-handler';
 import { getManagementService } from '../../../management-service/src/management-service';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 // PUT /v1/agents/:agentId/management/filters
 router.put('/filters', authenticateJWT, asyncHandler(async (req: any, res: any) => {

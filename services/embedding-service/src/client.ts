@@ -17,8 +17,6 @@ export class EmbeddingClient {
   private openai: OpenAI;
   private model: string;
   private dimension: number;
-  private timeout: number;
-  private maxRetries: number;
 
   constructor(config: EmbeddingConfig) {
     this.openai = new OpenAI({
@@ -28,8 +26,6 @@ export class EmbeddingClient {
     });
     this.model = config.model || 'text-embedding-3-small';
     this.dimension = config.dimension || 1536;
-    this.timeout = config.timeout || 30000;
-    this.maxRetries = config.maxRetries || 3;
   }
 
   /**

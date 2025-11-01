@@ -318,7 +318,7 @@ export class OptimizedBatchManager extends EventEmitter {
       };
 
       this.optimizer.recordNetworkMetrics(metrics);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error collecting network metrics', { error: error.message });
     }
   }
@@ -339,7 +339,7 @@ export class OptimizedBatchManager extends EventEmitter {
 
       // TODO: Implement actual batch merging in BatchManager
       // This would combine the source batches into a single batch
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to execute merge', { error: error.message });
       throw error;
     }

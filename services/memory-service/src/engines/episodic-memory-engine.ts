@@ -1,5 +1,4 @@
 import {
-  EpisodicMemoryRecord,
   EventType,
   createLogger,
   EpisodicQuery,
@@ -8,7 +7,7 @@ import {
 } from '@agent-memory/shared';
 import * as vectorDb from '@agent-memory/vector-db';
 import { getPrismaClient } from '@agent-memory/database';
-import { getEmbeddingClient } from '../../../embedding-service/src/client';
+import { getEmbeddingClient } from '@agent-memory/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('EpisodicMemoryEngine');
@@ -172,7 +171,7 @@ export class EpisodicMemoryEngine {
 
       // Calculate composite scores
       const now = Date.now();
-      const scoredMemories = results.map((result) => {
+      const scoredMemories = results.map((result: any) => {
         const timestamp = new Date(result.payload.timestamp as string);
         const importance = result.payload.importance as number;
 
@@ -204,7 +203,7 @@ export class EpisodicMemoryEngine {
       });
 
       // Sort by composite score and take top K
-      scoredMemories.sort((a, b) => b.compositeScore - a.compositeScore);
+      scoredMemories.sort((a: any, b: any) => b.compositeScore - a.compositeScore);
       const topMemories = scoredMemories.slice(0, topK);
 
       logger.info('Retrieved episodic memories', {
@@ -228,7 +227,7 @@ export class EpisodicMemoryEngine {
   private async getAllEpisodes(
     agentId: string,
     limit: number,
-    filter: any
+    _filter: any
   ): Promise<vectorDb.VectorSearchResult[]> {
     // This is a simplified version - in production, you'd use scroll/pagination
     const prisma = getPrismaClient();
@@ -346,7 +345,7 @@ export class EpisodicMemoryEngine {
         totalImportance += memory.importance?.toNumber() || 0;
       }
 
-      const dates = memories.map((m) => m.createdAt).sort((a, b) => a.getTime() - b.getTime());
+      const dates = memories.map((m: any) => m.createdAt).sort((a: Date, b: Date) => a.getTime() - b.getTime());
 
       return {
         totalMemories: memories.length,

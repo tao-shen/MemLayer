@@ -7,7 +7,7 @@ import reflectionRoutes from './reflections';
 import managementRoutes from './management';
 import blockchainRoutes from './blockchain';
 
-const router = Router();
+const router: Router = Router();
 
 // Mount routes
 router.use('/agents', agentRoutes);

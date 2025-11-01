@@ -11,7 +11,15 @@ import {
 import { getSTMEngine } from './engines/stm-engine';
 import { getEpisodicMemoryEngine } from './engines/episodic-memory-engine';
 import { getSemanticMemoryEngine } from './engines/semantic-memory-engine';
-import { getReflectionEngine } from '../../reflection-service/src/reflection-engine';
+import { ReflectionEngine } from '../../reflection-service/src/reflection-engine';
+
+let reflectionEngine: ReflectionEngine | null = null;
+function getReflectionEngine(): ReflectionEngine {
+  if (!reflectionEngine) {
+    reflectionEngine = new ReflectionEngine();
+  }
+  return reflectionEngine;
+}
 import { getPrismaClient } from '@agent-memory/database';
 
 const logger = createLogger('MemoryService');
@@ -182,7 +190,7 @@ export class MemoryService {
   /**
    * Update memory
    */
-  async updateMemory(id: string, updates: Partial<MemoryInput>): Promise<void> {
+  async updateMemory(id: string, _updates: Partial<MemoryInput>): Promise<void> {
     try {
       logger.info('Updating memory', { id });
 
@@ -199,7 +207,6 @@ export class MemoryService {
 
       // Update based on type
       if (memory.memoryType === 'semantic') {
-        const semanticEngine = getSemanticMemoryEngine();
         // Semantic updates would go here
         logger.warn('Semantic memory updates not yet implemented');
       } else if (memory.memoryType === 'episodic') {
@@ -332,7 +339,7 @@ export class MemoryService {
         }
       }
 
-      const dates = memories.map((m) => m.createdAt).sort((a, b) => a.getTime() - b.getTime());
+      const dates = memories.map((m: any) => m.createdAt).sort((a: Date, b: Date) => a.getTime() - b.getTime());
 
       return {
         totalMemories: memories.length,

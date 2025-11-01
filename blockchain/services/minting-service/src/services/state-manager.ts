@@ -54,7 +54,7 @@ export class StateManager implements IStateManager {
         requestId,
         status: state.status,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to save mint state', {
         requestId,
         error: error.message,
@@ -88,7 +88,7 @@ export class StateManager implements IStateManager {
       });
 
       return state;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get mint state', {
         requestId,
         error: error.message,
@@ -127,7 +127,7 @@ export class StateManager implements IStateManager {
         requestId,
         updates: Object.keys(updates),
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to update mint state', {
         requestId,
         error: error.message,
@@ -145,7 +145,7 @@ export class StateManager implements IStateManager {
       await this.redis.del(key);
 
       logger.debug('Mint state deleted', { requestId });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to delete mint state', {
         requestId,
         error: error.message,
@@ -168,7 +168,7 @@ export class StateManager implements IStateManager {
         batchId,
         status: state.status,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to save batch state', {
         batchId,
         error: error.message,
@@ -202,7 +202,7 @@ export class StateManager implements IStateManager {
       });
 
       return state;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get batch state', {
         batchId,
         error: error.message,
@@ -240,7 +240,7 @@ export class StateManager implements IStateManager {
       });
 
       return states;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get mint states by wallet', {
         walletAddress,
         error: error.message,
@@ -272,7 +272,7 @@ export class StateManager implements IStateManager {
       });
 
       return states;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get all batch states', {
         error: error.message,
       });
@@ -287,7 +287,7 @@ export class StateManager implements IStateManager {
     try {
       await this.redis.expire(key, ttl);
       logger.debug('TTL set for key', { key, ttl });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to set TTL', {
         key,
         error: error.message,
@@ -310,7 +310,7 @@ export class StateManager implements IStateManager {
       });
 
       return value;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to increment counter', {
         counterName,
         error: error.message,
@@ -328,7 +328,7 @@ export class StateManager implements IStateManager {
       const value = await this.redis.get(key);
 
       return value ? parseInt(value, 10) : 0;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get counter', {
         counterName,
         error: error.message,
@@ -348,7 +348,7 @@ export class StateManager implements IStateManager {
       await this.redis.setex(fullKey, ttl, serialized);
 
       logger.debug('Temporary data stored', { key, ttl });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to store temporary data', {
         key,
         error: error.message,
@@ -370,7 +370,7 @@ export class StateManager implements IStateManager {
       }
 
       return JSON.parse(value);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get temporary data', {
         key,
         error: error.message,
@@ -391,7 +391,7 @@ export class StateManager implements IStateManager {
         await this.redis.del(...keys);
         logger.warn('All state data cleared', { count: keys.length });
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to clear all state', {
         error: error.message,
       });
@@ -445,7 +445,7 @@ export class StateManager implements IStateManager {
     try {
       await this.redis.ping();
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis health check failed', {
         error: error.message,
       });

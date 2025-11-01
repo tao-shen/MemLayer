@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error-handler';
 import { getMemoryService } from '../../../memory-service/src/memory-service';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 // POST /v1/agents/:agentId/memories
 router.post('/', authenticateJWT, asyncHandler(async (req: any, res: any) => {

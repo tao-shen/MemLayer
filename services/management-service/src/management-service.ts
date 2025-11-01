@@ -405,7 +405,7 @@ Provide a ${level}-detail summary:`;
         }
       }
 
-      const dates = memories.map((m) => m.createdAt).sort((a, b) => a.getTime() - b.getTime());
+      const dates = memories.map((m: any) => m.createdAt).sort((a: Date, b: Date) => a.getTime() - b.getTime());
 
       return {
         totalMemories: memories.length,
@@ -440,7 +440,7 @@ Provide a ${level}-detail summary:`;
         // CSV format
         const headers = 'id,type,importance,created_at\n';
         const rows = memories
-          .map((m) => `${m.id},${m.memoryType},${m.importance},${m.createdAt.toISOString()}`)
+          .map((m: any) => `${m.id},${m.memoryType},${m.importance},${m.createdAt.toISOString()}`)
           .join('\n');
         return Buffer.from(headers + rows);
       }

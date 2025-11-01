@@ -153,9 +153,7 @@ export function generateToken(payload: {
     throw new Error('JWT_SECRET not configured');
   }
 
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as any);
 }
 
 /**

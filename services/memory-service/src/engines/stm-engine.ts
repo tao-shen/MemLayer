@@ -188,7 +188,7 @@ export class STMEngine {
     try {
       const pattern = 'stm:*';
       const keys = await cache.keys(pattern);
-      const sessionKeys = keys.filter((k) => !k.includes(':window_size'));
+      const sessionKeys = keys.filter((k: string) => !k.includes(':window_size'));
 
       let totalItems = 0;
       for (const key of sessionKeys) {

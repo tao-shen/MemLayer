@@ -13,7 +13,7 @@ import {
 import { rateLimiters } from '../middleware/rate-limit';
 import { createLogger } from '@agent-memory/shared';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 const logger = createLogger('BlockchainRoutes');
 
 // Placeholder for service clients (to be injected)
@@ -57,7 +57,7 @@ router.post('/auth/challenge', async (req: Request, res: Response) => {
       success: true,
       data: challenge,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to generate challenge', error as Error);
     res.status(500).json({
       error: {
@@ -109,7 +109,7 @@ router.post(
         success: true,
         data: result,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to mint memory', error as Error);
       res.status(500).json({
         error: {
@@ -162,7 +162,7 @@ router.post(
         success: true,
         data: result,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to mint batch', error as Error);
       res.status(500).json({
         error: {
@@ -206,7 +206,7 @@ router.get(
         success: true,
         data: memories,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get memories', error as Error);
       res.status(500).json({
         error: {
@@ -272,7 +272,7 @@ router.get(
         success: true,
         data: memory,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get memory asset', error as Error);
       res.status(500).json({
         error: {
@@ -330,7 +330,7 @@ router.post(
         success: true,
         message: 'Access granted successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to grant access', error as Error);
       res.status(500).json({
         error: {
@@ -385,7 +385,7 @@ router.post(
         success: true,
         message: 'Access revoked successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to revoke access', error as Error);
       res.status(500).json({
         error: {
@@ -430,7 +430,7 @@ router.post(
           status: 'pending',
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to transfer asset', error as Error);
       res.status(500).json({
         error: {
@@ -477,7 +477,7 @@ router.get(
         success: true,
         data: batch,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get batch info', error as Error);
       res.status(500).json({
         error: {
@@ -521,7 +521,7 @@ router.get('/cost/estimate', async (req: Request, res: Response) => {
       success: true,
       data: estimate,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to estimate cost', error as Error);
     res.status(500).json({
       error: {
@@ -567,7 +567,7 @@ router.get(
         success: true,
         data: policy,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get access policy', error as Error);
       res.status(500).json({
         error: {
@@ -603,7 +603,7 @@ router.get(
         success: true,
         data: grants,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get access grants', error as Error);
       res.status(500).json({
         error: {

@@ -119,7 +119,7 @@ export class BatchManager extends EventEmitter implements IBatchManager {
       }
 
       return requestId;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to add item to batch', {
         requestId,
         error: error.message,
@@ -169,7 +169,7 @@ export class BatchManager extends EventEmitter implements IBatchManager {
         count: batchesToProcess.length,
         duration,
       });
-    } catch (error) {
+    } catch (error: any) {
       const duration = Date.now() - startTime;
       logBatchOperation('processBatches', {
         duration,
@@ -450,7 +450,7 @@ export class BatchManager extends EventEmitter implements IBatchManager {
         itemCount: items.length,
         duration,
       });
-    } catch (error) {
+    } catch (error: any) {
       const duration = Date.now() - startTime;
 
       this.processingBatches.delete(batchId);
