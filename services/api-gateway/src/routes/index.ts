@@ -6,6 +6,7 @@ import ragRoutes from './rag';
 import reflectionRoutes from './reflections';
 import managementRoutes from './management';
 import blockchainRoutes from './blockchain';
+import visualizationRoutes from './visualization';
 
 const router: Router = Router();
 
@@ -19,5 +20,8 @@ router.use('/agents/:agentId/management', managementRoutes);
 
 // Blockchain routes (standalone, not agent-specific)
 router.use('/blockchain', blockchainRoutes);
+
+// Visualization routes
+router.use(visualizationRoutes);
 
 export default router;

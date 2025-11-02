@@ -4,13 +4,23 @@
 
 ## 概述
 
-此模块将 AI Agent 的记忆数据转化为可验证、可交易的个人数字资产，实现：
+此模块将 AI Agent 的记忆数据转化为可验证、可交易的个人数字资产。
 
-- ✅ 极低成本上链（$0.006/记忆，比传统 NFT 便宜 99.5%）
-- ✅ 高吞吐量（支持每秒 100+ 记忆上链）
-- ✅ 永久存储（Arweave 确保数据永不丢失）
-- ✅ 端到端加密（AES-256-GCM + 链下密钥管理）
-- ✅ 真正所有权（用户完全控制记忆资产）
+### 核心特性
+
+- ✅ **所有记忆都可上链**：不限类型、不限重要性，完全由用户决定
+- ✅ **完全可选**：不会自动上链，用户主动选择
+- ✅ **极低成本**：$0.006/记忆（Solana + IPFS），批量更便宜
+- ✅ **快速上链**：IPFS 秒级上传，Solana 秒级确认
+- ✅ **端到端加密**：AES-256-GCM 保护隐私
+- ✅ **真正所有权**：用户完全控制记忆资产
+
+### 默认配置
+
+- **区块链**：Solana（成本最优）
+- **存储**：IPFS（快速 + 经济）
+- **上链方式**：用户主动选择（不自动上链）
+- **加密**：默认开启
 
 ## 目录结构
 
@@ -32,36 +42,42 @@ blockchain/
 
 ## 快速开始
 
-### 1. 环境搭建
+### 1. 配置环境
 
 ```bash
-# 运行自动安装脚本
-./scripts/setup-solana-dev.sh
+# 复制配置文件
+cp blockchain/.env.example blockchain/.env
 
-# 验证环境
-./scripts/verify-solana-env.sh
+# 编辑配置（默认已启用 Solana + IPFS）
+# BLOCKCHAIN_ENABLED=true
+# SOLANA_ENABLED=true
+# STORAGE_PROVIDER=ipfs
 ```
 
-### 2. 安装依赖
+### 2. 配置 IPFS（推荐使用 Pinata）
 
 ```bash
-# 安装 Node.js 依赖
-yarn install
-
-# 构建 Solana Program
-cd blockchain/programs/memory-asset
-anchor build
+# 注册 Pinata: https://pinata.cloud
+# 获取 API Key 后配置：
+PINATA_API_KEY=your_api_key
+PINATA_API_SECRET=your_api_secret
 ```
 
-### 3. 部署到 Devnet
+### 3. 配置 Solana 钱包
 
 ```bash
-# 部署 Solana Program
-anchor deploy --provider.cluster devnet
+# 生成开发钱包
+solana-keygen new --outfile ~/.config/solana/devnet.json
 
-# 启动服务
-yarn workspace @blockchain/minting-service start
+# 获取测试 SOL
+solana airdrop 2
 ```
+
+### 4. 开始使用
+
+所有记忆都会显示"上链"按钮，用户点击即可上链！
+
+详细使用指南：[用户指南](./USER_GUIDE.md)
 
 ## 核心组件
 
@@ -113,33 +129,54 @@ yarn workspace @blockchain/minting-service start
 
 ## API 端点
 
-### 记忆上链
+### 上链单条记忆
 
 ```typescript
 POST /v1/blockchain/memories/mint
 {
-  "memory": {
-    "content": "记忆内容",
-    "metadata": { "agentId": "agent-001" }
-  },
-  "signature": "wallet_signature"
+  "memoryId": "mem-001",
+  "options": {
+    "encrypt": true,
+    "priority": "normal"
+  }
+}
+
+// 响应
+{
+  "success": true,
+  "assetId": "asset-xyz",
+  "transactionId": "tx-abc",
+  "storageUri": "ipfs://Qm...",
+  "cost": { "amount": 0.006, "currency": "USD" }
 }
 ```
 
-### 批量上链
+### 批量上链（节省成本）
 
 ```typescript
 POST /v1/blockchain/memories/mint-batch
 {
-  "memories": [...],
-  "signature": "wallet_signature"
+  "memoryIds": ["mem-001", "mem-002", "mem-003"],
+  "options": { "encrypt": true }
 }
+
+// 批量上链可节省 30-50% 成本
 ```
 
-### 查询记忆资产
+### 查询已上链记忆
 
 ```typescript
 GET /v1/blockchain/memories?walletAddress=xxx
+```
+
+### 转移记忆资产
+
+```typescript
+POST /v1/blockchain/memories/transfer
+{
+  "assetId": "asset-xyz",
+  "to": "recipient_wallet_address"
+}
 ```
 
 ### 授予访问权限
@@ -155,17 +192,24 @@ POST /v1/blockchain/memories/:assetId/grant
 
 ## 成本分析
 
-### 单条记忆成本
+### Solana + IPFS（默认配置）
 
-- 压缩 NFT 铸造: ~0.00005 SOL (~$0.005)
-- Arweave 存储 (1KB): ~0.00001 AR (~$0.0003)
-- 交易费用: ~0.000005 SOL (~$0.0005)
-- **总计**: ~$0.006/记忆
+| 操作 | 成本 | 说明 |
+|------|------|------|
+| 单条上链 | ~$0.006 | Solana cNFT + IPFS 存储 |
+| 批量上链（10+） | ~$0.005/条 | 节省 ~17% |
+| 批量上链（50+） | ~$0.004/条 | 节省 ~33% |
+| 批量上链（100+） | ~$0.003/条 | 节省 ~50% |
 
-### 批量优化
+### 月度成本估算
 
-- 50 条记忆批次: ~$0.004/记忆
-- 100 条记忆批次: ~$0.003/记忆
+| 使用量 | 单条上链 | 批量上链 |
+|--------|---------|---------|
+| 10 条/月 | $0.06 | $0.05 |
+| 100 条/月 | $0.60 | $0.40 |
+| 1000 条/月 | $6.00 | $4.00 |
+
+**建议**：使用批量上链可显著降低成本！
 
 ## 开发
 
@@ -268,12 +312,21 @@ A: 检查 Arweave 钱包余额，或切换到 Bundlr
 **Q: 索引器同步慢**
 A: 考虑使用 Helius RPC 提高性能
 
-## 资源
+## 文档
+
+- 📖 [用户指南](./USER_GUIDE.md) - 快速上手
+- 🔧 [配置指南](./CONFIGURATION_GUIDE.md) - 详细配置
+- 💡 [上链决策指南](./MEMORY_MINTING_GUIDE.md) - 哪些记忆应该上链
+- 🏗️ [模块化架构](./MODULAR_ARCHITECTURE.md) - 技术架构
+- 📚 [API 参考](./sdk/API_REFERENCE.md) - API 文档
+- 🛠️ [SDK 指南](./sdk/SDK_GUIDE.md) - SDK 使用
+
+## 外部资源
 
 - [Solana 文档](https://docs.solana.com)
-- [Anchor 文档](https://www.anchor-lang.com)
 - [Metaplex Bubblegum](https://docs.metaplex.com/programs/compression)
-- [Arweave 文档](https://docs.arweave.org)
+- [IPFS 文档](https://docs.ipfs.tech)
+- [Pinata 文档](https://docs.pinata.cloud)
 
 ## 许可证
 

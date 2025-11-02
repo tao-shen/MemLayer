@@ -1,0 +1,41 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🎉 前端演示应用已成功启动！                                  ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📍 访问地址:
+   http://localhost:5173
+
+🔧 后端 API:
+   http://localhost:3000
+
+✅ 运行状态:
+   • 前端: ✅ 运行中 (React + Vite)
+   • 后端: ✅ 运行中 (Express API)
+
+🚀 快速开始:
+
+1. 打开浏览器访问: http://localhost:5173
+
+2. 安装 Phantom 钱包:
+   https://phantom.app/
+
+3. 切换到 Devnet 网络
+
+4. 获取测试 SOL:
+   https://faucet.solana.com/
+
+5. 连接钱包并开始铸造记忆 NFT！
+
+📚 详细文档:
+   • FRONTEND_DEMO_GUIDE.md - 完整使用指南
+   • blockchain/frontend-demo/README.md - 技术文档
+   • FRONTEND_RUNNING_STATUS.md - 运行状态
+
+💡 提示:
+   • 确保钱包在 Devnet 网络
+   • 至少需要 0.01 SOL 用于交易
+   • 每次操作需要签名两次（认证 + 交易）
+
+🎊 祝您使用愉快！
