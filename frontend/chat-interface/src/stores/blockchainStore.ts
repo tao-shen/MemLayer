@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { blockchainApi } from '@/api';
-import type { MemoryAsset, MintingProgress } from '@/types';
+import { blockchainApi } from '../api';
+import type { MemoryAsset, MintingProgress } from '../types';
 
 interface BlockchainStore {
   // State

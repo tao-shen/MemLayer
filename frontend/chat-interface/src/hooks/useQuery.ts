@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
-import { chatApi, memoryApi, visualizationApi, blockchainApi } from '@/api';
-import type { GetMemoriesParams, GetVisualizationDataParams, GetAssetsParams } from '@/api';
+import { chatApi, memoryApi, visualizationApi, blockchainApi } from '../api';
+import type { GetMemoriesParams, GetVisualizationDataParams, GetAssetsParams } from '../api';
 
 // Query keys
 export const queryKeys = {

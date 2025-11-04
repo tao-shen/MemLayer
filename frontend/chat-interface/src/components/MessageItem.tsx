@@ -9,7 +9,7 @@ import {
   CubeIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
-import { Message } from '@/types';
+import type { Message } from '../types';
 import { format } from 'date-fns';
 
 interface MessageItemProps {
@@ -24,6 +24,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   onMintNFT,
 }) => {
   const [copied, setCopied] = useState(false);
+
+  // Debug log
+  console.log('MessageItem rendering:', message);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);

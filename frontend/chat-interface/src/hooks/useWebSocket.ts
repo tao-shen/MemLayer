@@ -6,8 +6,9 @@ export const useWebSocketConnection = (agentId: string, sessionId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token || !agentId) return;
+    if (!agentId) return;
+
+    const token = localStorage.getItem('auth_token') || 'demo-token';
 
     wsClient
       .connect(token, agentId, sessionId)
@@ -18,6 +19,7 @@ export const useWebSocketConnection = (agentId: string, sessionId?: string) => {
       .catch((err) => {
         setConnected(false);
         setError(err.message);
+        console.error('WebSocket connection error:', err);
       });
 
     return () => {

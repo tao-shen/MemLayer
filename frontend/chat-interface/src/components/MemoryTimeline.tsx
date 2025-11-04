@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import D3TimelineChart from './D3TimelineChart';
-import { Memory } from '../types';
+import type { Memory } from '../types';
 import { useVisualizationStore } from '../stores/visualizationStore';
 
 interface MemoryTimelineProps {

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { Session } from '@/types';
-import { useChatStore } from '@/stores';
+import type { Session } from '../types';
+import { useChatStore } from '../stores/chatStore';
 import { useQuery } from '@tanstack/react-query';
 
 interface SessionItemProps {

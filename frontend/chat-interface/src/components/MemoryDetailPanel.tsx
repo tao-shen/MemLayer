@@ -1,5 +1,5 @@
 import { XMarkIcon, CubeIcon, FireIcon, EyeIcon } from '@heroicons/react/24/outline';
-import type { Memory } from '@/types';
+import type { Memory } from '../types';
 import { format } from 'date-fns';
 
 interface MemoryDetailPanelProps {

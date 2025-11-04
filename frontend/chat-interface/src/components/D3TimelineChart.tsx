@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Memory } from '../types';
+import type { Memory } from '../types';
 
 interface D3TimelineChartProps {
   memories: Memory[];

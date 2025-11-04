@@ -5,7 +5,7 @@ import {
   FunnelIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import type { MemoryFilters, MemoryType } from '@/types';
+import type { MemoryFilters, MemoryType } from '../types';
 
 interface FilterPanelProps {
   filters: MemoryFilters;

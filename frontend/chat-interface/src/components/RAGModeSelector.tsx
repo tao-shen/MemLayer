@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import type { RAGMode } from '@/types';
+import type { RAGMode } from '../types';
 
 interface RAGModeSelectorProps {
   value: RAGMode;

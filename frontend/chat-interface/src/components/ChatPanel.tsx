@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useChatStore } from '@/stores';
+import { useChatStore } from '../stores/chatStore';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 
@@ -27,6 +27,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ agentId }) => {
   };
 
   const currentMessages = currentSessionId ? messages[currentSessionId] || [] : [];
+
+  console.log('ChatPanel - currentSessionId:', currentSessionId);
+  console.log('ChatPanel - all messages:', messages);
+  console.log('ChatPanel - currentMessages:', currentMessages);
 
   return (
     <div className="flex flex-col h-full">

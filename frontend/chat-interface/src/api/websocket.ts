@@ -38,6 +38,10 @@ class WebSocketClient {
       this.socket.on('connect', () => {
         console.log('WebSocket connected');
         this.reconnectAttempts = 0;
+        // Join the agent room
+        if (agentId) {
+          this.socket?.emit('join', agentId);
+        }
         resolve();
       });
 
@@ -53,6 +57,10 @@ class WebSocketClient {
 
       this.socket.on('authenticated', (data) => {
         console.log('WebSocket authenticated:', data);
+      });
+
+      this.socket.on('connected', (data) => {
+        console.log('WebSocket room joined:', data);
       });
 
       // Message handlers

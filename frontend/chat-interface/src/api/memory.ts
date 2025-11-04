@@ -6,7 +6,7 @@ import type {
   Relationship,
   ApiResponse,
   PaginatedResponse,
-} from '@/types';
+} from '../types';
 
 export interface GetMemoriesParams {
   types?: MemoryType[];

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { visualizationApi, memoryApi } from '@/api';
-import type { Memory, Entity, Relationship, MemoryFilters, Statistics } from '@/types';
+import { visualizationApi, memoryApi } from '../api';
+import type { Memory, Entity, Relationship, MemoryFilters, Statistics } from '../types';
 
 type ViewType = 'timeline' | 'graph' | 'list' | 'stats' | 'blockchain';
 

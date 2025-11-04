@@ -1,10 +1,24 @@
-// Core Types
+// ============================================
+// Core Type Definitions
+// ============================================
+
 export type MemoryType = 'stm' | 'episodic' | 'semantic' | 'reflection';
 export type RAGMode = 'off' | 'standard' | 'agentic';
 export type MessageRole = 'user' | 'assistant' | 'system';
 
-// Session Types
-export interface Session {
+// ============================================
+// Session Related Types
+// ============================================
+
+export type SessionConfig = {
+  agentType: string;
+  ragMode: RAGMode;
+  memoryTypes: MemoryType[];
+  autoReflection: boolean;
+  blockchainEnabled: boolean;
+};
+
+export type Session = {
   id: string;
   agentId: string;
   userId: string;
@@ -15,36 +29,56 @@ export interface Session {
   lastMessage?: string;
   messageCount: number;
   config: SessionConfig;
-}
+};
 
-export interface SessionConfig {
-  agentType: string;
-  ragMode: RAGMode;
-  memoryTypes: MemoryType[];
-  autoReflection: boolean;
-  blockchainEnabled: boolean;
-}
+// ============================================
+// Message Related Types
+// ============================================
 
-// Message Types
-export interface Message {
+export type RAGResult = {
+  id: string;
+  content: string;
+  score: number;
+  source: string;
+  metadata: Record<string, any>;
+};
+
+export type Message = {
   id: string;
   role: MessageRole;
   content: string;
   timestamp: Date;
   ragResults?: RAGResult[];
   memoryIds?: string[];
-}
+};
 
-export interface RAGResult {
+// ============================================
+// Entity and Relationship Types
+// ============================================
+
+export type Entity = {
   id: string;
-  content: string;
-  score: number;
-  source: string;
-  metadata: Record<string, any>;
-}
+  name: string;
+  type: string;
+  properties: Record<string, any>;
+  memoryIds: string[];
+  importance: number;
+};
 
+export type Relationship = {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  type: string;
+  weight: number;
+  properties: Record<string, any>;
+};
+
+// ============================================
 // Memory Types
-export interface Memory {
+// ============================================
+
+export type Memory = {
   id: string;
   agentId: string;
   type: MemoryType;
@@ -59,50 +93,35 @@ export interface Memory {
   relationships?: Relationship[];
   onChain: boolean;
   assetAddress?: string;
-}
+};
 
-export interface Entity {
-  id: string;
-  name: string;
-  type: string;
-  properties: Record<string, any>;
-  memoryIds: string[];
-  importance: number;
-}
-
-export interface Relationship {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  type: string;
-  weight: number;
-  properties: Record<string, any>;
-}
-
+// ============================================
 // Visualization Types
-export interface MemoryFilters {
+// ============================================
+
+export type MemoryFilters = {
   types: MemoryType[];
   dateRange: [Date, Date] | null;
   importanceRange: [number, number];
   searchQuery: string;
-}
+};
 
-export interface GraphNode {
+export type GraphNode = {
   id: string;
   label: string;
   type: 'entity' | 'memory' | 'concept';
   properties: Record<string, any>;
   importance: number;
-}
+};
 
-export interface GraphEdge {
+export type GraphEdge = {
   source: string;
   target: string;
   type: string;
   weight: number;
-}
+};
 
-export interface Statistics {
+export type Statistics = {
   memoryStats: {
     total: number;
     byType: Record<MemoryType, number>;
@@ -121,10 +140,13 @@ export interface Statistics {
     entity: Entity;
     connectionCount: number;
   }>;
-}
+};
 
+// ============================================
 // Blockchain Types
-export interface MemoryAsset {
+// ============================================
+
+export type MemoryAsset = {
   id: string;
   memoryId: string;
   assetAddress: string;
@@ -138,27 +160,30 @@ export interface MemoryAsset {
   arweaveUri: string;
   mintedAt: Date;
   transactionSignature: string;
-}
+};
 
-export interface MintingProgress {
+export type MintingProgress = {
   memoryId: string;
   status: 'encrypting' | 'uploading' | 'minting' | 'confirming' | 'complete' | 'error';
   progress: number;
   message: string;
   error?: string;
-}
+};
 
+// ============================================
 // API Response Types
-export interface ApiResponse<T> {
+// ============================================
+
+export type ApiResponse<T> = {
   data: T;
   success: boolean;
   error?: string;
-}
+};
 
-export interface PaginatedResponse<T> {
+export type PaginatedResponse<T> = {
   data: T[];
   total: number;
   limit: number;
   offset: number;
   hasMore: boolean;
-}
+};

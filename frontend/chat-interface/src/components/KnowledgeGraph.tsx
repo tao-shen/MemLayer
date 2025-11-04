@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import D3ForceGraph from './D3ForceGraph';
-import { GraphNode } from '../types';
+import type { GraphNode } from '../types';
 import { useVisualizationStore } from '../stores/visualizationStore';
 
 interface KnowledgeGraphProps {

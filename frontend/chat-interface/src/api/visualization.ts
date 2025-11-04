@@ -7,7 +7,7 @@ import type {
   GraphEdge,
   Statistics,
   ApiResponse,
-} from '@/types';
+} from '../types';
 
 export interface GetVisualizationDataParams {
   types?: string;

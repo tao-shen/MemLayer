@@ -6,7 +6,7 @@ import type {
   RAGMode,
   ApiResponse,
   PaginatedResponse,
-} from '@/types';
+} from '../types';
 
 export interface SendMessageRequest {
   sessionId: string;

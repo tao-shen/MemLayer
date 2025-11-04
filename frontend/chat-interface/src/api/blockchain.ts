@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { MemoryAsset, ApiResponse, PaginatedResponse } from '@/types';
+import type { MemoryAsset, ApiResponse, PaginatedResponse } from '../types';
 
 export interface MintMemoryRequest {
   agentId: string;

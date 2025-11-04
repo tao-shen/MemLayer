@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useVisualizationStore } from '@/stores';
+import { useVisualizationStore } from '../stores/visualizationStore';
 import MemoryTimeline from './MemoryTimeline';
 import KnowledgeGraph from './KnowledgeGraph';
 import MemoryList from './MemoryList';

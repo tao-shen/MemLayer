@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useChatStore } from '@/stores';
+import { useChatStore } from '../stores/chatStore';
 import { SessionItem } from './SessionItem';
 
 interface SessionSidebarProps {
@@ -18,17 +18,25 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({ agentId }) => {
   } = useChatStore();
 
   useEffect(() => {
-    loadSessions(agentId);
+    if (agentId) {
+      loadSessions(agentId);
+    }
   }, [agentId, loadSessions]);
 
   const handleCreateSession = async () => {
-    await createSession(agentId, {
-      agentType: 'default',
-      ragMode: 'off',
-      memoryTypes: ['stm', 'episodic', 'semantic', 'reflection'],
-      autoReflection: false,
-      blockchainEnabled: false,
-    });
+    try {
+      console.log('Creating session for agent:', agentId);
+      const session = await createSession(agentId, {
+        agentType: 'default',
+        ragMode: 'off',
+        memoryTypes: ['stm', 'episodic', 'semantic', 'reflection'],
+        autoReflection: false,
+        blockchainEnabled: false,
+      });
+      console.log('Session created:', session);
+    } catch (error) {
+      console.error('Failed to create session:', error);
+    }
   };
 
   const handleDeleteSession = async (sessionId: string) => {
@@ -53,7 +61,7 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({ agentId }) => {
 
       {/* Session List */}
       <div className="flex-1 overflow-y-auto">
-        {sessions.length === 0 ? (
+        {!sessions || sessions.length === 0 ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400">
             <p>No sessions yet</p>
             <p className="text-sm mt-2">Create a new session to get started</p>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Memory } from '../types';
+import type { Memory } from '../types';
 
 interface MemoryCardProps {
   memory: Memory;

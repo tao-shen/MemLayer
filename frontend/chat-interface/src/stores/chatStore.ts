@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { chatApi } from '@/api';
-import type { Session, Message, RAGMode, SessionConfig } from '@/types';
+import { chatApi } from '../api';
+import type { Session, Message, RAGMode, SessionConfig } from '../types';
 
 interface ChatStore {
   // State

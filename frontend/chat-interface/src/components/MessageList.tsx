@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import { MessageItem } from './MessageItem';
-import type { Message } from '@/types';
+import type { Message } from '../types';
 
 interface MessageListProps {
   messages: Message[];
