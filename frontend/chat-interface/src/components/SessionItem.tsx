@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { Session } from '../types';
 import { useChatStore } from '../stores/chatStore';
-import { useQuery } from '@tanstack/react-query';
 
 interface SessionItemProps {
   session: Session;
@@ -26,12 +25,6 @@ export const SessionItem: React.FC<SessionItemProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Prefetch session messages on hover
-  const { prefetchQuery } = useQuery({
-    queryKey: ['messages', session.id],
-    enabled: false,
-  });
-
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,11 +46,6 @@ export const SessionItem: React.FC<SessionItemProps> = ({
       inputRef.current.select();
     }
   }, [isEditing]);
-
-  const handleMouseEnter = () => {
-    // Prefetch messages when hovering
-    prefetchQuery();
-  };
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -98,13 +86,20 @@ export const SessionItem: React.FC<SessionItemProps> = ({
   return (
     <div
       className="relative"
-      onMouseEnter={handleMouseEnter}
       onContextMenu={handleContextMenu}
     >
-      <button
+      <div
         onClick={onSelect}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect();
+          }
+        }}
         className={`
-          w-full text-left px-3 py-3 rounded-lg transition-all duration-200
+          w-full text-left px-3 py-3 rounded-lg transition-all duration-200 cursor-pointer
           ${
             isActive
               ? 'bg-primary-100 dark:bg-primary-900 text-primary-900 dark:text-primary-100 shadow-sm'
@@ -153,11 +148,12 @@ export const SessionItem: React.FC<SessionItemProps> = ({
               p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors
               ${showMenu ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
             `}
+            aria-label="Session menu"
           >
             <EllipsisVerticalIcon className="w-4 h-4" />
           </button>
         </div>
-      </button>
+      </div>
 
       {/* Context menu */}
       {showMenu && (

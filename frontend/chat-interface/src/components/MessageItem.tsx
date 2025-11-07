@@ -25,8 +25,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  // Debug log
-  console.log('MessageItem rendering:', message);
+  // Debug: Check message content
+  if (!message.content) {
+    console.warn('⚠️ MessageItem: message.content is empty!', message);
+  }
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);

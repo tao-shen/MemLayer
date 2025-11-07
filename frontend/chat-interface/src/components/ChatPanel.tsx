@@ -28,9 +28,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ agentId }) => {
 
   const currentMessages = currentSessionId ? messages[currentSessionId] || [] : [];
 
-  console.log('ChatPanel - currentSessionId:', currentSessionId);
-  console.log('ChatPanel - all messages:', messages);
-  console.log('ChatPanel - currentMessages:', currentMessages);
+  // Debug: Log messages
+  if (currentMessages.length > 0) {
+    console.log('💬 ChatPanel messages:', currentMessages);
+    currentMessages.forEach((msg, i) => {
+      console.log(`  ${i + 1}. [${msg.role}] content length: ${msg.content?.length || 0}`);
+    });
+  }
 
   return (
     <div className="flex flex-col h-full">

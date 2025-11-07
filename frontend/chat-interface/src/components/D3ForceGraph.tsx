@@ -84,9 +84,24 @@ const D3ForceGraph: React.FC<D3ForceGraphProps> = ({
       .data(edges)
       .enter()
       .append('line')
-      .attr('stroke', '#9ca3af')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', (d: GraphEdge) => Math.sqrt(d.weight) * 2);
+      .attr('stroke', '#6b7280')
+      .attr('stroke-opacity', 0.4)
+      .attr('stroke-width', (d: GraphEdge) => Math.sqrt(d.weight) * 3);
+
+    // Draw edge labels
+    const edgeLabel = g.append('g')
+      .attr('class', 'edge-labels')
+      .selectAll('text')
+      .data(edges)
+      .enter()
+      .append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dy', -5)
+      .style('font-size', '10px')
+      .style('fill', '#6b7280')
+      .style('opacity', 0)
+      .style('pointer-events', 'none')
+      .text((d: GraphEdge) => d.type.replace(/_/g, ' '));
 
     // Draw nodes
     const node = g.append('g')
@@ -140,12 +155,24 @@ const D3ForceGraph: React.FC<D3ForceGraphProps> = ({
           .attr('stroke-opacity', (l: any) => {
             const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
             const targetId = typeof l.target === 'string' ? l.target : l.target.id;
-            return (sourceId === d.id || targetId === d.id) ? 1 : 0.1;
+            return (sourceId === d.id || targetId === d.id) ? 0.9 : 0.15;
           })
           .attr('stroke-width', (l: any) => {
             const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
             const targetId = typeof l.target === 'string' ? l.target : l.target.id;
-            return (sourceId === d.id || targetId === d.id) ? Math.sqrt(l.weight) * 3 : Math.sqrt(l.weight) * 2;
+            return (sourceId === d.id || targetId === d.id) ? Math.sqrt(l.weight) * 5 : Math.sqrt(l.weight) * 3;
+          })
+          .attr('stroke', (l: any) => {
+            const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
+            const targetId = typeof l.target === 'string' ? l.target : l.target.id;
+            return (sourceId === d.id || targetId === d.id) ? '#3b82f6' : '#6b7280';
+          });
+
+        edgeLabel
+          .style('opacity', (l: any) => {
+            const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
+            const targetId = typeof l.target === 'string' ? l.target : l.target.id;
+            return (sourceId === d.id || targetId === d.id) ? 1 : 0;
           });
 
         // Show tooltip
@@ -169,8 +196,10 @@ const D3ForceGraph: React.FC<D3ForceGraphProps> = ({
       .on('mouseout', function() {
         node.selectAll('circle').attr('opacity', 0.9);
         link
-          .attr('stroke-opacity', 0.6)
-          .attr('stroke-width', (d: any) => Math.sqrt(d.weight) * 2);
+          .attr('stroke-opacity', 0.4)
+          .attr('stroke-width', (d: any) => Math.sqrt(d.weight) * 3)
+          .attr('stroke', '#6b7280');
+        edgeLabel.style('opacity', 0);
         tooltip.style('opacity', 0);
       })
       .on('click', (event, d: GraphNode) => {
@@ -185,6 +214,10 @@ const D3ForceGraph: React.FC<D3ForceGraphProps> = ({
         .attr('y1', (d: any) => d.source.y)
         .attr('x2', (d: any) => d.target.x)
         .attr('y2', (d: any) => d.target.y);
+
+      edgeLabel
+        .attr('x', (d: any) => (d.source.x + d.target.x) / 2)
+        .attr('y', (d: any) => (d.source.y + d.target.y) / 2);
 
       node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
