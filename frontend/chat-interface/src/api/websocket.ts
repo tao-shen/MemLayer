@@ -182,6 +182,11 @@ class WebSocketClient {
 
 export const wsClient = new WebSocketClient();
 
+// 暴露到 window 以便在组件中使用
+if (typeof window !== 'undefined') {
+  (window as any).wsClient = wsClient;
+}
+
 // Hook for using WebSocket in React components
 export const useWebSocket = () => {
   return wsClient;

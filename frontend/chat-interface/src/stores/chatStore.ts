@@ -106,6 +106,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
 
     try {
+      // 确保已经加入 session room
+      const ws = (window as any).wsClient;
+      if (ws && ws.isConnected()) {
+        ws.emit('join-session', currentSessionId);
+        console.log('🔌 Re-joining session room before sending message:', currentSessionId);
+      }
+
       // Add user message immediately
       const userMessage: Message = {
         id: generateId(),
@@ -120,7 +127,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           [currentSessionId]: [...(state.messages[currentSessionId] || []), userMessage],
         },
         isLoading: true,
+        streamingMessage: '', // 开始流式输出
       }));
+
+      console.log('📤 Sending message to API:', { agentId, sessionId: currentSessionId, message: message.substring(0, 50) });
 
       // Send to API
       const response = await chatApi.sendMessage(agentId, {
@@ -128,6 +138,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         message,
         ragMode,
       });
+
+      console.log('✅ API response received:', response.messageId);
 
       // Add assistant message
       const assistantMessage: Message = {
@@ -149,7 +161,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to send message:', error);
-      set({ error: 'Failed to send message', isLoading: false });
+      set({ error: 'Failed to send message', isLoading: false, streamingMessage: null });
     }
   },
 

@@ -1671,6 +1671,34 @@ app.get('/v1/agents/:agentId/sessions/:sessionId/messages', (req, res) => {
   });
 });
 
+// 简单的相似度计算函数（基于关键词匹配）
+function calculateSimilarity(text1, text2) {
+  const words1 = text1.toLowerCase().split(/\s+/);
+  const words2 = text2.toLowerCase().split(/\s+/);
+  const commonWords = words1.filter(word => words2.includes(word) && word.length > 2);
+  return commonWords.length / Math.max(words1.length, words2.length);
+}
+
+// 检索相关记忆
+function retrieveRelevantMemories(query, sessionId, topK = 3) {
+  // 检索所有记忆（不限制 session，这样新 session 也能访问历史知识）
+  // 但优先返回当前 session 的记忆
+  const allMemories = mockMemories.map(mem => ({
+    memory: mem,
+    score: calculateSimilarity(query, mem.content),
+    isCurrentSession: mem.metadata.sessionId === sessionId
+  })).filter(item => item.score > 0.05) // 降低阈值，让更多记忆被检索到
+    .sort((a, b) => {
+      // 先按是否当前 session 排序，再按相似度排序
+      if (a.isCurrentSession && !b.isCurrentSession) return -1;
+      if (!a.isCurrentSession && b.isCurrentSession) return 1;
+      return b.score - a.score;
+    })
+    .slice(0, topK);
+  
+  return allMemories;
+}
+
 app.post('/v1/agents/:agentId/chat', async (req, res) => {
   const { sessionId, message } = req.body;
   
@@ -1689,21 +1717,53 @@ app.post('/v1/agents/:agentId/chat', async (req, res) => {
   }
   messages[sessionId].push(userMessage);
   
-  console.log('✅ User message saved:', userMessage);
+  console.log('✅ User message saved:', userMessage.id);
   console.log('📊 Total messages in session:', messages[sessionId].length);
+  
+  // 🔍 检索相关记忆
+  const relevantMemories = retrieveRelevantMemories(message, sessionId, 5);
+  console.log('🧠 Retrieved memories:', relevantMemories.length);
+  
+  if (relevantMemories.length > 0) {
+    console.log('📚 Top memories:');
+    relevantMemories.forEach((item, idx) => {
+      const mem = item.memory;
+      const timeAgo = Math.floor((Date.now() - new Date(mem.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      console.log(`  ${idx + 1}. [${mem.type.toUpperCase()}] (${timeAgo}天前, 相似度:${item.score.toFixed(2)}, 重要性:${mem.importance.toFixed(2)})`);
+      console.log(`     ${mem.content.substring(0, 100)}...`);
+    });
+  } else {
+    console.log('⚠️ No relevant memories found for this message');
+  }
   
   // Get AI response (real or mock)
   let aiResponse = '';
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   
   if (OPENAI_API_KEY && OPENAI_API_KEY.startsWith('sk-')) {
-    console.log('🤖 Calling OpenAI API...');
+    console.log('🤖 Calling OpenAI API with memory context...');
     try {
+      // 构建包含记忆的系统提示
+      let systemPrompt = '你是一个具有记忆能力的AI助手。';
+      
+      if (relevantMemories.length > 0) {
+        systemPrompt += '\n\n📚 相关记忆：\n';
+        relevantMemories.forEach((item, idx) => {
+          const mem = item.memory;
+          const timeAgo = Math.floor((Date.now() - new Date(mem.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+          systemPrompt += `\n${idx + 1}. [${mem.type.toUpperCase()}] (${timeAgo}天前, 重要性:${mem.importance.toFixed(2)})\n   ${mem.content}\n`;
+        });
+        systemPrompt += '\n请基于这些记忆来回答用户的问题。在回答开始时，简要说明你参考了哪些记忆（例如："根据我们X天前讨论的..."）。';
+      }
+      
       // Build conversation history
-      const conversationHistory = messages[sessionId].map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      const conversationHistory = [
+        { role: 'system', content: systemPrompt },
+        ...messages[sessionId].slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      ];
       
       const openaiResponse = await axios.post(
         'https://api.openai.com/v1/chat/completions',
@@ -1711,7 +1771,8 @@ app.post('/v1/agents/:agentId/chat', async (req, res) => {
           model: 'gpt-4o-mini',
           messages: conversationHistory,
           temperature: 0.7,
-          max_tokens: 1000,
+          max_tokens: 1500,
+          stream: false, // 先不用流式，确保基本功能正常
         },
         {
           headers: {
@@ -1729,7 +1790,15 @@ app.post('/v1/agents/:agentId/chat', async (req, res) => {
     }
   } else {
     console.log('⚠️ No OpenAI API key found, using mock response');
-    aiResponse = `This is a mock response to: "${message}". Please configure OPENAI_API_KEY in .env.local for real AI responses.`;
+    
+    // Mock response with memory context
+    if (relevantMemories.length > 0) {
+      const mem = relevantMemories[0].memory;
+      const timeAgo = Math.floor((Date.now() - new Date(mem.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      aiResponse = `根据我们${timeAgo}天前的对话记忆，我记得：\n\n"${mem.content}"\n\n基于这个记忆，我来回答你的问题："${message}"\n\n[这是一个模拟回复。请配置 OPENAI_API_KEY 以获得真实的AI回复]`;
+    } else {
+      aiResponse = `This is a mock response to: "${message}". Please configure OPENAI_API_KEY in .env.local for real AI responses.`;
+    }
   }
   
   // Create AI message
@@ -1743,9 +1812,63 @@ app.post('/v1/agents/:agentId/chat', async (req, res) => {
   
   console.log('🤖 AI message created');
   
-  // Emit via WebSocket
-  io.to(sessionId).emit('message', aiMessage);
-  console.log('📡 Message emitted via WebSocket to room:', sessionId);
+  // 🌊 流式发送消息（模拟打字效果）
+  console.log('🌊 Starting stream for session:', sessionId);
+  console.log('📝 Message length:', aiResponse.length, 'chars');
+  
+  // 等待一下，确保前端已经加入 room
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const words = aiResponse.split('');
+  let currentText = '';
+  
+  // 立即发送一个空消息，让前端知道开始了
+  console.log('📤 Emitting message:start to room:', sessionId);
+  io.to(sessionId).emit('message:start', { 
+    id: aiMessage.id,
+    sessionId: sessionId 
+  });
+  
+  // 等待一下让前端处理 start 事件
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
+  // 逐字发送
+  for (let i = 0; i < words.length; i++) {
+    currentText += words[i];
+    
+    // 每5个字符发送一次更新
+    if (i % 5 === 0 || i === words.length - 1) {
+      const chunkData = {
+        id: aiMessage.id,
+        content: currentText,
+        done: i === words.length - 1,
+        sessionId: sessionId
+      };
+      
+      if (i % 50 === 0) {
+        console.log(`📤 Emitting chunk ${i}/${words.length} (${currentText.length} chars)`);
+      }
+      
+      io.to(sessionId).emit('message:chunk', chunkData);
+      
+      // 延迟，让效果更明显
+      await new Promise(resolve => setTimeout(resolve, 30));
+    }
+  }
+  
+  // 发送完成消息
+  console.log('📤 Emitting final message to room:', sessionId);
+  io.to(sessionId).emit('message', {
+    ...aiMessage,
+    ragResults: relevantMemories.map(item => ({
+      memoryId: item.memory.id,
+      type: item.memory.type,
+      content: item.memory.content.substring(0, 200),
+      score: item.score,
+      importance: item.memory.importance
+    }))
+  });
+  console.log('✅ Stream completed for session:', sessionId);
   
   const response = {
     data: {
@@ -1877,6 +2000,13 @@ io.on('connection', (socket) => {
     console.log('Agent joined:', agentId);
     socket.join(agentId);
     socket.emit('connected', { agentId });
+  });
+  
+  // 加入 session room（用于流式消息）
+  socket.on('join-session', (sessionId) => {
+    console.log('Session joined:', sessionId);
+    socket.join(sessionId);
+    socket.emit('session-joined', { sessionId });
   });
   
   socket.on('disconnect', () => {
