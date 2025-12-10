@@ -17,6 +17,16 @@ A comprehensive memory system for AI Agents with episodic, semantic, and procedu
 
 ---
 
+## 🌍 Vision
+
+**AI Democratization: Every Individual Deserves Their Own AI**
+
+We are building MemLayer to realize a future where AI is truly personal and accessible to everyone. Our vision is to empower every individual to own their own AI that learns from their unique experiences.
+
+- **Experience to Memory**: Transform your personal life experiences into structured, AI-readable memory.
+- **Shared Value**: Participate in a collaborative ecosystem where you can share your memories and knowledge to train better AIs, and **get paid for it**. Your unique perspective is an asset.
+
+
 ## 📖 About
 
 MemLayer is a professional-grade memory platform for AI Agents, inspired by cognitive science and implementing the complete memory architecture described in modern AI research. It provides:
