@@ -2,16 +2,16 @@
 
 <div align="center">
 
-**Professional AI Agent Memory System Platform**
+**Professional Memory Infrastructure for AI Agents**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![GitHub](https://img.shields.io/github/stars/tao-shen/MemLayer?style=social)](https://github.com/tao-shen/MemLayer)
 
-A comprehensive memory system for AI Agents with episodic, semantic, and procedural memory support, featuring vector search, knowledge graphs, RAG, and reflection mechanisms.
+Empowering everyone to own, share, and monetize their experience in the age of AI.
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#️-architecture)
+[Vision](#-vision) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#️-architecture)
 
 </div>
 
@@ -29,51 +29,38 @@ We are building MemLayer to realize a future where AI is truly personal and acce
 
 ## 📖 About
 
-MemLayer is a professional-grade memory platform for AI Agents, inspired by cognitive science and implementing the complete memory architecture described in modern AI research. It provides:
+**MemLayer is not just a database; it is the cognitive foundation for your Digital Self.**
 
-- **Multi-type Memory System**: Short-term, episodic, semantic, and procedural memory
-- **Advanced Retrieval**: Vector search, knowledge graphs, and hybrid strategies
-- **RAG Support**: Both standard and agentic RAG workflows
-- **Reflection Mechanism**: LLM-powered insight generation from experiences
-- **Production-Ready**: Full authentication, monitoring, and scalability
+In the era of AI, your experiences, knowledge, and memories are your most valuable assets. MemLayer allows you to capture, structure, and own these assets, enabling you to run **Personal AIs** that truly understand you—because they remember what you remember.
+
+-   **Cognitive Sovereignty**: You own your memory. It's encrypted, decentralized, and under your control.
+-   **Universal Compatibility**: A standardized memory layer that any AI agent can plug into (with your permission) to serve you better.
+-   **Living Memory**: A dynamic system that evolves with you, turning daily interactions into structured wisdom.
 
 ## 🌟 Features
 
-### Core Memory System
-- **Short-Term Memory (STM)**: Session-level context window management
-- **Long-Term Memory (LTM)**:
-  - **Episodic Memory**: Time-stamped personal experiences and interactions
-  - **Semantic Memory**: Structured factual knowledge and knowledge graphs
-  - **Reflection Memory**: LLM-powered insight generation from experiences
+### Your Digital Twin's Brain
+-   **Short-Term Memory (STM)**: Fluid conversation context that makes interactions feel natural.
+-   **Episodic Memory**: **"Time Travel" for AI.** It remembers your history, personal stories, and life events exactly as they happened.
+-   **Semantic Memory**: **Your Personal Knowledge Graph.** It organizes what you know into a structured web of concepts, making your AI smarter over time.
+-   **Reflection**: An internal monologue that digests your experiences to generate new insights and self-awareness for your AI.
 
-### Advanced Retrieval
-- **Vector Search**: Efficient semantic similarity search using Qdrant
-- **Knowledge Graph**: Complex relationship reasoning using Neo4j
-- **Hybrid Retrieval**: Multi-strategy fusion for optimal results
-- **RAG (Retrieval-Augmented Generation)**: Standard and Agentic RAG workflows
-- **Three-Component Scoring**: Recency, importance, and relevance scoring
+### Memory Economy & Ownership
+-   **Turn Experience into Assets**: Mint your high-value memories and knowledge contributions as **cNFTs (Compressed NFTs)** on Solana.
+-   **Get Paid to Share**: Participate in the collaborative training of specialized models. If your shared memory helps an AI learn a new skill, **you get paid**.
+-   **Decentralized Permanence**: Store critical memories on Arweave/IPFS. Your digital legacy lives forever, independent of any central server.
 
-### Blockchain Integration
-- **Solana Smart Contracts**: Memory asset minting with compressed NFTs (cNFT)
-- **Permanent Storage**: Arweave/IPFS integration for decentralized storage
-- **End-to-End Encryption**: AES-256-GCM encryption for privacy protection
-- **Batch Optimization**: Automatic batching to reduce costs by 30-50%
-- **Access Control**: Fine-grained permissions with audit logging
-- **TypeScript & Rust SDKs**: Complete client libraries
+### Privacy & Control
+-   **You Hold the Keys**: Military-grade **AES-256-GCM encryption** ensures that only you (and the agents you authorize) can read your thoughts.
+-   **Granular Access**: Grant specific agents access to specific memory segments. "My financial advisor AI sees my ledger, but not my diary."
+-   **Audit Trails**: See exactly who accessed what and when.
 
-### Visualization & UI
-- **Real-time Visualization**: Timeline, graph, list, and statistics views
-- **Chat Interface**: Integrated chat interface with all features
-- **WebSocket Support**: Real-time updates and notifications
-- **Responsive Design**: Perfect adaptation for desktop, tablet, and mobile
+### Advanced Cognitive Architecture
+-   **Visual Recall**: Vector search capabilities (Qdrant) allow agents to find "similar" past situations instantly.
+-   **Reasoning Engine**: Knowledge graphs (Neo4j) enable complex reasoning and connecting dots between seemingly unrelated facts.
+-   **Hybrid Intelligence**: Fuses vector similarity with structural knowledge for human-like recall.
 
-### Production Ready
-- **Security**: JWT authentication, RBAC, data encryption, audit logging
-- **Monitoring**: Prometheus metrics, Grafana dashboards, Jaeger tracing
-- **Scalability**: Microservices architecture with horizontal scaling
-- **DevOps**: Docker containerization, Kubernetes ready, CI/CD support
-
-## 🏗️ Architecture
+## 🏗️ Architecture: The Engine of Democratized AI
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
