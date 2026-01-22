@@ -1,8 +1,8 @@
-# MemLayer - Agent Memory Platform
+# TacitLayer - Agent Tacit Knowledge Platform
 
 <div align="center">
 
-**Professional Memory Infrastructure for AI Agents**
+**Professional Tacit Knowledge Infrastructure for AI Agents**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
@@ -20,27 +20,27 @@ Empowering everyone to own, share, and monetize their experience in the age of A
 
 **AI Democratization: Every Individual Deserves Their Own AI**
 
-We are building MemLayer to realize a future where AI is truly personal and accessible to everyone.
+We are building TacitLayer to realize a future where AI is truly personal and accessible to everyone.
 
-- **Experience to Memory**: Transform your personal life experiences into structured, AI-readable memory.
-- **Shared Value**: Participate in a collaborative ecosystem where you can share your memories and knowledge to train better AIs, and **get paid for it**.
+- **Experience to Tacit Knowledge**: Transform your personal life experiences into structured, AI-readable tacit knowledge.
+- **Shared Value**: Participate in a collaborative ecosystem where you can share your tacit knowledge to train better AIs, and **get paid for it**.
 
 ## 🌟 Features
 
 ### Your Digital Twin's Brain
-- **Short-Term Memory (STM)**: Fluid conversation context for natural interactions
-- **Episodic Memory**: "Time Travel" for AI - remembers your history and life events
-- **Semantic Memory**: Personal Knowledge Graph that organizes your knowledge
+- **Short-Term Tacit Knowledge (STT)**: Fluid conversation context for natural interactions
+- **Episodic Tacit Knowledge**: "Time Travel" for AI - remembers your history and life events
+- **Semantic Tacit Knowledge**: Personal Knowledge Graph that organizes your knowledge
 - **Reflection**: Internal monologue that generates insights and self-awareness
 
-### Memory Economy & Ownership
-- **Turn Experience into Assets**: Mint memories as cNFTs on Solana
-- **Get Paid to Share**: Earn from your shared memory contributions
+### Tacit Knowledge Economy & Ownership
+- **Turn Experience into Assets**: Mint tacit knowledge as cNFTs on Solana
+- **Get Paid to Share**: Earn from your shared tacit knowledge contributions
 - **Decentralized Permanence**: Store on Arweave/IPFS forever
 
 ### Privacy & Control
 - **AES-256-GCM Encryption**: Military-grade protection
-- **Granular Access**: Control which agents see which memories
+- **Granular Access**: Control which agents see which tacit knowledge
 - **Audit Trails**: Full transparency on data access
 
 ## 🛒 Agent Store
@@ -76,8 +76,8 @@ Visit http://localhost:3000
 
 ```bash
 # Clone the repository
-git clone https://github.com/tao-shen/MemLayer.git
-cd MemLayer
+git clone https://github.com/tao-shen/TacitLayer.git
+cd TacitLayer
 
 # Install dependencies
 pnpm install
@@ -107,7 +107,7 @@ pnpm dev
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
 │                    Service Layer                             │
-│  Memory │ Embedding │ Retrieval │ Reflection │ Management   │
+│  Tacit │ Embedding │ Retrieval │ Reflection │ Management   │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
@@ -119,7 +119,7 @@ pnpm dev
 ## 📦 Project Structure
 
 ```
-MemLayer/
+TacitLayer/
 ├── packages/                # Shared packages
 │   ├── shared/              # Shared types and utilities
 │   ├── database/            # Database client (Prisma)
@@ -135,7 +135,7 @@ MemLayer/
 ├── frontend/                # Frontend applications
 │   ├── agent-store/         # Agent Store marketplace
 │   ├── chat-interface/      # Chat interface
-│   └── memory-visualization/ # Memory visualization
+│   └── tacit-visualization/ # Tacit knowledge visualization
 ├── docs/                    # Documentation
 └── docker-compose.yml       # Docker services
 ```
@@ -166,5 +166,5 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/tao-shen/MemLayer)
-- [Report Issues](https://github.com/tao-shen/MemLayer/issues)
+- [GitHub Repository](https://github.com/tao-shen/TacitLayer)
+- [Report Issues](https://github.com/tao-shen/TacitLayer/issues)

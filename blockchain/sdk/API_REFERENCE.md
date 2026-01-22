@@ -681,5 +681,5 @@ Batch operations count as a single request regardless of batch size.
 For questions or issues:
 
 - Documentation: https://docs.memoryplatform.io
-- GitHub: https://github.com/your-org/memory-platform
+- GitHub: https://github.com/tao-shen/TacitLayer
 - Discord: https://discord.gg/memoryplatform

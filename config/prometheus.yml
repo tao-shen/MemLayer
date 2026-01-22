@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'agent-memory-platform'
+    cluster: 'tacit-layer'
     environment: 'development'
 
 scrape_configs:
@@ -15,9 +15,9 @@ scrape_configs:
       - targets: ['api-gateway:3000']
     metrics_path: '/metrics'
 
-  - job_name: 'memory-service'
+  - job_name: 'tacit-service'
     static_configs:
-      - targets: ['memory-service:3001']
+      - targets: ['tacit-service:3001']
     metrics_path: '/metrics'
 
   - job_name: 'postgres'

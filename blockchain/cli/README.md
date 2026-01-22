@@ -400,7 +400,7 @@ npm test
 ## Support
 
 - Documentation: https://docs.memoryplatform.io
-- Issues: https://github.com/your-org/memory-platform/issues
+- Issues: https://github.com/tao-shen/TacitLayer/issues
 - Discord: https://discord.gg/memoryplatform
 
 ## Related

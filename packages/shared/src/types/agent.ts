@@ -35,12 +35,22 @@ export interface Session {
   metadata: Record<string, any>;
 }
 
-// Memory statistics
+// Memory statistics (deprecated, use TacitStats)
 export interface MemoryStats {
   totalMemories: number;
   byType: Record<string, number>;
   storageSize: number;
   oldestMemory: Date;
   newestMemory: Date;
+  averageImportance: number;
+}
+
+// Tacit knowledge statistics
+export interface TacitStats {
+  totalTacits: number;
+  byType: Record<string, number>;
+  storageSize: number;
+  oldestTacit: Date;
+  newestTacit: Date;
   averageImportance: number;
 }

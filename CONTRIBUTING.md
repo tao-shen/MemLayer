@@ -17,9 +17,9 @@
 - Use interfaces for public APIs
 
 ### Naming Conventions
-- Files: kebab-case (e.g., `memory-service.ts`)
-- Classes: PascalCase (e.g., `MemoryService`)
-- Functions: camelCase (e.g., `storeMemory`)
+- Files: kebab-case (e.g., `tacit-service.ts`)
+- Classes: PascalCase (e.g., `TacitService`)
+- Functions: camelCase (e.g., `storeTacit`)
 - Constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
 
 ### Code Style
@@ -45,7 +45,7 @@ Follow conventional commits:
 - `test:` Tests
 - `chore:` Maintenance
 
-Example: `feat: add episodic memory filtering`
+Example: `feat: add episodic tacit knowledge filtering`
 
 ## Pull Requests
 

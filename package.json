@@ -1,7 +1,7 @@
 {
-  "name": "agent-memory-platform",
+  "name": "tacit-layer",
   "version": "1.0.0",
-  "description": "Professional AI Agent Memory System Platform",
+  "description": "Professional AI Agent Tacit Knowledge Platform",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -20,7 +20,7 @@
   "keywords": [
     "ai",
     "agent",
-    "memory",
+    "tacit-knowledge",
     "llm",
     "rag",
     "vector-database",

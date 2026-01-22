@@ -341,7 +341,7 @@ See the `/examples` directory for complete working examples:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/memory-platform/blockchain-sdk
+- GitHub Issues: https://github.com/tao-shen/TacitLayer/issues
 - Documentation: https://docs.memoryplatform.com
 - Discord: https://discord.gg/memoryplatform
 

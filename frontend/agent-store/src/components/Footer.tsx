@@ -22,7 +22,7 @@ const footerLinks = {
 
 const socialLinks = [
   { name: 'Twitter', href: '#', icon: TwitterIcon },
-  { name: 'GitHub', href: '#', icon: GitHubIcon },
+  { name: 'GitHub', href: 'https://github.com/tao-shen/TacitLayer', icon: GitHubIcon },
   { name: 'Discord', href: '#', icon: DiscordIcon },
 ];
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import agentRoutes from './agents';
-import memoryRoutes from './memories';
+import tacitRoutes from './tacits';
 import sessionRoutes from './sessions';
 import ragRoutes from './rag';
 import reflectionRoutes from './reflections';
@@ -12,7 +12,7 @@ const router: Router = Router();
 
 // Mount routes
 router.use('/agents', agentRoutes);
-router.use('/agents/:agentId/memories', memoryRoutes);
+router.use('/agents/:agentId/tacits', tacitRoutes);
 router.use('/agents/:agentId/sessions', sessionRoutes);
 router.use('/agents/:agentId/rag', ragRoutes);
 router.use('/agents/:agentId/reflections', reflectionRoutes);

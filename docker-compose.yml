@@ -4,9 +4,9 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: agent-memory-postgres
+    container_name: agent-tacit-postgres
     environment:
-      POSTGRES_DB: agent_memory
+      POSTGRES_DB: agent_tacit
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -20,12 +20,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Qdrant Vector Database
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: agent-memory-qdrant
+    container_name: agent-tacit-qdrant
     ports:
       - "6333:6333"
       - "6334:6334"
@@ -39,12 +39,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Neo4j Knowledge Graph
   neo4j:
     image: neo4j:5-community
-    container_name: agent-memory-neo4j
+    container_name: agent-tacit-neo4j
     environment:
       NEO4J_AUTH: neo4j/neo4j_password
       NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
@@ -63,12 +63,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: agent-memory-redis
+    container_name: agent-tacit-redis
     ports:
       - "6379:6379"
     volumes:
@@ -80,12 +80,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Prometheus (Monitoring)
   prometheus:
     image: prom/prometheus:latest
-    container_name: agent-memory-prometheus
+    container_name: agent-tacit-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -95,12 +95,12 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Grafana (Visualization)
   grafana:
     image: grafana/grafana:latest
-    container_name: agent-memory-grafana
+    container_name: agent-tacit-grafana
     ports:
       - "3001:3000"
     environment:
@@ -113,12 +113,12 @@ services:
     depends_on:
       - prometheus
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
   # Jaeger (Distributed Tracing)
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: agent-memory-jaeger
+    container_name: agent-tacit-jaeger
     ports:
       - "5775:5775/udp"
       - "6831:6831/udp"
@@ -131,7 +131,7 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HOST_PORT: :9411
     networks:
-      - agent-memory-network
+      - agent-tacit-network
 
 volumes:
   postgres_data:
@@ -143,5 +143,5 @@ volumes:
   grafana_data:
 
 networks:
-  agent-memory-network:
+  agent-tacit-network:
     driver: bridge

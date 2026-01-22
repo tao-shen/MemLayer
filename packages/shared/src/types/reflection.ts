@@ -5,7 +5,7 @@ export interface ReflectionContext {
     end: Date;
   };
   importanceThreshold?: number;
-  maxMemories?: number;
+  maxTacits?: number;
 }
 
 // Reflection
@@ -13,7 +13,7 @@ export interface Reflection {
   id: string;
   agentId: string;
   insights: string[];
-  sourceMemories: string[];
+  sourceTacits: string[];
   importance: number;
   timestamp: Date;
 }
