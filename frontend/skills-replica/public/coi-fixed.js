@@ -46,7 +46,11 @@ if (typeof window === 'undefined') {
 
     event.respondWith(
       fetchPromise.then((response) => {
-         if (response.status === 0 || response.status === 200) {
+        if (response.status === 0) {
+          return response;
+        }
+
+        if (response.status === 200) {
             const newHeaders = new Headers(response.headers);
             newHeaders.set("Cross-Origin-Embedder-Policy", coepCredentialless ? "credentialless" : "require-corp");
             newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
