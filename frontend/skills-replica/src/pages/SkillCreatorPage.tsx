@@ -10,6 +10,7 @@ import type { CreationStep, Skill, AnalysisResult } from '../types/skill-creator
 interface SkillCreatorPageProps {
   onComplete: () => void;
   onCancel: () => void;
+  onSkillCreated?: (skill: Partial<Skill>) => void;
 }
 
 export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps) {

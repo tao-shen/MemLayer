@@ -10,7 +10,7 @@ import { FAQ } from './components/home/FAQ';
 import { AuthModal } from './components/auth/AuthModal';
 import { CartDrawer } from './components/common/CartDrawer';
 import { DocsModal } from './components/common/DocsModal';
-import { SkillCreatorPage } from './pages/SkillCreatorPage';
+import { SkillCreationPage } from './pages/SkillCreationPage';
 import { MySkillsLibrary } from './components/skill-creator/MySkillsLibrary';
 import { SkillExecutor } from './components/skill-creator/SkillExecutor';
 import type { Skill } from './types/skill-creator';
@@ -134,7 +134,7 @@ function AppContent() {
               onNavCd={() => {}}
               onNavMan={() => setIsDocsOpen(true)}
             >
-              <SkillCreatorPage
+              <SkillCreationPage
                 onComplete={() => {
                   navigate('/skills/library');
                 }}
