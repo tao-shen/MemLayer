@@ -68,7 +68,13 @@ if (typeof window === 'undefined') {
   });
 } else {
   (async function () {
-    if (window.crossOriginIsolated !== false) return;
+    if (window.crossOriginIsolated !== false) {
+      // If we are isolated, clear the flag
+      try {
+        window.sessionStorage.removeItem('coiReloaded');
+      } catch (e) { }
+      return;
+    }
 
     // Active Killer: Unregister the old broken worker if present
     try {
@@ -109,9 +115,4 @@ if (typeof window === 'undefined') {
         window.location.reload();
     }
   })();
-} else {
-  // If we are isolated, clear the flag
-  try {
-    window.sessionStorage.removeItem('coiReloaded');
-  } catch (e) { }
 }
