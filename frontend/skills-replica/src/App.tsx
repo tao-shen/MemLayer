@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
@@ -9,16 +10,70 @@ import { FAQ } from './components/home/FAQ';
 import { AuthModal } from './components/auth/AuthModal';
 import { CartDrawer } from './components/common/CartDrawer';
 import { DocsModal } from './components/common/DocsModal';
+import { SkillCreatorPage } from './pages/SkillCreatorPage';
+import { MySkillsLibrary } from './components/skill-creator/MySkillsLibrary';
+import { SkillExecutor } from './components/skill-creator/SkillExecutor';
+import type { Skill } from './types/skill-creator';
 
-function App() {
+function HomePage({
+  user,
+  cart,
+  onToggleCart,
+  onOpenAuth,
+  onOpenCart,
+  onOpenDocs,
+}: any) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  const handleSearchFocus = () => {
+    document.getElementById('search-input')?.focus();
+    document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleCategoryScroll = () => {
+    document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <Layout
+      onOpenAuth={onOpenAuth}
+      onOpenCart={onOpenCart}
+      user={user}
+      cartCount={cart.size}
+      onNavFind={handleSearchFocus}
+      onNavCd={handleCategoryScroll}
+      onNavMan={onOpenDocs}
+    >
+      <Hero onOpenDocs={onOpenDocs} />
+      <Categories onSelectCategory={(cat) => {
+        setCategoryFilter(cat);
+        setSearchQuery('');
+        document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
+      }} />
+      <SkillsGrid
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        cart={cart}
+        onToggleCart={onToggleCart}
+      />
+      <ExternalResources />
+      <FAQ />
+    </Layout>
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
 
   const [user, setUser] = useState<any>(null);
   const [cart, setCart] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [executingSkill, setExecutingSkill] = useState<Skill | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,44 +106,47 @@ function App() {
 
   const handleClearCart = () => setCart(new Set());
 
-  // Navigation Handlers
-  const handleSearchFocus = () => {
-    document.getElementById('search-input')?.focus();
-    document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleCategoryScroll = () => {
-    document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <>
-      <Layout
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onOpenCart={() => setIsCartOpen(true)}
-        user={user}
-        cartCount={cart.size}
-        onNavFind={handleSearchFocus}
-        onNavCd={handleCategoryScroll}
-        onNavMan={() => setIsDocsOpen(true)}
-      >
-        <Hero onOpenDocs={() => setIsDocsOpen(true)} />
-        <Categories onSelectCategory={(cat) => {
-          setCategoryFilter(cat);
-          setSearchQuery(''); // Reset search when picking category usually
-          document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
-        }} />
-        <SkillsGrid
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          cart={cart}
-          onToggleCart={handleAddToCart}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              user={user}
+              cart={cart}
+              onToggleCart={handleAddToCart}
+              onOpenAuth={() => setIsAuthOpen(true)}
+              onOpenCart={() => setIsCartOpen(true)}
+              onOpenDocs={() => setIsDocsOpen(true)}
+            />
+          }
         />
-        <ExternalResources />
-        <FAQ />
-      </Layout>
+        <Route
+          path="/skills/create"
+          element={
+            <SkillCreatorPage
+              user={user}
+              onComplete={(skill) => {
+                navigate('/skills/library');
+              }}
+              onCancel={() => navigate('/')}
+            />
+          }
+        />
+        <Route
+          path="/skills/library"
+          element={
+            <div className="min-h-screen bg-gray-50 py-12 px-4">
+              <MySkillsLibrary
+                user={user}
+                onCreateNew={() => navigate('/skills/create')}
+                onUseSkill={(skill) => setExecutingSkill(skill)}
+              />
+            </div>
+          }
+        />
+      </Routes>
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
@@ -104,7 +162,22 @@ function App() {
         isOpen={isDocsOpen}
         onClose={() => setIsDocsOpen(false)}
       />
+
+      {executingSkill && (
+        <SkillExecutor
+          skill={executingSkill}
+          onClose={() => setExecutingSkill(null)}
+        />
+      )}
     </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

@@ -1,4 +1,5 @@
-import { ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
+import { ShoppingBag, User as UserIcon, LogOut, Plus, Library } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 
 interface HeaderProps {
@@ -12,15 +13,19 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onNavCd, onNavMan }: HeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-pink-200 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
         {/* Logo Area */}
         <div className="flex items-center gap-2 font-mono text-sm md:text-base">
-          <span className="text-2xl leading-none">🍬</span>
-          <span className="font-bold text-text-main font-candy text-lg">
-            ~/ Candy-Shop
-          </span>
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <span className="text-2xl leading-none">🍬</span>
+            <span className="font-bold text-text-main font-candy text-lg">
+              ~/ Candy-Shop
+            </span>
+          </button>
           <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -44,6 +49,25 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
             <span className="text-secondary">$</span>
             <span className="group-hover:translate-x-0.5 transition-transform">man recipes</span>
           </button>
+          
+          {user && (
+            <>
+              <button 
+                onClick={() => navigate('/skills/create')} 
+                className="hover:text-primary transition-colors flex items-center gap-2 group"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="group-hover:translate-x-0.5 transition-transform">创建技能</span>
+              </button>
+              <button 
+                onClick={() => navigate('/skills/library')} 
+                className="hover:text-primary transition-colors flex items-center gap-2 group"
+              >
+                <Library className="w-4 h-4" />
+                <span className="group-hover:translate-x-0.5 transition-transform">我的技能</span>
+              </button>
+            </>
+          )}
         </nav>
 
         {/* Auth / Cart */}

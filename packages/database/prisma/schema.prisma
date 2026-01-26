@@ -182,3 +182,70 @@ model ExtractionJob {
   @@index([createdAt(sort: Desc)])
   @@map("extraction_jobs")
 }
+
+// Skill Creator: Skills
+model Skill {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  name            String   @db.VarChar(255)
+  description     String?  @db.Text
+  category        String   @db.VarChar(50)
+  icon            String?  @db.VarChar(10)
+  color           String?  @db.VarChar(50)
+  config          Json     @default("{}")
+  sourceFiles     String[] @map("source_files")
+  analysisContext Json?    @map("analysis_context")
+  installCommand  String?  @map("install_command") @db.Text
+  popularity      Int      @default(0)
+  status          String   @default("draft") @db.VarChar(20)
+  isPublic        Boolean  @default(false) @map("is_public")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  lastUsedAt      DateTime? @map("last_used_at") @db.Timestamp(6)
+
+  executions SkillExecution[]
+
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("skills")
+}
+
+// Skill Creator: Uploaded files
+model UploadedFile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  fileName    String   @map("file_name") @db.VarChar(255)
+  fileType    String?  @map("file_type") @db.VarChar(50)
+  fileSize    Int?     @map("file_size")
+  filePath    String   @map("file_path") @db.Text
+  contentHash String?  @map("content_hash") @db.VarChar(64)
+  status      String   @default("uploaded") @db.VarChar(20)
+  uploadedAt  DateTime @default(now()) @map("uploaded_at") @db.Timestamp(6)
+
+  @@index([userId])
+  @@index([status])
+  @@map("uploaded_files")
+}
+
+// Skill Creator: Skill executions
+model SkillExecution {
+  id         String   @id @default(uuid()) @db.Uuid
+  skillId    String   @map("skill_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  input      String   @db.Text
+  output     String?  @db.Text
+  status     String   @db.VarChar(20)
+  error      String?  @db.Text
+  executedAt DateTime @default(now()) @map("executed_at") @db.Timestamp(6)
+  duration   Int?     // milliseconds
+  tokensUsed Int?     @map("tokens_used")
+
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+  @@index([userId])
+  @@index([executedAt(sort: Desc)])
+  @@map("skill_executions")
+}

@@ -1,0 +1,127 @@
+import { Loader2, FileText, Brain, Sparkles, CheckCircle } from 'lucide-react';
+import type { AnalysisStatus } from '../../types/skill-creator';
+
+interface AnalysisProgressProps {
+  status: AnalysisStatus['status'];
+  progress: number;
+  currentFile?: string;
+  message: string;
+}
+
+export function AnalysisProgress({ status, progress, currentFile, message }: AnalysisProgressProps) {
+  const steps = [
+    { key: 'uploading', label: '上传文件', icon: FileText },
+    { key: 'extracting', label: '提取内容', icon: FileText },
+    { key: 'analyzing', label: 'AI 分析', icon: Brain },
+    { key: 'generating', label: '生成技能', icon: Sparkles },
+  ];
+
+  const currentStepIndex = steps.findIndex(s => s.key === status);
+
+  return (
+    <div className="w-full max-w-2xl mx-auto space-y-6">
+      {/* Progress Bar */}
+      <div className="relative">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="absolute -top-1 right-0 text-xs font-mono text-gray-500">
+          {progress}%
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="flex items-center justify-between">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isActive = index === currentStepIndex;
+          const isComplete = index < currentStepIndex;
+          const isPending = index > currentStepIndex;
+
+          return (
+            <div key={step.key} className="flex flex-col items-center gap-2 flex-1">
+              <div
+                className={`
+                  w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
+                  ${isActive ? 'bg-pink-500 text-white scale-110' : ''}
+                  ${isComplete ? 'bg-green-500 text-white' : ''}
+                  ${isPending ? 'bg-gray-200 text-gray-400' : ''}
+                `}
+              >
+                {isComplete ? (
+                  <CheckCircle className="w-6 h-6" />
+                ) : isActive ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <Icon className="w-6 h-6" />
+                )}
+              </div>
+              <span
+                className={`
+                  text-xs font-medium text-center
+                  ${isActive ? 'text-pink-600' : ''}
+                  ${isComplete ? 'text-green-600' : ''}
+                  ${isPending ? 'text-gray-400' : ''}
+                `}
+              >
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Status Message */}
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div className="flex items-start gap-3">
+          <Loader2 className="w-5 h-5 text-pink-500 animate-spin flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-700 mb-1">{message}</p>
+            {currentFile && (
+              <p className="text-xs text-gray-500 font-mono">
+                正在处理: {currentFile}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Fun Loading Messages */}
+      <div className="text-center">
+        <p className="text-xs text-gray-400 italic">
+          {getLoadingMessage(status)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function getLoadingMessage(status: string): string {
+  const messages: Record<string, string[]> = {
+    uploading: [
+      '正在传送你的文件到云端...',
+      '文件上传中，请稍候...',
+    ],
+    extracting: [
+      '正在阅读你的文件内容...',
+      'AI 正在理解你的文档...',
+      '提取关键信息中...',
+    ],
+    analyzing: [
+      'AI 正在深度分析你的专业领域...',
+      '识别你的技能和经验中...',
+      '这可能需要一点时间，请耐心等待...',
+    ],
+    generating: [
+      '正在为你量身定制技能配置...',
+      '生成专属的 AI 助手...',
+      '马上就好了...',
+    ],
+  };
+
+  const statusMessages = messages[status] || ['处理中...'];
+  return statusMessages[Math.floor(Math.random() * statusMessages.length)];
+}

@@ -7,6 +7,7 @@ import reflectionRoutes from './reflections';
 import managementRoutes from './management';
 import blockchainRoutes from './blockchain';
 import visualizationRoutes from './visualization';
+import skillRoutes from './skills';
 
 const router: Router = Router();
 
@@ -20,6 +21,9 @@ router.use('/agents/:agentId/management', managementRoutes);
 
 // Blockchain routes (standalone, not agent-specific)
 router.use('/blockchain', blockchainRoutes);
+
+// Skill creator routes
+router.use('/skills', skillRoutes);
 
 // Visualization routes
 router.use(visualizationRoutes);
