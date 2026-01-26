@@ -1,5 +1,6 @@
-/*! coi-serviceworker v0.1.7 - Guido Zuidhof, licensed under MIT */
-let coepCredentialless = false;
+/*! coi-serviceworker v0.1.7-patched - Guido Zuidhof, licensed under MIT */
+let coepCredentialless = true;
+console.log("COI: Configured with coepCredentialless =", coepCredentialless);
 if (typeof window === 'undefined') {
   self.addEventListener("install", () => self.skipWaiting());
   self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -86,9 +87,9 @@ if (typeof window === 'undefined') {
 
     let scriptSrc = window.document.currentScript?.src;
     if (!scriptSrc) {
-      const path = window.location.pathname;
-      const basePath = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
-      scriptSrc = `${window.location.origin}${basePath}coi-fixed.js`;
+      // Fallback for when currentScript is null (e.g. sub-routes on SPA)
+      // Explicitly point to the Service Worker at the root of the deployment
+      scriptSrc = `${window.location.origin}/TacitLayer/coi-fixed.js`;
     }
     const registration = await navigator.serviceWorker.register(scriptSrc).catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
