@@ -69,6 +69,21 @@ if (typeof window === 'undefined') {
   (async function () {
     if (window.crossOriginIsolated !== false) return;
 
+    // Active Killer: Unregister the old broken worker if present
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        if (reg.active && reg.active.scriptURL.includes("coi-serviceworker.js")) {
+          console.log("[COI] Unregistering stale worker:", reg.active.scriptURL);
+          await reg.unregister();
+          window.location.reload();
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("[COI] Failed to clear stale workers", e);
+    }
+
     const registration = await navigator.serviceWorker.register("/coi-fixed.js").catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
         console.log("COI Service Worker registered");
