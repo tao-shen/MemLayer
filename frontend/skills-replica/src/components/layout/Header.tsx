@@ -1,47 +1,53 @@
-import { Terminal } from 'lucide-react';
+import { ShoppingBag, User } from 'lucide-react';
 
-export function Header() {
+interface HeaderProps {
+  onOpenAuth: () => void;
+  user: any;
+}
+
+export function Header({ onOpenAuth, user }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur supports-[backdrop-filter]:bg-surface/60">
-      <div className="container flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
+    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm border-b border-primary/10">
+      <div className="container flex h-20 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
         {/* Logo Area */}
-        <div className="flex items-center gap-2 font-mono text-sm md:text-base">
-          <Terminal className="h-4 w-4 text-text-muted" />
-          <span className="font-bold text-text-main">
-            ~/ skillsmp
-          </span>
-          <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-success/10 border border-success/20">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-            </span>
-            <span className="text-[10px] font-medium text-success uppercase tracking-wider">Ready</span>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-full">
+            <div className="text-2xl pt-1">🍬</div>
           </div>
+          <span className="font-candy font-bold text-2xl text-primary tracking-wide">
+            Candy Shop
+          </span>
         </div>
 
-        {/* Navigation Links - Hidden on mobile, visible on md+ */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-mono text-text-muted">
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
-            <span className="text-syntax-keyword">$</span>
-            <span className="group-hover:translate-x-0.5 transition-transform">ai --search</span>
-          </a>
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
-             <span className="text-syntax-keyword">$</span>
-            <span className="group-hover:translate-x-0.5 transition-transform">cd /categories</span>
-          </a>
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
-             <span className="text-syntax-keyword">$</span>
-            <span className="group-hover:translate-x-0.5 transition-transform">man docs</span>
-          </a>
+        {/* Navigation - could add later if needed */}
+        <nav className="hidden md:flex items-center gap-8 font-body font-bold text-text-muted">
+          <a href="#" className="hover:text-primary transition-colors">Gummies</a>
+          <a href="#" className="hover:text-primary transition-colors">Chocolate</a>
+          <a href="#" className="hover:text-primary transition-colors">Hard Candy</a>
         </nav>
 
-        {/* Auth / Actions */}
+        {/* Auth / Cart */}
         <div className="flex items-center gap-4">
-           {/* Mobile Menu Button could go here */}
-           
-           <button className="hidden sm:flex items-center gap-2 px-4 py-1.5 text-sm font-mono font-medium text-primary border border-primary/20 rounded hover:bg-primary/5 transition-colors">
-              <span className="text-syntax-keyword">$</span> Sign In
-           </button>
+          <button className="relative p-2 text-text-muted hover:text-primary transition-colors">
+            <ShoppingBag className="w-6 h-6" />
+            <span className="absolute top-0 right-0 w-4 h-4 bg-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
+              3
+            </span>
+          </button>
+
+          {user ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-secondary/10 text-secondary rounded-full font-candy text-sm hover:bg-secondary/20 cursor-pointer">
+              <User className="w-4 h-4" />
+              <span>My Profile</span>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="btn-candy bg-primary text-white hover:bg-pink-600"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>

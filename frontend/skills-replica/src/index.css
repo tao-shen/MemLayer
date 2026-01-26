@@ -1,9 +1,8 @@
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
-@import '@fontsource/fira-code/400.css';
-@import '@fontsource/fira-code/500.css';
-@import '@fontsource/fira-code/600.css';
+@import '@fontsource/fredoka/400.css';
+@import '@fontsource/fredoka/600.css';
+@import '@fontsource/quicksand/400.css';
+@import '@fontsource/quicksand/500.css';
+@import '@fontsource/quicksand/600.css';
 
 @tailwind base;
 @tailwind components;
@@ -11,15 +10,14 @@
 
 @layer base {
   body {
-    @apply bg-background text-text-main font-mono antialiased;
-    /* Optional grid pattern */
-    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-    background-size: 24px 24px;
+    @apply bg-background text-text-main font-body antialiased selection:bg-primary/30;
+      background-image: radial-gradient(#fbcfe8 2px, transparent 2px);
+      background-size: 32px 32px;
   }
 }
 
-@layer utilities {
-  .window-shadow {
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 4px 6px -1px rgba(0,0,0,0.1);
+@layer components {
+  .btn-candy {
+    @apply px-6 py-2 rounded-full font-candy font-bold transition-all transform hover:scale-105 active:scale-95 shadow-candy;
   }
 }

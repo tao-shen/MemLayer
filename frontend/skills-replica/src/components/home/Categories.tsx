@@ -1,47 +1,27 @@
-import { Folder, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'Research', count: 432, exports: ['browser', 'paper-qa', 'summarize'] },
-  { name: 'Coding', count: 891, exports: ['git-ops', 'review', 'test-gen'] },
-  { name: 'Productivity', count: 1205, exports: ['calendar', 'email', 'notion'] },
-  { name: 'Data', count: 567, exports: ['sql', 'csv', 'visualization'] },
-  { name: 'Creative', count: 234, exports: ['image-gen', 'video', 'music'] },
-  { name: 'Finance', count: 123, exports: ['crypto', 'stripe', 'stocks'] },
+  { name: 'Gummies', count: 120, color: 'bg-red-50 text-red-500' },
+  { name: 'Chocolates', count: 85, color: 'bg-amber-50 text-amber-700' },
+  { name: 'Hard Candy', count: 200, color: 'bg-purple-50 text-purple-600' },
+  { name: 'Licorice', count: 45, color: 'bg-slate-50 text-slate-700' },
+  { name: 'Sugar Free', count: 30, color: 'bg-green-50 text-green-600' },
+  { name: 'Bundles', count: 12, color: 'bg-pink-50 text-pink-500' },
 ];
 
 export function Categories() {
   return (
-    <section className="py-20 bg-gray-50 border-t border-border">
+    <section className="py-20">
       <div className="container max-w-7xl mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-8 font-sans flex items-center gap-3">
-          <Folder className="w-6 h-6 text-primary" />
-          <span>Directories</span>
-        </h2>
+        <h2 className="text-3xl font-candy text-text-main mb-8">Shop by Category</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {CATEGORIES.map((cat, i) => (
-            <div key={i} className="group bg-surface p-6 rounded-xl border border-border shadow-sm hover:shadow-window transition-all cursor-pointer">
-              <div className="font-mono text-sm">
-                <div className="text-text-muted mb-2">// {cat.count} modules available</div>
-                <div className="text-primary mb-1">
-                  "{cat.name.toLowerCase()}": <span className="text-text-main">{'{'}</span>
-                </div>
-                <div className="pl-4 text-text-muted">
-                  <span className="text-secondary">exports</span>: [
-                  {cat.exports.map((e, idx) => (
-                     <span key={idx}>
-                       <span className="text-syntax-string">'{e}'</span>
-                       {idx < cat.exports.length - 1 && ', '}
-                     </span>
-                  ))}
-                  ]
-                </div>
-                <div className="text-text-main">{'}'}</div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between text-xs font-mono text-text-muted group-hover:text-primary transition-colors">
-                <span>$ cd ./{cat.name.toLowerCase()} && ls</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            <div key={i} className={`p-6 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-transform hover:scale-105 ${cat.color} bg-opacity-50`}>
+              <div className="font-candy text-lg font-bold mb-1">{cat.name}</div>
+              <div className="text-xs opacity-70 mb-3">{cat.count} items</div>
+              <div className="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center">
+                <ArrowRight className="w-4 h-4" />
               </div>
             </div>
           ))}
