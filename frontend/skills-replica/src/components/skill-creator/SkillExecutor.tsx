@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Send, Loader2, Sparkles, Upload, FileCode, Terminal as TerminalIcon } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import { Terminal } from '../common/Terminal';
@@ -78,7 +78,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       }
       await refreshFiles(webContainer);
     } catch (err: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Upload failed: ${err.message}` }]);
+      setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: `Upload failed: ${err.message}` }]);
     } finally {
       setIsExecuting(false);
     }
@@ -88,7 +88,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     if (!input.trim() || !apiKey || !webContainer) return;
 
     const userMsg: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev: Message[]) => [...prev, userMsg]);
     setInput('');
     setIsExecuting(true);
     setActiveTab('chat'); // Switch to chat to see progress
@@ -97,7 +97,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     // Note: System Prompt is handled in runAgentStep, but we can augment it with Skill info if we modify runAgentStep
     // For now, we'll append Skill Context to the first user message or just rely on generic agent
 
-    const skillContext = `Current Skill: ${skill.name}\nDescription: ${skill.description}\nInstructions: ${skill.config?.systemPrompt || ''}\n\nTask: ${input}`;
+    // Removed unused skillContext variable
 
     // If it's the first message, prefix with skill context? 
     // Actually, let's just push the raw input, but maybe hint the agent about the skill in the system prompt.
@@ -114,7 +114,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       const context: AgentContext = {
         webContainer,
         apiKey,
-        onLog: (msg) => { } // Logs go to terminal automatically via pipe
+        onLog: (_msg: string) => { } // Logs go to terminal automatically via pipe
       };
 
       let currentHistory = newHistory;
@@ -122,12 +122,12 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       let response = await runAgentStep(currentHistory, context);
 
       while (response.stop_reason === 'tool_use') {
-        const toolUseContent = response.content.find(c => c.type === 'tool_use');
+        const toolUseContent = response.content.find((c: any) => c.type === 'tool_use');
         if (toolUseContent && toolUseContent.type === 'tool_use') {
           const assistantMsg: Anthropic.MessageParam = { role: 'assistant', content: response.content };
           currentHistory = [...currentHistory, assistantMsg];
 
-          setMessages(prev => [...prev, { role: 'assistant', content: `Executing: ${toolUseContent.name}...` }]);
+          setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: `Executing: ${toolUseContent.name}...` }]);
           setActiveTab('terminal'); // Auto-switch to terminal for tool output? Optional.
 
           const toolResult = await executeToolCall(toolUseContent, context);
@@ -144,10 +144,10 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         }
       }
 
-      const textContent = response.content.find(c => c.type === 'text');
+      const textContent = response.content.find((c: any) => c.type === 'text');
       if (textContent && textContent.type === 'text') {
         const assistantMsg: Message = { role: 'assistant', content: textContent.text };
-        setMessages(prev => [...prev, assistantMsg]);
+        setMessages((prev: Message[]) => [...prev, assistantMsg]);
         setAnthropicMessages([...currentHistory, { role: 'assistant', content: response.content }]);
       }
 

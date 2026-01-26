@@ -53,7 +53,7 @@ export const Terminal = ({ webContainer }: TerminalProps) => {
         });
         
         shellProcess.output.pipeTo(new WritableStream({
-            write(data) {
+          write(data: string) {
                 xtermRef.current!.write(data);
             }
         }));

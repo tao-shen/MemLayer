@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { WebContainer } from '@webcontainer/api';
 
-export interface AgentContext {
+export type AgentContext = {
   webContainer: WebContainer;
   apiKey: string;
   onLog: (message: string) => void;
