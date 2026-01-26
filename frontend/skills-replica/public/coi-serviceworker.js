@@ -28,7 +28,6 @@ if (typeof window === 'undefined') {
     }
     coepHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
 
-    event.respondWith(
     const fetchPromise = (r.mode === 'navigate')
       ? fetch(r)
       : fetch(r, {
