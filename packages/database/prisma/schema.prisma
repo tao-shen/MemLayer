@@ -17,8 +17,12 @@ model Agent {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  sessions     Session[]
-  memoryIndex  MemoryIndex[]
+  sessions          Session[]
+  memoryIndex       MemoryIndex[]
+  workflows         Workflow[]
+  behaviorStyles    BehaviorStyle[]
+  extractedMemories ExtractedMemory[]
+  rawData           RawData[]
 
   @@index([userId])
   @@index([createdAt(sort: Desc)])
@@ -75,4 +79,106 @@ model MemoryIndex {
   @@index([createdAt(sort: Desc)])
   @@index([accessedAt(sort: Desc)])
   @@map("memory_index")
+}
+
+// Vibe Agent: Workflow extraction
+model Workflow {
+  id          String   @id @default(uuid()) @db.Uuid
+  agentId     String   @map("agent_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  version     Int      @default(1)
+  graph       Json     // Workflow graph structure
+  metadata    Json     @default("{}")
+  statistics  Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([name])
+  @@index([version])
+  @@map("workflows")
+}
+
+// Vibe Agent: Behavior style extraction
+model BehaviorStyle {
+  id          String   @id @default(uuid()) @db.Uuid
+  agentId     String   @map("agent_id") @db.Uuid
+  version     Int      @default(1)
+  style       Json     // BehaviorStyle object
+  embedding   Json?    // Vector representation
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([version])
+  @@map("behavior_styles")
+}
+
+// Vibe Agent: Extracted memory
+model ExtractedMemory {
+  id          String   @id @default(uuid()) @db.Uuid
+  agentId     String   @map("agent_id") @db.Uuid
+  type        String   @db.VarChar(50) // factual, procedural, episodic, semantic
+  content     String   @db.Text
+  summary     String?  @db.Text
+  importance  Decimal  @db.Decimal(5, 2)
+  embedding   Json?    // Vector embedding
+  source      Json     // Source information
+  usage       Json     @default("{}")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([type])
+  @@index([importance(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("extracted_memories")
+}
+
+// Vibe Agent: Raw data for extraction
+model RawData {
+  id        String   @id @default(uuid()) @db.Uuid
+  agentId   String?  @map("agent_id") @db.Uuid
+  type      String   @db.VarChar(50) // conversation, code, document, log, api_call, feedback
+  content   Json     // Raw content
+  metadata  Json     @default("{}")
+  context   Json?
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  agent Agent? @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([type])
+  @@index([processed])
+  @@index([createdAt(sort: Desc)])
+  @@map("raw_data")
+}
+
+// Vibe Agent: Extraction jobs
+model ExtractionJob {
+  id          String   @id @default(uuid()) @db.Uuid
+  agentId     String?  @map("agent_id") @db.Uuid
+  status      String   @db.VarChar(50) // queued, processing, completed, failed
+  progress    Json     @default("{}") // { workflow: 0-100, behavior: 0-100, memory: 0-100 }
+  results     Json?    // Extraction results
+  errors      Json?    // Error messages
+  options     Json     @default("{}") // Extraction options
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamp(6)
+
+  @@index([agentId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("extraction_jobs")
 }
