@@ -57,14 +57,14 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
                 className="hover:text-primary transition-colors flex items-center gap-2 group"
               >
                 <Plus className="w-4 h-4" />
-                <span className="group-hover:translate-x-0.5 transition-transform">创建技能</span>
+                <span className="group-hover:translate-x-0.5 transition-transform">create skills</span>
               </button>
               <button 
                 onClick={() => navigate('/skills/library')} 
                 className="hover:text-primary transition-colors flex items-center gap-2 group"
               >
                 <Library className="w-4 h-4" />
-                <span className="group-hover:translate-x-0.5 transition-transform">我的技能</span>
+                <span className="group-hover:translate-x-0.5 transition-transform">my skills</span>
               </button>
             </>
           )}

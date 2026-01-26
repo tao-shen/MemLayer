@@ -125,24 +125,42 @@ function AppContent() {
         <Route
           path="/skills/create"
           element={
-            <SkillCreatorPage
+            <Layout
+              onOpenAuth={() => setIsAuthOpen(true)}
+              onOpenCart={() => setIsCartOpen(true)}
               user={user}
-              onComplete={() => {
-                navigate('/skills/library');
-              }}
-              onCancel={() => navigate('/')}
-            />
+              cartCount={cart.size}
+              onNavFind={() => {}}
+              onNavCd={() => {}}
+              onNavMan={() => setIsDocsOpen(true)}
+            >
+              <SkillCreatorPage
+                onComplete={() => {
+                  navigate('/skills/library');
+                }}
+                onCancel={() => navigate('/')}
+              />
+            </Layout>
           }
         />
         <Route
           path="/skills/library"
           element={
-            <div className="min-h-screen bg-gray-50 py-12 px-4">
+            <Layout
+              onOpenAuth={() => setIsAuthOpen(true)}
+              onOpenCart={() => setIsCartOpen(true)}
+              user={user}
+              cartCount={cart.size}
+              onNavFind={() => {}}
+              onNavCd={() => {}}
+              onNavMan={() => setIsDocsOpen(true)}
+            >
               <MySkillsLibrary
                 onCreateNew={() => navigate('/skills/create')}
                 onUseSkill={(skill) => setExecutingSkill(skill)}
+                onBack={() => navigate('/')}
               />
-            </div>
+            </Layout>
           }
         />
       </Routes>

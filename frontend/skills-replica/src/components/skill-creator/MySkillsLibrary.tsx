@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Play, Calendar, Filter } from 'lucide-react';
-import { apiClient } from '../../lib/api-client';
+import { Search, Plus, Trash2, Play, Calendar, Filter, ArrowLeft } from 'lucide-react';
+import { storageUtils } from '../../utils/storage';
 import type { Skill, SkillCategory } from '../../types/skill-creator';
 
 interface MySkillsLibraryProps {
   onCreateNew: () => void;
   onUseSkill: (skill: Skill) => void;
+  onBack?: () => void;
 }
 
 const CATEGORY_LABELS: Record<SkillCategory, string> = {
@@ -17,39 +18,47 @@ const CATEGORY_LABELS: Record<SkillCategory, string> = {
   Custom: 'Custom',
 };
 
-export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProps) {
+export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLibraryProps) {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     loadSkills();
   }, [categoryFilter]);
 
-  const loadSkills = async () => {
+  const loadSkills = () => {
     setIsLoading(true);
     try {
-      const data = await apiClient.getUserSkills({
-        category: categoryFilter as SkillCategory | undefined,
-        searchQuery: searchQuery || undefined,
-      });
-      setSkills(data);
+      const data = storageUtils.getSkills();
+      let filtered = data;
+      
+      if (categoryFilter) {
+        filtered = data.filter((s: Skill) => s.category === categoryFilter);
+      }
+      
+      setSkills(filtered);
+      setFeedback(null);
     } catch (error) {
       console.error('Failed to load skills:', error);
+      setFeedback({ type: 'error', message: 'Failed to load skills' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (skillId: string) => {
+  const handleDelete = (skillId: string) => {
     try {
-      await apiClient.deleteSkill(skillId);
+      storageUtils.deleteSkill(skillId);
       setSkills(skills.filter(s => s.id !== skillId));
       setDeleteConfirm(null);
+      setFeedback({ type: 'success', message: 'Skill deleted successfully' });
     } catch (error) {
       console.error('Failed to delete skill:', error);
+      setFeedback({ type: 'error', message: 'Failed to delete skill' });
     }
   };
 
@@ -66,11 +75,21 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
     <div className="w-full max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Skills Library</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage all your created AI skills
-          </p>
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Skills Library</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage all your created AI skills
+            </p>
+          </div>
         </div>
         <button
           onClick={onCreateNew}
@@ -80,6 +99,15 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
           Create New Skill
         </button>
       </div>
+
+      {/* Feedback Messages */}
+      {feedback && (
+        <div className={`p-4 rounded-lg ${feedback.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+          <p className={`text-sm ${feedback.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+            {feedback.message}
+          </p>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">

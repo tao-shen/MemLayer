@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X, Send, Loader2, Clock, Sparkles } from 'lucide-react';
-import { apiClient } from '../../lib/api-client';
 import type { Skill, ExecutionHistory } from '../../types/skill-creator';
 
 interface SkillExecutorProps {
@@ -25,27 +24,25 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     const startTime = Date.now();
 
     try {
-      const result = await apiClient.executeSkill(skill.id, input);
+      // Simulate skill execution with mock response
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const duration = Date.now() - startTime;
+      const mockOutput = `Skill "${skill.name}" executed successfully.\n\nInput: ${input}\n\nProcessed with AI analysis.`;
 
-      if (result.status === 'success') {
-        setOutput(result.output);
-        
-        // Add to history
-        setHistory([
-          {
-            id: result.id,
-            input,
-            output: result.output,
-            timestamp: new Date(),
-            duration,
-          },
-          ...history,
-        ]);
-      } else {
-        setError(result.error || 'Execution failed');
-      }
+      setOutput(mockOutput);
+      
+      // Add to history
+      setHistory([
+        {
+          id: `exec-${Date.now()}`,
+          input,
+          output: mockOutput,
+          timestamp: new Date(),
+          duration,
+        },
+        ...history,
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Execution failed');
     } finally {
