@@ -84,7 +84,7 @@ if (typeof window === 'undefined') {
       console.error("[COI] Failed to clear stale workers", e);
     }
 
-    const registration = await navigator.serviceWorker.register("coi-fixed.js").catch((e) => console.error("COI Service Worker failed to register:", e));
+    const registration = await navigator.serviceWorker.register(window.document.currentScript.src).catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
         console.log("COI Service Worker registered");
         window.location.reload();
