@@ -62,7 +62,7 @@ function HomePage({
         cart={cart}
         onToggleCart={onToggleCart}
         user={user}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={onOpenAuth}
       />
       <ExternalResources />
       <FAQ />
