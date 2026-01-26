@@ -1,5 +1,6 @@
-/*! coi-serviceworker v0.1.7 - Guido Zuidhof, licensed under MIT */
+/*! coi-serviceworker v0.1.7-patched - Guido Zuidhof, licensed under MIT */
 let coepCredentialless = true;
+console.log("COI: Configured with coepCredentialless =", coepCredentialless);
 if (typeof window === 'undefined') {
   self.addEventListener("install", () => self.skipWaiting());
   self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
