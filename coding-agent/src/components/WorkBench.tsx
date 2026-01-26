@@ -16,6 +16,7 @@ export const WorkBench = () => {
     const [input, setInput] = useState('');
     const [apiKey, setApiKey] = useState(localStorage.getItem('anthropic_api_key') || '');
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Anthropic message history
     const [anthropicMessages, setAnthropicMessages] = useState<Anthropic.MessageParam[]>([]);
@@ -34,15 +35,46 @@ export const WorkBench = () => {
         localStorage.setItem('anthropic_api_key', key);
     };
 
-    const handleSend = async () => {
-        if (!input.trim() || !apiKey || !webContainer) return;
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files.length || !webContainer) return;
 
-        const userMsg: Message = { role: 'user', content: input };
+        const file = e.target.files[0];
+        const content = await file.text();
+        const path = file.name;
+
+        try {
+            await webContainer.fs.writeFile(path, content);
+            const msg = `Uploaded file: ${path}`;
+            console.log(msg);
+            setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
+            // Inform the agent that a file is available
+            const systemNote: Anthropic.MessageParam = { role: 'user', content: `[System] User uploaded file '${path}'. It is available in the current directory.` };
+            setAnthropicMessages(prev => [...prev, systemNote]);
+        } catch (err: any) {
+            console.error('Upload failed', err);
+            setMessages(prev => [...prev, { role: 'assistant', content: `Failed to upload ${path}: ${err.message}` }]);
+        }
+    };
+
+    // Simple Skill Injection
+    const runSkill = (skillPrompt: string) => {
+        if (!input && !skillPrompt) return;
+        const msg = skillPrompt || input;
+
+        // Treating skill prompt as a user message for now, but prepended with context
+        handleSend(msg);
+    };
+
+    const handleSend = async (manualInput?: string) => {
+        const textToSend = manualInput || input;
+        if (!textToSend.trim() || !apiKey || !webContainer) return;
+
+        const userMsg: Message = { role: 'user', content: textToSend };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setLoading(true);
 
-        const newHistory: Anthropic.MessageParam[] = [...anthropicMessages, { role: 'user', content: input }];
+        const newHistory: Anthropic.MessageParam[] = [...anthropicMessages, { role: 'user', content: textToSend }];
         setAnthropicMessages(newHistory);
 
         try {
@@ -134,6 +166,26 @@ export const WorkBench = () => {
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         disabled={loading || !apiKey}
                     />
+                    <div className="flex justify-between mt-2 text-xs">
+                        <div className="flex gap-2">
+                            <button
+                                className="text-gray-400 hover:text-white flex items-center gap-1"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <span>📄 Upload File</span>
+                            </button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileUpload}
+                            />
+                        </div>
+                        <div className="text-gray-500">
+                            {/* Placeholder for Skills UI */}
+                            <span>✨ Skills (Drop SKILL.md here soon)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="w-2/3 flex flex-col bg-[#1e1e1e]">
