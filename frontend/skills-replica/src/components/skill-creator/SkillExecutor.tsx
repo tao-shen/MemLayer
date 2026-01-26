@@ -4,7 +4,7 @@ import type { Skill } from '../../types/skill-creator';
 import { Terminal } from '../common/Terminal';
 import { getWebContainerInstance } from '../../lib/webcontainer';
 import { WebContainer } from '@webcontainer/api';
-import { runAgentStep, AgentContext, executeToolCall } from '../../lib/agent';
+import { runAgentStep, type AgentContext, executeToolCall } from '../../lib/agent';
 import Anthropic from '@anthropic-ai/sdk';
 
 interface SkillExecutorProps {
