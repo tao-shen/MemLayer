@@ -36,7 +36,7 @@ if (typeof window === 'undefined') {
         integrity: r.integrity,
         keepalive: r.keepalive,
         method: r.method,
-        mode: r.mode,
+        mode: r.mode === 'navigate' ? undefined : r.mode,
         redirect: r.redirect,
         referrer: r.referrer,
         referrerPolicy: r.referrerPolicy,
