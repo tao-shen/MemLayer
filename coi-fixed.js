@@ -94,7 +94,24 @@ if (typeof window === 'undefined') {
     const registration = await navigator.serviceWorker.register(scriptSrc).catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
         console.log("COI Service Worker registered");
+
+      // Loop protection
+      try {
+        if (window.sessionStorage.getItem('coiReloaded')) {
+          console.error("COI: Reloaded but still not isolated. Stopping loop.");
+          return;
+        }
+        window.sessionStorage.setItem('coiReloaded', 'true');
+      } catch (e) {
+        // checking sessionStorage might fail in some contexts
+      }
+
         window.location.reload();
     }
   })();
+} else {
+  // If we are isolated, clear the flag
+  try {
+    window.sessionStorage.removeItem('coiReloaded');
+  } catch (e) { }
 }
