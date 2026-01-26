@@ -6,8 +6,13 @@ import { Terminal } from '../common/Terminal';
 import { getWebContainerInstance } from '../../lib/webcontainer';
 import { WebContainer } from '@webcontainer/api';
 import { runAgentStep, executeToolCall } from '../../lib/agent';
-import type { AgentContext } from '../../lib/agent';
 import Anthropic from '@anthropic-ai/sdk';
+
+interface AgentContext {
+  webContainer: WebContainer;
+  apiKey: string;
+  onLog: (message: string) => void;
+}
 
 interface SkillExecutorProps {
   skill: Skill;
