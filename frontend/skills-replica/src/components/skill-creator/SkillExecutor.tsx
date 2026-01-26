@@ -1,3 +1,4 @@
+// Trigger deployment refresh
 import { useState, useEffect } from 'react';
 import { X, Send, Loader2, Sparkles, Upload, FileCode, Terminal as TerminalIcon } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
