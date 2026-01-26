@@ -1,0 +1,53 @@
+import { Header } from './Header';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  onOpenAuth: () => void;
+  onOpenCart: () => void;
+  user: any;
+  cartCount: number;
+  onNavFind: () => void;
+  onNavCd: () => void;
+  onNavMan: () => void;
+}
+
+export function Layout({
+  children,
+  onOpenAuth,
+  onOpenCart,
+  user,
+  cartCount,
+  onNavFind,
+  onNavCd,
+  onNavMan
+}: LayoutProps) {
+  return (
+    <div className="flex min-h-screen flex-col font-mono text-text-main">
+      <Header
+        onOpenAuth={onOpenAuth}
+        onOpenCart={onOpenCart}
+        user={user}
+        cartCount={cartCount}
+        onNavFind={onNavFind}
+        onNavCd={onNavCd}
+        onNavMan={onNavMan}
+      />
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-8 md:py-12">
+        {children}
+      </main>
+      
+      {/* Simple Footer Placeholder */}
+      <footer className="w-full border-t border-pink-200 py-6 mt-12 bg-white/50 relative">
+        <div className="container max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-text-muted font-mono">
+          <p className="font-mono">$ echo "Made with sugar, spice, and AI"</p>
+          <button 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="hover:text-primary transition-colors font-mono"
+          >
+            $ cd top
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}
