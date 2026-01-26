@@ -23,8 +23,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
-          // Dynamic redirect to current origin to fix the localhost:3000 vs 5173 mismatch
-          redirectTo: `${window.location.origin}/`,
+          // Dynamic redirect: Appends index.html to ensure GitHub Pages finds the file
+          // e.g. https://user.github.io/repo/index.html
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}index.html`, 
         }
       });
       if (error) throw error;
