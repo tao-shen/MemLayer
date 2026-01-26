@@ -59,7 +59,7 @@ export const Terminal = ({ webContainer }: TerminalProps) => {
         }));
 
         const input = shellProcess.input.getWriter();
-        xtermRef.current!.onData((data) => {
+      xtermRef.current!.onData((data: string) => {
             input.write(data);
         });
     };
