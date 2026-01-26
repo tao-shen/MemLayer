@@ -46,7 +46,67 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         }
         
         setSkills(filtered as any[]);
+      } else if (activeTab === 'all') {
+        // Load all skills: created + purchased + liked
+        const createdAndPurchased = storageUtils.getSkills();
+        const likedIds = storageUtils.getLikes();
+        const likedSkills = SKILLS_DATA.filter(skill => likedIds.includes(skill.id));
+        
+        // Convert liked skills to Skill format for consistency
+        const likedSkillsFormatted = likedSkills.map(skill => ({
+          id: skill.id,
+          userId: '',
+          name: skill.name,
+          description: skill.description,
+          category: skill.category as SkillCategory,
+          icon: skill.icon,
+          color: skill.color,
+          config: {
+            capabilities: [],
+            systemPrompt: '',
+            parameters: skill.config,
+            tools: []
+          },
+          sourceFiles: [],
+          analysisContext: {
+            workDomain: [],
+            technicalSkills: [],
+            experiencePatterns: [],
+            keyTopics: [],
+            suggestedName: skill.name,
+            suggestedDescription: skill.description,
+            suggestedCategory: skill.category as SkillCategory,
+            suggestedCapabilities: [],
+            filesSummary: [],
+            confidence: 0,
+            systemPrompt: '',
+          },
+          installCommand: skill.installCommand,
+          popularity: skill.popularity,
+          status: 'active' as const,
+          isPublic: false,
+          origin: 'store' as const, // Liked skills are from store
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+        
+        // Combine all skills
+        let allSkills: Skill[] = [...createdAndPurchased, ...likedSkillsFormatted];
+        
+        // Remove duplicates (in case a skill is both purchased and liked)
+        const uniqueSkills = Array.from(
+          new Map(allSkills.map(skill => [skill.id, skill])).values()
+        ) as Skill[];
+        
+        if (categoryFilter) {
+          allSkills = uniqueSkills.filter((s: Skill) => s.category === categoryFilter);
+        } else {
+          allSkills = uniqueSkills;
+        }
+        
+        setSkills(allSkills);
       } else {
+        // Created or Purchased tab
         const data = storageUtils.getSkills();
         let filtered = data;
         
@@ -54,9 +114,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           filtered = filtered.filter((s: Skill) => s.category === categoryFilter);
         }
 
-        if (activeTab !== 'all') {
-          filtered = filtered.filter((s: Skill) => s.origin === activeTab);
-        }
+        filtered = filtered.filter((s: Skill) => s.origin === activeTab);
         
         setSkills(filtered);
       }

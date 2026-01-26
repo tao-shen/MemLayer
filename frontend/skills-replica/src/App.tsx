@@ -175,8 +175,19 @@ function AppContent() {
               onOpenCart={() => setIsCartOpen(true)}
               user={user}
               cartCount={cart.size}
-              onNavFind={() => {}}
-              onNavCd={() => {}}
+              onNavFind={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('search-input')?.focus();
+                  document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              onNavCd={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               onNavMan={() => setIsDocsOpen(true)}
             >
               <SkillCreationPage
@@ -196,8 +207,19 @@ function AppContent() {
               onOpenCart={() => setIsCartOpen(true)}
               user={user}
               cartCount={cart.size}
-              onNavFind={() => {}}
-              onNavCd={() => {}}
+              onNavFind={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('search-input')?.focus();
+                  document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              onNavCd={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               onNavMan={() => setIsDocsOpen(true)}
             >
               <MySkillsLibrary
