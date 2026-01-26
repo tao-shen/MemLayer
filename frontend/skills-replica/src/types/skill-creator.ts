@@ -31,6 +31,9 @@ export interface Skill {
   // Status
   status: 'draft' | 'active' | 'archived';
   isPublic: boolean;
+
+  // Origin
+  origin?: 'created' | 'store';
 }
 
 export type SkillCategory = 

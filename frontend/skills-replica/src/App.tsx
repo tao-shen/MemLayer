@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
@@ -13,7 +13,9 @@ import { DocsModal } from './components/common/DocsModal';
 import { SkillCreationPage } from './pages/SkillCreationPage';
 import { MySkillsLibrary } from './components/skill-creator/MySkillsLibrary';
 import { SkillExecutor } from './components/skill-creator/SkillExecutor';
-import type { Skill } from './types/skill-creator';
+import type { Skill, SkillCategory } from './types/skill-creator';
+import { storageUtils } from './utils/storage';
+import { SKILLS_DATA } from './data/skillsData';
 
 function HomePage({
   user,
@@ -106,6 +108,40 @@ function AppContent() {
 
   const handleClearCart = () => setCart(new Set());
 
+  const handlePurchase = () => {
+    // Convert store skills to user skills
+    const storeSkills = SKILLS_DATA.filter(skill => cart.has(skill.id));
+
+    storeSkills.forEach(storeSkill => {
+      // Check if already owned
+      const existing = storageUtils.getSkills().find(s => s.name === storeSkill.name && s.origin === 'store');
+
+      if (!existing) {
+        storageUtils.saveSkill({
+          name: storeSkill.name,
+          description: storeSkill.description,
+          category: storeSkill.category as SkillCategory,
+          icon: storeSkill.icon,
+          color: storeSkill.color,
+          config: {
+            capabilities: [],
+            systemPrompt: '',
+            parameters: storeSkill.config,
+            tools: []
+          },
+          origin: 'store',
+          status: 'active',
+          sourceFiles: [],
+          installCommand: storeSkill.installCommand
+        });
+      }
+    });
+
+    setCart(new Set());
+    setIsCartOpen(false);
+    navigate('/skills/library');
+  };
+
   return (
     <>
       <Routes>
@@ -163,6 +199,8 @@ function AppContent() {
             </Layout>
           }
         />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
@@ -173,6 +211,7 @@ function AppContent() {
         cartIds={cart}
         onRemove={handleRemoveFromCart}
         onClear={handleClearCart}
+        onPurchase={handlePurchase}
       />
 
       <DocsModal

@@ -23,12 +23,13 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'store'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     loadSkills();
-  }, [categoryFilter]);
+  }, [categoryFilter, activeTab]);
 
   const loadSkills = () => {
     setIsLoading(true);
@@ -37,7 +38,11 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
       let filtered = data;
       
       if (categoryFilter) {
-        filtered = data.filter((s: Skill) => s.category === categoryFilter);
+        filtered = filtered.filter((s: Skill) => s.category === categoryFilter);
+      }
+
+      if (activeTab !== 'all') {
+        filtered = filtered.filter((s: Skill) => s.origin === activeTab);
       }
       
       setSkills(filtered);
@@ -139,6 +144,37 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Tabs */}
+      < div className="flex items-center gap-1 border-b border-gray-200" >
+        <button
+          onClick={() => { setActiveTab('all'); loadSkills(); }}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'all'
+              ? 'border-pink-500 text-pink-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          All Skills
+        </button>
+        <button
+          onClick={() => { setActiveTab('created'); loadSkills(); }}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'created'
+              ? 'border-pink-500 text-pink-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          Created
+        </button>
+        <button
+          onClick={() => { setActiveTab('store'); loadSkills(); }}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'store'
+              ? 'border-pink-500 text-pink-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          Purchased
+        </button>
       </div>
 
       {/* Skills Grid */}

@@ -8,9 +8,10 @@ interface CartDrawerProps {
   cartIds: Set<string>;
   onRemove: (id: string) => void;
   onClear: () => void;
+  onPurchase: () => void;
 }
 
-export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear }: CartDrawerProps) {
+export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear, onPurchase }: CartDrawerProps) {
   const [copied, setCopied] = useState(false);
 
   // Get full skill objects from IDs
@@ -123,6 +124,13 @@ export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear }: Cart
             >
               <Download className="w-5 h-5" />
               checkout --merge
+            </button>
+            <button 
+              onClick={onPurchase}
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold font-candy text-lg shadow-lg shadow-green-200 hover:from-green-600 hover:to-emerald-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <Check className="w-5 h-5" />
+              Complete Purchase
             </button>
             <button 
               onClick={onClear}

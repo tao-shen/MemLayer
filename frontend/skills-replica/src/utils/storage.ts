@@ -42,6 +42,7 @@ export const storageUtils = {
         popularity: skill.popularity || 0,
         status: skill.status || 'draft',
         isPublic: skill.isPublic || false,
+        origin: skill.origin || 'created',
         createdAt: skill.createdAt instanceof Date ? skill.createdAt : new Date(skill.createdAt || Date.now()),
         updatedAt: new Date(),
       };
