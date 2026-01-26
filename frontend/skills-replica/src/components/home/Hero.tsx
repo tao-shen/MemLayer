@@ -1,6 +1,10 @@
 import { Search, FileText, Code2, TrendingUp } from 'lucide-react';
 
-export function Hero() {
+interface HeroProps {
+  onOpenDocs: () => void;
+}
+
+export function Hero({ onOpenDocs }: HeroProps) {
   return (
     <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-32">
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
@@ -34,7 +38,10 @@ export function Hero() {
               <Search className="w-4 h-4" />
               Browse Treats
             </button>
-            <button className="h-12 px-6 bg-white border border-pink-200 text-text-main rounded-md font-mono font-medium hover:bg-pink-50 transition-colors flex items-center gap-2">
+            <button
+              onClick={onOpenDocs}
+              className="h-12 px-6 bg-white border border-pink-200 text-text-main rounded-md font-mono font-medium hover:bg-pink-50 transition-colors flex items-center gap-2"
+            >
               <FileText className="w-4 h-4 text-text-muted" />
               Menu.md
             </button>

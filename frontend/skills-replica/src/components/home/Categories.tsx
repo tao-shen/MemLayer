@@ -9,9 +9,9 @@ const CATEGORIES = [
   { name: 'Creative', count: 4, exports: ['image-gen', 'music', 'text-to-speech'] },
 ];
 
-export function Categories() {
+export function Categories({ onSelectCategory }: { onSelectCategory: (cat: string) => void }) {
   return (
-    <section className="py-20 bg-pink-50 border-t border-pink-200">
+    <section className="py-20 bg-pink-50 border-t border-pink-200" id="categories-section">
       <div className="container max-w-7xl mx-auto px-4">
         <h2 className="text-2xl font-bold mb-8 font-candy flex items-center gap-3 text-text-main">
           <Folder className="w-6 h-6 text-primary" />
@@ -20,7 +20,11 @@ export function Categories() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat, i) => (
-            <div key={i} className="group bg-white p-6 rounded-xl border border-pink-200 shadow-sm hover:shadow-candy transition-all cursor-pointer">
+            <div
+              key={i}
+              onClick={() => onSelectCategory(cat.name)}
+              className="group bg-white p-6 rounded-xl border border-pink-200 shadow-sm hover:shadow-candy transition-all cursor-pointer"
+            >
               <div className="font-mono text-sm">
                 <div className="text-pink-300 mb-2">// {cat.count} modules</div>
                 <div className="text-primary mb-1">

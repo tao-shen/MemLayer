@@ -1,18 +1,35 @@
-import { Search, Heart, Share2, MoreHorizontal } from 'lucide-react';
+import { Search, ShoppingBag, Check, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { SKILLS_DATA, type Skill } from '../../data/skillsData';
 import { SkillModal } from '../common/SkillModal';
 
-export function SkillsGrid() {
-  const [searchQuery, setSearchQuery] = useState('');
+interface SkillsGridProps {
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  categoryFilter: string | null;
+  setCategoryFilter: (c: string | null) => void;
+  cart: Set<string>;
+  onToggleCart: (id: string) => void;
+}
+
+export function SkillsGrid({
+  searchQuery,
+  setSearchQuery,
+  categoryFilter,
+  setCategoryFilter,
+  cart,
+  onToggleCart
+}: SkillsGridProps) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
   const filteredSkills = useMemo(() => {
-    return SKILLS_DATA.filter(skill =>
-      skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      skill.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+    return SKILLS_DATA.filter(skill => {
+      const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        skill.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter ? skill.category === categoryFilter : true;
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, categoryFilter]);
 
   return (
     <>
@@ -22,10 +39,20 @@ export function SkillsGrid() {
           {/* Section Header & Search */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
-              <h2 className="text-3xl font-candy font-bold mb-2 text-text-main">Freshly Baked Skills</h2>
-              <p className="text-text-muted font-mono">
-                $ ls ./inventory | grep "{searchQuery || '*'}"
-              </p>
+              <h2 className="text-3xl font-candy font-bold mb-2 text-text-main">
+                {categoryFilter ? `${categoryFilter} Modules` : 'Freshly Baked Skills'}
+              </h2>
+              <div className="flex items-center gap-2 text-text-muted font-mono text-sm">
+                <span>$ ls ./inventory</span>
+                {categoryFilter && (
+                  <button
+                    onClick={() => setCategoryFilter(null)}
+                    className="px-2 py-0.5 bg-pink-100 text-pink-600 rounded hover:bg-pink-200 transition-colors flex items-center gap-1"
+                  >
+                    --filter="{categoryFilter}" <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="w-full md:w-96 relative group">
@@ -33,6 +60,7 @@ export function SkillsGrid() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                 <input
+                  id="search-input"
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -61,9 +89,7 @@ export function SkillsGrid() {
                   <div className="text-xs font-mono text-text-muted truncate max-w-[150px]">
                     {skill.id}.json
                   </div>
-                  <div className="flex gap-2 text-text-muted/50">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </div>
+
                 </div>
 
                 {/* Card Body (Preview) */}
@@ -95,15 +121,29 @@ export function SkillsGrid() {
                       Free
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 group/like hover:text-pink-500 transition-colors">
-                      <Heart className="w-3.5 h-3.5 group-hover/like:fill-pink-500" />
-                      <span>{skill.popularity}</span>
-                    </div>
-                    <div className="hover:text-primary transition-colors">
-                      <Share2 className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleCart(skill.id);
+                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all font-bold ${cart.has(skill.id)
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-primary text-white hover:bg-pink-600 shadow-md shadow-pink-200'
+                      }`}
+                  >
+                    {cart.has(skill.id) ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        <span>Added</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-3 h-3" />
+                        <span>Add</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

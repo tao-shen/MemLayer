@@ -3,13 +3,35 @@ import { Header } from './Header';
 interface LayoutProps {
   children: React.ReactNode;
   onOpenAuth: () => void;
+  onOpenCart: () => void;
   user: any;
+  cartCount: number;
+  onNavFind: () => void;
+  onNavCd: () => void;
+  onNavMan: () => void;
 }
 
-export function Layout({ children, onOpenAuth, user }: LayoutProps) {
+export function Layout({
+  children,
+  onOpenAuth,
+  onOpenCart,
+  user,
+  cartCount,
+  onNavFind,
+  onNavCd,
+  onNavMan
+}: LayoutProps) {
   return (
     <div className="flex min-h-screen flex-col font-mono text-text-main">
-      <Header onOpenAuth={onOpenAuth} user={user} />
+      <Header
+        onOpenAuth={onOpenAuth}
+        onOpenCart={onOpenCart}
+        user={user}
+        cartCount={cartCount}
+        onNavFind={onNavFind}
+        onNavCd={onNavCd}
+        onNavMan={onNavMan}
+      />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-8 md:py-12">
         {children}
       </main>

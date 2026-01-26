@@ -3,10 +3,15 @@ import { supabase } from '../../lib/supabaseClient';
 
 interface HeaderProps {
   onOpenAuth: () => void;
+  onOpenCart: () => void;
   user: any;
+  cartCount: number;
+  onNavFind: () => void;
+  onNavCd: () => void;
+  onNavMan: () => void;
 }
 
-export function Header({ onOpenAuth, user }: HeaderProps) {
+export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onNavCd, onNavMan }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-pink-200 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
@@ -27,25 +32,25 @@ export function Header({ onOpenAuth, user }: HeaderProps) {
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-mono text-text-muted">
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
+          <button onClick={onNavFind} className="hover:text-primary transition-colors flex items-center gap-2 group">
             <span className="text-secondary">$</span>
             <span className="group-hover:translate-x-0.5 transition-transform">find --sweet</span>
-          </a>
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
+          </button>
+          <button onClick={onNavCd} className="hover:text-primary transition-colors flex items-center gap-2 group">
             <span className="text-secondary">$</span>
             <span className="group-hover:translate-x-0.5 transition-transform">cd /chocolates</span>
-          </a>
-          <a href="#" className="hover:text-primary transition-colors flex items-center gap-2 group">
+          </button>
+          <button onClick={onNavMan} className="hover:text-primary transition-colors flex items-center gap-2 group">
             <span className="text-secondary">$</span>
             <span className="group-hover:translate-x-0.5 transition-transform">man recipes</span>
-          </a>
+          </button>
         </nav>
 
         {/* Auth / Cart */}
         <div className="flex items-center gap-4 font-mono text-sm">
-          <button className="flex items-center gap-2 hover:text-primary transition-colors">
+          <button onClick={onOpenCart} className="flex items-center gap-2 hover:text-primary transition-colors relative">
             <ShoppingBag className="w-4 h-4" />
-            <span>[3]</span>
+            <span>[{cartCount}]</span>
           </button>
 
           {user ? (
