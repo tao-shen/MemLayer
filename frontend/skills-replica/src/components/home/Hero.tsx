@@ -27,7 +27,10 @@ export function Hero() {
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
-            <button className="h-12 px-6 bg-primary text-white rounded-md font-mono font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-pink-200">
+            <button
+              onClick={() => document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' })}
+              className="h-12 px-6 bg-primary text-white rounded-md font-mono font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-pink-200"
+            >
               <Search className="w-4 h-4" />
               Browse Treats
             </button>

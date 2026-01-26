@@ -1,4 +1,5 @@
-import { Terminal, ShoppingBag, User } from 'lucide-react';
+import { Terminal, ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 
 interface HeaderProps {
   onOpenAuth: () => void;
@@ -48,10 +49,29 @@ export function Header({ onOpenAuth, user }: HeaderProps) {
           </button>
 
           {user ? (
-            <button className="flex items-center gap-2 px-3 py-1 text-secondary border border-secondary/20 rounded hover:bg-secondary/5 transition-colors">
-              <User className="w-3 h-3" />
-              <span>user@candy</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/5 border border-secondary/20 rounded-full hover:bg-secondary/10 transition-colors">
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Avatar"
+                    className="w-5 h-5 rounded-full border border-secondary/20"
+                  />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-secondary" />
+                )}
+                <span className="font-candy text-secondary text-xs">
+                  {user.user_metadata?.full_name || user.email?.split('@')[0] || 'Agent'}
+                </span>
+              </div>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={onOpenAuth}
