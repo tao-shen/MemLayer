@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Play, Calendar, Filter, ArrowLeft } from 'lucide-react';
 import { storageUtils } from '../../utils/storage';
 import type { Skill, SkillCategory } from '../../types/skill-creator';
+import { SKILLS_DATA } from '../../data/skillsData';
 
 interface MySkillsLibraryProps {
   onCreateNew: () => void;
@@ -23,7 +24,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'store'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'store' | 'liked'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -34,18 +35,31 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
   const loadSkills = () => {
     setIsLoading(true);
     try {
-      const data = storageUtils.getSkills();
-      let filtered = data;
-      
-      if (categoryFilter) {
-        filtered = filtered.filter((s: Skill) => s.category === categoryFilter);
-      }
+      if (activeTab === 'liked') {
+        // Load liked skills from store
+        const likedIds = storageUtils.getLikes();
+        const likedSkills = SKILLS_DATA.filter(skill => likedIds.includes(skill.id));
+        let filtered = likedSkills;
+        
+        if (categoryFilter) {
+          filtered = filtered.filter((s) => s.category === categoryFilter);
+        }
+        
+        setSkills(filtered as any[]);
+      } else {
+        const data = storageUtils.getSkills();
+        let filtered = data;
+        
+        if (categoryFilter) {
+          filtered = filtered.filter((s: Skill) => s.category === categoryFilter);
+        }
 
-      if (activeTab !== 'all') {
-        filtered = filtered.filter((s: Skill) => s.origin === activeTab);
+        if (activeTab !== 'all') {
+          filtered = filtered.filter((s: Skill) => s.origin === activeTab);
+        }
+        
+        setSkills(filtered);
       }
-      
-      setSkills(filtered);
       setFeedback(null);
     } catch (error) {
       console.error('Failed to load skills:', error);
@@ -175,6 +189,15 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         >
           Purchased
         </button>
+        <button
+          onClick={() => { setActiveTab('liked'); loadSkills(); }}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'liked'
+              ? 'border-pink-500 text-pink-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+        >
+          Liked
+        </button>
       </div>
 
       {/* Skills Grid */}
@@ -186,12 +209,18 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         <div className="text-center py-20">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-medium text-gray-700 mb-2">
-            {searchQuery || categoryFilter ? 'No matching skills found' : 'No skills created yet'}
+            {searchQuery || categoryFilter 
+              ? 'No matching skills found' 
+              : activeTab === 'liked' 
+                ? 'No liked skills yet' 
+                : 'No skills created yet'}
           </h3>
           <p className="text-gray-500 mb-6">
             {searchQuery || categoryFilter
               ? 'Try adjusting your search criteria'
-              : 'Click the button above to create your first skill'}
+              : activeTab === 'liked'
+                ? 'Like skills from the home page to see them here'
+                : 'Click the button above to create your first skill'}
           </p>
           {!searchQuery && !categoryFilter && (
             <button
@@ -243,25 +272,39 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
                 <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    Created on {new Date(skill.createdAt).toLocaleDateString('en-US')}
+                    {skill.createdAt 
+                      ? `Created on ${new Date(skill.createdAt).toLocaleDateString('en-US')}`
+                      : activeTab === 'liked' ? 'From Store' : 'Created recently'}
                   </span>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onUseSkill(skill)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
-                  >
-                    <Play className="w-4 h-4" />
-                    Use
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(skill.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {activeTab === 'liked' ? (
+                    <button
+                      onClick={() => onUseSkill(skill as any)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                    >
+                      <Play className="w-4 h-4" />
+                      View Details
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => onUseSkill(skill)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                      >
+                        <Play className="w-4 h-4" />
+                        Use
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(skill.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

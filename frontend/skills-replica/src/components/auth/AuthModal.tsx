@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { X, Mail, Github, MessageCircle } from 'lucide-react';
+import { X, Mail } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,12 +20,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // WeChat often requires 'wechat_work' or specific configuration in Supabase. 
       // Using 'wechat' generic if enabled, otherwise might need custom flow.
       // For Google/GitHub it is standard.
+      // Build redirect URL preserving the basename
+      const basePath = window.location.pathname.replace(/\/[^/]*$/, '') || '/TacitLayer';
+      const redirectUrl = `${window.location.origin}${basePath}/auth/callback`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
-          // Dynamic redirect: Appends index.html to ensure GitHub Pages finds the file
-          // e.g. https://user.github.io/repo/index.html
-          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}index.html`, 
+          // Redirect to auth callback route
+          redirectTo: redirectUrl,
         }
       });
       if (error) throw error;
@@ -93,25 +96,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             Continue with Google
           </button>
 
-          {/* Github */}
-          <button
-            onClick={() => handleSocialLogin('github')}
-            disabled={loading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-[#24292F] text-white rounded-xl font-medium hover:bg-[#24292F]/90 transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            <Github className="w-5 h-5" />
-            Continue with GitHub
-          </button>
-
-          {/* WeChat (Mock provider name, requires specific setup in Supabase) */}
-          <button
-            onClick={() => handleSocialLogin('wechat')}
-            disabled={loading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-[#07C160] text-white rounded-xl font-medium hover:bg-[#06ad56] transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            <MessageCircle className="w-5 h-5 fill-white" />
-            Continue with WeChat
-          </button>
         </div>
 
         <div className="relative my-6">

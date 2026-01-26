@@ -1,7 +1,8 @@
 import { Search, ShoppingBag, Check, X, Calendar, Heart } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { SKILLS_DATA, type Skill } from '../../data/skillsData';
 import { SkillModal } from '../common/SkillModal';
+import { storageUtils } from '../../utils/storage';
 
 interface SkillsGridProps {
   searchQuery: string;
@@ -10,6 +11,8 @@ interface SkillsGridProps {
   setCategoryFilter: (c: string | null) => void;
   cart: Set<string>;
   onToggleCart: (id: string) => void;
+  user: any;
+  onOpenAuth: () => void;
 }
 
 export function SkillsGrid({
@@ -18,9 +21,38 @@ export function SkillsGrid({
   categoryFilter, 
   setCategoryFilter,
   cart,
-  onToggleCart
+  onToggleCart,
+  user,
+  onOpenAuth
 }: SkillsGridProps) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [likedSkills, setLikedSkills] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Load liked skills from storage
+    const likes = storageUtils.getLikes();
+    setLikedSkills(new Set(likes));
+  }, []);
+
+  const handleLike = (skillId: string) => {
+    if (!user) {
+      onOpenAuth();
+      return;
+    }
+
+    const isLiked = likedSkills.has(skillId);
+    if (isLiked) {
+      storageUtils.removeLike(skillId);
+      setLikedSkills(prev => {
+        const next = new Set(prev);
+        next.delete(skillId);
+        return next;
+      });
+    } else {
+      storageUtils.saveLike(skillId);
+      setLikedSkills(prev => new Set(prev).add(skillId));
+    }
+  };
 
   const filteredSkills = useMemo(() => {
     return SKILLS_DATA.filter(skill => {
@@ -131,11 +163,11 @@ export function SkillsGrid({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Favorite logic placeholder
+                        handleLike(skill.id);
                       }}
                       className="hover:text-pink-500 transition-colors"
                     >
-                      <Heart className={`w-3.5 h-3.5 ${skill.popularity > 90 ? 'fill-pink-500 text-pink-500' : ''}`} />
+                      <Heart className={`w-3.5 h-3.5 ${likedSkills.has(skill.id) ? 'fill-pink-500 text-pink-500' : ''}`} />
                     </button>
 
                     {/* Add Button - Small & Pill shaped */}

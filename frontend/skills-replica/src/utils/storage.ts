@@ -118,4 +118,42 @@ export const storageUtils = {
       return [];
     }
   },
+
+  // Likes management
+  getLikes: (): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem('liked_skills') || '[]');
+    } catch {
+      return [];
+    }
+  },
+
+  saveLike: (skillId: string): void => {
+    try {
+      const likes = storageUtils.getLikes();
+      if (!likes.includes(skillId)) {
+        likes.push(skillId);
+        localStorage.setItem('liked_skills', JSON.stringify(likes));
+      }
+    } catch (error) {
+      console.error('Failed to save like:', error);
+      throw error;
+    }
+  },
+
+  removeLike: (skillId: string): void => {
+    try {
+      const likes = storageUtils.getLikes();
+      const filtered = likes.filter(id => id !== skillId);
+      localStorage.setItem('liked_skills', JSON.stringify(filtered));
+    } catch (error) {
+      console.error('Failed to remove like:', error);
+      throw error;
+    }
+  },
+
+  isLiked: (skillId: string): boolean => {
+    const likes = storageUtils.getLikes();
+    return likes.includes(skillId);
+  },
 };

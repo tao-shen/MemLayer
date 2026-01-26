@@ -8,6 +8,7 @@ import { Categories } from './components/home/Categories';
 import { ExternalResources } from './components/home/ExternalResources';
 import { FAQ } from './components/home/FAQ';
 import { AuthModal } from './components/auth/AuthModal';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { CartDrawer } from './components/common/CartDrawer';
 import { DocsModal } from './components/common/DocsModal';
 import { SkillCreationPage } from './pages/SkillCreationPage';
@@ -60,6 +61,8 @@ function HomePage({
         setCategoryFilter={setCategoryFilter}
         cart={cart}
         onToggleCart={onToggleCart}
+        user={user}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
       <ExternalResources />
       <FAQ />
@@ -109,6 +112,12 @@ function AppContent() {
   const handleClearCart = () => setCart(new Set());
 
   const handlePurchase = () => {
+    // Check if user is logged in
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
     // Convert store skills to user skills
     const storeSkills = SKILLS_DATA.filter(skill => cart.has(skill.id));
 
@@ -199,6 +208,7 @@ function AppContent() {
             </Layout>
           }
         />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
