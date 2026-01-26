@@ -4,6 +4,7 @@ import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
 import { SkillsGrid } from './components/home/SkillsGrid';
 import { Categories } from './components/home/Categories';
+import { ExternalResources } from './components/home/ExternalResources';
 import { FAQ } from './components/home/FAQ';
 import { AuthModal } from './components/auth/AuthModal';
 import { CartDrawer } from './components/common/CartDrawer';
@@ -85,6 +86,7 @@ function App() {
           cart={cart}
           onToggleCart={handleAddToCart}
         />
+        <ExternalResources />
         <FAQ />
       </Layout>
 

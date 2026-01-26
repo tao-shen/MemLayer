@@ -18,7 +18,7 @@ export function Hero({ onOpenDocs }: HeroProps) {
           <div className="relative">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-candy font-bold tracking-tight text-text-main leading-[1.1]">
               The Ultimate <br />
-              Candy Shop
+              Candy-Shop
               <span className="inline-block w-3 h-10 ml-2 -mb-1 bg-primary animate-pulse"></span>
             </h1>
             <p className="mt-4 text-xl text-text-muted font-mono">

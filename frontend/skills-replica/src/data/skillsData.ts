@@ -3,7 +3,7 @@ export interface Skill {
   id: string;
   name: string;
   description: string;
-  category: 'Knowledge' | 'Tools' | 'Productivity' | 'Development';
+  category: 'Knowledge' | 'Tools' | 'Productivity' | 'Development' | 'Analysis';
   icon: string;
   color: string;
   installCommand: string;
@@ -13,128 +13,100 @@ export interface Skill {
 
 export const SKILLS_DATA: Skill[] = [
   {
-    id: 'brave-search',
-    name: 'Brave Search',
-    description: 'Allow Claude to search the web using Brave\'s privacy-focused search API.',
-    category: 'Knowledge',
-    icon: '🦁',
-    color: 'bg-orange-100 border-orange-200 text-orange-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-brave-search',
-    popularity: 98,
+    id: 'financial-analyst',
+    name: 'Financial Analyst',
+    description: 'Expert at analyzing financial data, reading 10-K reports, and generating investment memos.',
+    category: 'Analysis',
+    icon: '📊',
+    color: 'bg-green-100 border-green-200 text-green-700',
+    installCommand: 'clone https://github.com/anthropics/skills/financial-analyst',
+    popularity: 99,
     config: {
-      "brave-search": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-brave-search"
-        ],
-        "env": {
-          "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
-        }
+      "financial-analyst": {
+        "source": "github.com/anthropics/skills",
+        "path": "financial-analyst",
+        "capabilities": ["web-search", "pdf-analysis"]
       }
     }
   },
   {
-    id: 'filesystem',
-    name: 'Filesystem',
-    description: 'Give Claude access to read and write files on your local machine.',
-    category: 'Tools',
-    icon: '📂',
-    color: 'bg-blue-100 border-blue-200 text-blue-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-filesystem',
+    id: 'superpowers-planner',
+    name: 'Superpowers Planner',
+    description: 'Enhances Claude Code with TDD, YAGNI, and structured planning capabilities.',
+    category: 'Development',
+    icon: '⚡',
+    color: 'bg-yellow-100 border-yellow-200 text-yellow-700',
+    installCommand: '/plugin install superpowers@superpowers-marketplace',
     popularity: 95,
     config: {
-      "filesystem": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-filesystem",
-          "/allowed/path/1",
-          "/allowed/path/2"
-        ]
+      "superpowers": {
+        "plugin": "obra/superpowers",
+        "settings": {
+          "mode": "planner",
+          "tdd": true
+        }
       }
     }
   },
   {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Integration with GitHub API to manage repositories, issues, and PRs.',
-    category: 'Development',
-    icon: '🐙',
-    color: 'bg-slate-100 border-slate-200 text-slate-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-github',
+    id: 'research-agent',
+    name: 'Deep Research',
+    description: 'Automated researcher that can browse the web, synthesize information, and write reports.',
+    category: 'Knowledge',
+    icon: '🦁',
+    color: 'bg-blue-100 border-blue-200 text-blue-700',
+    installCommand: 'clone https://github.com/anthropics/skills/research-agent',
     popularity: 92,
     config: {
-      "github": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-github"
-        ],
-        "env": {
-          "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN_HERE"
-        }
+      "research-agent": {
+        "source": "github.com/anthropics/skills",
+        "capabilities": ["browser-tool", "filesystem"]
       }
     }
   },
   {
-    id: 'postgres',
-    name: 'PostgreSQL',
-    description: 'ReadOnly access to your PostgreSQL database for data analysis.',
-    category: 'Development',
-    icon: '🐘',
-    color: 'bg-indigo-100 border-indigo-200 text-indigo-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-postgres',
+    id: 'web-scraper',
+    name: 'Universal Scraper',
+    description: 'Extract clean markdown from any URL using Composio skills.',
+    category: 'Tools',
+    icon: '�️',
+    color: 'bg-purple-100 border-purple-200 text-purple-700',
+    installCommand: 'composio add web-scraper',
     popularity: 88,
     config: {
-      "postgres": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-postgres",
-          "postgresql://user:password@localhost:5432/dbname"
-        ]
+      "composio": {
+        "integrations": ["web-scraper"],
+        "api_key": "YOUR_KEY"
       }
     }
   },
   {
-    id: 'google-maps',
-    name: 'Google Maps',
-    description: 'Location services, places search, and directions.',
-    category: 'Knowledge',
-    icon: '🗺️',
-    color: 'bg-green-100 border-green-200 text-green-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-google-maps',
+    id: 'customer-support',
+    name: 'Support Agent',
+    description: 'Handle customer tickets, draft empathetic responses, and categorize issues.',
+    category: 'Productivity',
+    icon: '🎧',
+    color: 'bg-pink-100 border-pink-200 text-pink-700',
+    installCommand: 'clone https://github.com/anthropics/skills/customer-support',
     popularity: 85,
     config: {
-      "google-maps": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-google-maps"
-        ],
-        "env": {
-          "GOOGLE_MAPS_API_KEY": "YOUR_API_KEY_HERE"
-        }
+      "support-agent": {
+        "source": "github.com/anthropics/skills/customer-support"
       }
     }
   },
   {
-    id: 'pup-browser',
-    name: 'Puppeteer',
-    description: 'Browser automation for scraping and interaction.',
-    category: 'Tools',
-    icon: '🎭',
-    color: 'bg-pink-100 border-pink-200 text-pink-700',
-    installCommand: 'npx -y @modelcontextprotocol/server-puppeteer',
+    id: 'data-scientist',
+    name: 'Data Scientist',
+    description: 'Analyze CSV files, generate Python visualizations, and run statistical tests.',
+    category: 'Analysis',
+    icon: '📈',
+    color: 'bg-indigo-100 border-indigo-200 text-indigo-700',
+    installCommand: 'clone https://github.com/VoltAgent/awesome-claude-skills/data-sci',
     popularity: 82,
     config: {
-      "puppeteer": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-puppeteer"
-        ]
+      "data-sci": {
+        "tools": ["python-execution", "file-upload"]
       }
     }
   }

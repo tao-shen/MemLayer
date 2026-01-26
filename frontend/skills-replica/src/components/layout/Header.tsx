@@ -1,4 +1,4 @@
-import { Terminal, ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
+import { ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface HeaderProps {
@@ -17,9 +17,9 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
       <div className="container flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
         {/* Logo Area */}
         <div className="flex items-center gap-2 font-mono text-sm md:text-base">
-          <Terminal className="h-4 w-4 text-pink-400" />
+          <span className="text-2xl leading-none">🍬</span>
           <span className="font-bold text-text-main font-candy text-lg">
-            ~/ candy-shop
+            ~/ Candy-Shop
           </span>
           <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
             <span className="relative flex h-2 w-2">
