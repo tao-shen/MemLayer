@@ -29,19 +29,24 @@ if (typeof window === 'undefined') {
     coepHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
 
     event.respondWith(
-      fetch(r, {
+    const fetchPromise = (r.mode === 'navigate')
+      ? fetch(r)
+      : fetch(r, {
         cache: r.cache,
         credentials: r.credentials,
         headers: coepHeaders,
         integrity: r.integrity,
         keepalive: r.keepalive,
         method: r.method,
-        mode: r.mode === 'navigate' ? undefined : r.mode,
+        mode: r.mode,
         redirect: r.redirect,
         referrer: r.referrer,
         referrerPolicy: r.referrerPolicy,
         signal: r.signal,
-      }).then((response) => {
+      });
+
+    event.respondWith(
+      fetchPromise.then((response) => {
          if (response.status === 0 || response.status === 200) {
             const newHeaders = new Headers(response.headers);
             newHeaders.set("Cross-Origin-Embedder-Policy", coepCredentialless ? "credentialless" : "require-corp");
