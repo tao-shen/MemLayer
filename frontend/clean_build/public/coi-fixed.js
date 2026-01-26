@@ -68,7 +68,13 @@ if (typeof window === 'undefined') {
   });
 } else {
   (async function () {
-    if (window.crossOriginIsolated !== false) return;
+    if (window.crossOriginIsolated !== false) {
+      // If we are isolated, clear the flag
+      try {
+        window.sessionStorage.removeItem('coiReloaded');
+      } catch (e) { }
+      return;
+    }
 
     // Active Killer: Unregister the old broken worker if present
     try {
@@ -87,9 +93,9 @@ if (typeof window === 'undefined') {
 
     let scriptSrc = window.document.currentScript?.src;
     if (!scriptSrc) {
-      const path = window.location.pathname;
-      const basePath = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
-      scriptSrc = `${window.location.origin}${basePath}coi-fixed.js`;
+      // Fallback for when currentScript is null (e.g. sub-routes on SPA)
+      // Explicitly point to the Service Worker at the root of the deployment
+      scriptSrc = `${window.location.origin}/TacitLayer/coi-fixed.js`;
     }
     const registration = await navigator.serviceWorker.register(scriptSrc).catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
@@ -109,9 +115,4 @@ if (typeof window === 'undefined') {
         window.location.reload();
     }
   })();
-} else {
-  // If we are isolated, clear the flag
-  try {
-    window.sessionStorage.removeItem('coiReloaded');
-  } catch (e) { }
 }
