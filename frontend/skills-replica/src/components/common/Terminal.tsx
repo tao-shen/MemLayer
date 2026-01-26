@@ -19,7 +19,7 @@ export const Terminal = ({ webContainer }: TerminalProps) => {
       convertEol: true,
       cursorBlink: true,
       theme: {
-        background: '#1e1e1e',
+        background: '#0f0f10',
       }
     });
     const fitAddon = new FitAddon();
