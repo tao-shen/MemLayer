@@ -85,13 +85,13 @@ export function FileUploadZone({ onFilesSelected, maxFiles = 10 }: FileUploadZon
           
           <div>
             <p className="text-lg font-medium text-gray-700 mb-1">
-              {isDragActive ? '放开以上传文件' : '拖拽文件到这里，或点击选择'}
+              {isDragActive ? 'Drop files here' : 'Drag files here or click to select'}
             </p>
             <p className="text-sm text-gray-500">
-              支持的格式: {ALL_SUPPORTED_EXTENSIONS.join(', ')}
+              Supported formats: {ALL_SUPPORTED_EXTENSIONS.join(', ')}
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              最多 {maxFiles} 个文件，每个文件最大 10MB
+              Max {maxFiles} files, 10MB each
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export function FileUploadZone({ onFilesSelected, maxFiles = 10 }: FileUploadZon
           <div className="flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-sm font-medium text-red-800 mb-2">上传错误</h4>
+              <h4 className="text-sm font-medium text-red-800 mb-2">Upload Errors</h4>
               <ul className="space-y-1">
                 {errors.map((error, index) => (
                   <li key={index} className="text-sm text-red-700">
@@ -121,13 +121,13 @@ export function FileUploadZone({ onFilesSelected, maxFiles = 10 }: FileUploadZon
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium text-gray-700">
-              已选择 {selectedFiles.length} 个文件
+              {selectedFiles.length} file(s) selected
             </h4>
             <button
               onClick={clearAll}
               className="text-xs text-gray-500 hover:text-red-600 transition-colors"
             >
-              清空全部
+              Clear all
             </button>
           </div>
           

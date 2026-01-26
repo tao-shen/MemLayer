@@ -19,12 +19,12 @@ const CATEGORIES: SkillCategory[] = [
 ];
 
 const CATEGORY_LABELS: Record<SkillCategory, string> = {
-  Knowledge: '知识',
-  Tools: '工具',
-  Productivity: '生产力',
-  Development: '开发',
-  Analysis: '分析',
-  Custom: '自定义',
+  Knowledge: 'Knowledge',
+  Tools: 'Tools',
+  Productivity: 'Productivity',
+  Development: 'Development',
+  Analysis: 'Analysis',
+  Custom: 'Custom',
 };
 
 export function SkillPreviewEditor({
@@ -47,19 +47,19 @@ export function SkillPreviewEditor({
     const newErrors: Record<string, string> = {};
 
     if (!s.name || s.name.trim().length === 0) {
-      newErrors.name = '技能名称不能为空';
+      newErrors.name = 'Skill name cannot be empty';
     } else if (s.name.length > 50) {
-      newErrors.name = '技能名称不能超过 50 个字符';
+      newErrors.name = 'Skill name cannot exceed 50 characters';
     }
 
     if (!s.description || s.description.trim().length === 0) {
-      newErrors.description = '技能描述不能为空';
+      newErrors.description = 'Skill description cannot be empty';
     } else if (s.description.length > 500) {
-      newErrors.description = '技能描述不能超过 500 个字符';
+      newErrors.description = 'Skill description cannot exceed 500 characters';
     }
 
     if (!s.category) {
-      newErrors.category = '请选择一个分类';
+      newErrors.category = 'Please select a category';
     }
 
     setErrors(newErrors);
@@ -97,9 +97,9 @@ export function SkillPreviewEditor({
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">技能预览</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Skill Preview</h2>
             <p className="text-sm text-gray-500">
-              {isEditing ? '编辑你的技能配置' : '查看生成的技能'}
+              {isEditing ? 'Edit your skill configuration' : 'View the generated skill'}
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function SkillPreviewEditor({
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <Edit2 className="w-4 h-4" />
-          {isEditing ? '预览模式' : '编辑模式'}
+          {isEditing ? 'Preview Mode' : 'Edit Mode'}
         </button>
       </div>
 
@@ -141,14 +141,14 @@ export function SkillPreviewEditor({
                 </div>
                 <div className="text-gray-400 italic text-xs leading-5 border-l-2 border-gray-100 pl-3 py-1 mt-3">
                   /** <br />
-                  &nbsp;* {skill.description || '技能描述'} <br />
+                  &nbsp;* {skill.description || 'Skill description'} <br />
                   &nbsp;*/
                 </div>
               </div>
 
               {/* Footer */}
               <div className="h-10 px-4 border-t border-gray-100 bg-[#FAFAFA] flex items-center justify-between text-xs font-mono text-gray-500">
-                <span>{CATEGORY_LABELS[skill.category as SkillCategory] || '分类'}</span>
+                <span>{CATEGORY_LABELS[skill.category as SkillCategory] || 'Category'}</span>
                 <span className="text-pink-500">{skill.icon || '✨'}</span>
               </div>
             </div>
@@ -160,7 +160,7 @@ export function SkillPreviewEditor({
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              技能名称 *
+              Skill Name *
             </label>
             {isEditing ? (
               <input
@@ -170,11 +170,11 @@ export function SkillPreviewEditor({
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="例如: 数据分析专家"
+                placeholder="e.g., Data Analysis Expert"
               />
             ) : (
               <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900">
-                {skill.name || '未设置'}
+                {skill.name || 'Not set'}
               </div>
             )}
             {errors.name && (
@@ -188,7 +188,7 @@ export function SkillPreviewEditor({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              技能描述 *
+              Skill Description *
             </label>
             {isEditing ? (
               <textarea
@@ -198,11 +198,11 @@ export function SkillPreviewEditor({
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none ${
                   errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="描述这个技能能做什么..."
+                placeholder="Describe what this skill can do..."
               />
             ) : (
               <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900 whitespace-pre-wrap">
-                {skill.description || '未设置'}
+                {skill.description || 'Not set'}
               </div>
             )}
             {errors.description && (
@@ -216,7 +216,7 @@ export function SkillPreviewEditor({
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              分类 *
+              Category *
             </label>
             {isEditing ? (
               <select
@@ -226,7 +226,7 @@ export function SkillPreviewEditor({
                   errors.category ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">选择分类</option>
+                <option value="">Select a category</option>
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
                     {CATEGORY_LABELS[cat]}
@@ -235,7 +235,7 @@ export function SkillPreviewEditor({
               </select>
             ) : (
               <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900">
-                {skill.category ? CATEGORY_LABELS[skill.category as SkillCategory] : '未设置'}
+                {skill.category ? CATEGORY_LABELS[skill.category as SkillCategory] : 'Not set'}
               </div>
             )}
             {errors.category && (
@@ -248,18 +248,18 @@ export function SkillPreviewEditor({
 
           {/* Analysis Context */}
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">AI 分析结果</h4>
+            <h4 className="text-sm font-medium text-blue-900 mb-2">AI Analysis Results</h4>
             <div className="space-y-2 text-xs text-blue-800">
               <div>
-                <span className="font-medium">工作领域:</span>{' '}
+                <span className="font-medium">Work Domain:</span>{' '}
                 {analysisContext.workDomain.join(', ')}
               </div>
               <div>
-                <span className="font-medium">技术技能:</span>{' '}
+                <span className="font-medium">Technical Skills:</span>{' '}
                 {analysisContext.technicalSkills.join(', ')}
               </div>
               <div>
-                <span className="font-medium">置信度:</span>{' '}
+                <span className="font-medium">Confidence:</span>{' '}
                 {(analysisContext.confidence * 100).toFixed(0)}%
               </div>
             </div>
@@ -274,7 +274,7 @@ export function SkillPreviewEditor({
           className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <X className="w-4 h-4 inline mr-2" />
-          取消
+          Cancel
         </button>
         <button
           onClick={handleSave}
@@ -284,12 +284,12 @@ export function SkillPreviewEditor({
           {isSaving ? (
             <>
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              保存中...
+              Saving...
             </>
           ) : (
             <>
               <Save className="w-4 h-4 inline mr-2" />
-              保存技能
+              Save Skill
             </>
           )}
         </button>

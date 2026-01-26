@@ -37,7 +37,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
       const uploadResult = await uploadFiles(selectedFiles);
       
       if (!uploadResult.success) {
-        throw new Error('文件上传失败');
+        throw new Error('File upload failed');
       }
 
       // Start analysis
@@ -97,13 +97,13 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
-            返回
+            Back
           </button>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            创建 AI 技能
+            Create AI Skill
           </h1>
           <p className="text-gray-600">
-            上传你的文件，让 AI 分析并生成专属技能
+            Upload your files and let AI analyze and generate a custom skill
           </p>
         </div>
 
@@ -111,10 +111,10 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
         <div className="mb-12">
           <div className="flex items-center justify-center gap-4">
             {[
-              { key: 'upload', label: '上传文件' },
-              { key: 'analyzing', label: '分析中' },
-              { key: 'preview', label: '预览编辑' },
-              { key: 'complete', label: '完成' },
+              { key: 'upload', label: 'Upload Files' },
+              { key: 'analyzing', label: 'Analyzing' },
+              { key: 'preview', label: 'Preview & Edit' },
+              { key: 'complete', label: 'Complete' },
             ].map((s, index) => {
               const isActive = s.key === step;
               const isComplete = ['upload', 'analyzing', 'preview', 'complete'].indexOf(step) > index;
@@ -160,7 +160,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
                     disabled={isUploading}
                     className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isUploading ? '上传中...' : '开始分析'}
+                    {isUploading ? 'Uploading...' : 'Start Analysis'}
                   </button>
                 </div>
               )}
@@ -198,10 +198,10 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                技能创建成功！
+                Skill Created Successfully!
               </h2>
               <p className="text-gray-600">
-                正在跳转到技能库...
+                Redirecting to skills library...
               </p>
             </div>
           )}

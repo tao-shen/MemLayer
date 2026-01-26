@@ -39,7 +39,7 @@ export function validateFiles(files: File[]): {
   if (files.length > MAX_FILES) {
     errors.push({
       file: 'general',
-      error: `最多只能上传 ${MAX_FILES} 个文件`,
+      error: `Maximum ${MAX_FILES} files can be uploaded`,
     });
     return { valid, errors };
   }
@@ -48,12 +48,12 @@ export function validateFiles(files: File[]): {
     if (!validateFileType(file)) {
       errors.push({
         file: file.name,
-        error: `不支持的文件类型。支持的格式: ${ALL_SUPPORTED_EXTENSIONS.join(', ')}`,
+        error: `Unsupported file type. Supported formats: ${ALL_SUPPORTED_EXTENSIONS.join(', ')}`,
       });
     } else if (!validateFileSize(file)) {
       errors.push({
         file: file.name,
-        error: `文件大小超过限制 (最大 ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+        error: `File size exceeds limit (maximum ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
       });
     } else {
       valid.push(file);

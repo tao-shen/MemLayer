@@ -9,12 +9,12 @@ interface MySkillsLibraryProps {
 }
 
 const CATEGORY_LABELS: Record<SkillCategory, string> = {
-  Knowledge: '知识',
-  Tools: '工具',
-  Productivity: '生产力',
-  Development: '开发',
-  Analysis: '分析',
-  Custom: '自定义',
+  Knowledge: 'Knowledge',
+  Tools: 'Tools',
+  Productivity: 'Productivity',
+  Development: 'Development',
+  Analysis: 'Analysis',
+  Custom: 'Custom',
 };
 
 export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProps) {
@@ -67,9 +67,9 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">我的技能库</h1>
+          <h1 className="text-3xl font-bold text-gray-900">My Skills Library</h1>
           <p className="text-sm text-gray-500 mt-1">
-            管理你创建的所有 AI 技能
+            Manage all your created AI skills
           </p>
         </div>
         <button
@@ -77,7 +77,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
           className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all shadow-md"
         >
           <Plus className="w-5 h-5" />
-          创建新技能
+          Create New Skill
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索技能..."
+            placeholder="Search skills..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
@@ -103,7 +103,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
             onChange={(e) => setCategoryFilter(e.target.value || null)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
           >
-            <option value="">所有分类</option>
+            <option value="">All Categories</option>
             {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
@@ -122,12 +122,12 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
         <div className="text-center py-20">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-medium text-gray-700 mb-2">
-            {searchQuery || categoryFilter ? '没有找到匹配的技能' : '还没有创建任何技能'}
+            {searchQuery || categoryFilter ? 'No matching skills found' : 'No skills created yet'}
           </h3>
           <p className="text-gray-500 mb-6">
             {searchQuery || categoryFilter
-              ? '尝试调整搜索条件'
-              : '点击上方按钮创建你的第一个技能'}
+              ? 'Try adjusting your search criteria'
+              : 'Click the button above to create your first skill'}
           </p>
           {!searchQuery && !categoryFilter && (
             <button
@@ -135,7 +135,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
             >
               <Plus className="w-5 h-5" />
-              创建第一个技能
+              Create Your First Skill
             </button>
           )}
         </div>
@@ -179,7 +179,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
                 <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    创建于 {new Date(skill.createdAt).toLocaleDateString('zh-CN')}
+                    Created on {new Date(skill.createdAt).toLocaleDateString('en-US')}
                   </span>
                 </div>
 
@@ -190,7 +190,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
                   >
                     <Play className="w-4 h-4" />
-                    使用
+                    Use
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(skill.id)}
@@ -210,23 +210,23 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProp
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-gray-900 mb-2">
-              确认删除
+              Confirm Delete
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              确定要删除这个技能吗？此操作无法撤销。
+              Are you sure you want to delete this skill? This action cannot be undone.
             </p>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                删除
+                Delete
               </button>
             </div>
           </div>

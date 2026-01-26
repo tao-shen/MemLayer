@@ -44,10 +44,10 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           ...history,
         ]);
       } else {
-        setError(result.error || '执行失败');
+        setError(result.error || 'Execution failed');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '执行失败');
+      setError(err instanceof Error ? err.message : 'Execution failed');
     } finally {
       setIsExecuting(false);
     }
@@ -86,18 +86,18 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           {/* Input Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              输入
+              Input
             </label>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="输入你的问题或任务..."
+              placeholder="Enter your question or task..."
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
             />
             <p className="text-xs text-gray-500 mt-1">
-              按 Cmd/Ctrl + Enter 执行
+              Press Cmd/Ctrl + Enter to execute
             </p>
           </div>
 
@@ -110,12 +110,12 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             {isExecuting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                执行中...
+                Executing...
               </>
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                执行技能
+                Execute Skill
               </>
             )}
           </button>
@@ -124,7 +124,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           {(output || error) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                输出
+                Output
               </label>
               {error ? (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -145,7 +145,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-gray-400" />
-                <h3 className="text-sm font-medium text-gray-700">执行历史</h3>
+                <h3 className="text-sm font-medium text-gray-700">Execution History</h3>
               </div>
               <div className="space-y-3">
                 {history.slice(0, 5).map((item) => (
@@ -156,7 +156,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {item.timestamp.toLocaleTimeString('zh-CN')}
+                        {item.timestamp.toLocaleTimeString('en-US')}
                       </span>
                       <span className="text-xs text-gray-500">
                         {item.duration}ms
@@ -164,10 +164,10 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     </div>
                     <div className="text-sm">
                       <p className="text-gray-600 mb-2">
-                        <span className="font-medium">输入:</span> {item.input}
+                        <span className="font-medium">Input:</span> {item.input}
                       </p>
                       <p className="text-gray-800">
-                        <span className="font-medium">输出:</span>{' '}
+                        <span className="font-medium">Output:</span>{' '}
                         {item.output.slice(0, 100)}
                         {item.output.length > 100 && '...'}
                       </p>

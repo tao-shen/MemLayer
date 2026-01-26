@@ -10,10 +10,10 @@ interface AnalysisProgressProps {
 
 export function AnalysisProgress({ status, progress, currentFile, message }: AnalysisProgressProps) {
   const steps = [
-    { key: 'uploading', label: '上传文件', icon: FileText },
-    { key: 'extracting', label: '提取内容', icon: FileText },
-    { key: 'analyzing', label: 'AI 分析', icon: Brain },
-    { key: 'generating', label: '生成技能', icon: Sparkles },
+    { key: 'uploading', label: 'Upload Files', icon: FileText },
+    { key: 'extracting', label: 'Extract Content', icon: FileText },
+    { key: 'analyzing', label: 'AI Analysis', icon: Brain },
+    { key: 'generating', label: 'Generate Skill', icon: Sparkles },
   ];
 
   const currentStepIndex = steps.findIndex(s => s.key === status);
@@ -82,7 +82,7 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
             <p className="text-sm font-medium text-gray-700 mb-1">{message}</p>
             {currentFile && (
               <p className="text-xs text-gray-500 font-mono">
-                正在处理: {currentFile}
+                Processing: {currentFile}
               </p>
             )}
           </div>
@@ -102,26 +102,26 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
 function getLoadingMessage(status: string): string {
   const messages: Record<string, string[]> = {
     uploading: [
-      '正在传送你的文件到云端...',
-      '文件上传中，请稍候...',
+      'Uploading your files to the cloud...',
+      'File upload in progress, please wait...',
     ],
     extracting: [
-      '正在阅读你的文件内容...',
-      'AI 正在理解你的文档...',
-      '提取关键信息中...',
+      'Reading your file content...',
+      'AI is understanding your documents...',
+      'Extracting key information...',
     ],
     analyzing: [
-      'AI 正在深度分析你的专业领域...',
-      '识别你的技能和经验中...',
-      '这可能需要一点时间，请耐心等待...',
+      'AI is deeply analyzing your professional domain...',
+      'Identifying your skills and experience...',
+      'This may take a moment, please be patient...',
     ],
     generating: [
-      '正在为你量身定制技能配置...',
-      '生成专属的 AI 助手...',
-      '马上就好了...',
+      'Customizing skill configuration for you...',
+      'Generating your personal AI assistant...',
+      'Almost done...',
     ],
   };
 
-  const statusMessages = messages[status] || ['处理中...'];
+  const statusMessages = messages[status] || ['Processing...'];
   return statusMessages[Math.floor(Math.random() * statusMessages.length)];
 }

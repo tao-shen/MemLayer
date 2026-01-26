@@ -22,7 +22,7 @@ export function useSkillAnalysis() {
     setStatus({
       status: 'uploading',
       progress: 0,
-      message: '开始分析...',
+      message: 'Starting analysis...',
     });
 
     try {
@@ -48,7 +48,7 @@ export function useSkillAnalysis() {
               clearInterval(pollingIntervalRef.current);
             }
           } else if (statusData.status === 'failed') {
-            setError(statusData.error || '分析失败');
+            setError(statusData.error || 'Analysis failed');
             setIsAnalyzing(false);
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
@@ -60,7 +60,7 @@ export function useSkillAnalysis() {
       }, 1000); // Poll every second
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : '分析失败');
+      setError(err instanceof Error ? err.message : 'Analysis failed');
       setIsAnalyzing(false);
     }
   }, []);
@@ -73,7 +73,7 @@ export function useSkillAnalysis() {
     setStatus({
       status: 'uploading',
       progress: 0,
-      message: '准备分析...',
+      message: 'Preparing analysis...',
     });
     setResult(null);
     setError(null);
@@ -101,14 +101,14 @@ export function useSkillAnalysis() {
 
 function getStatusMessage(status: string): string {
   const messages: Record<string, string> = {
-    uploading: '正在上传文件...',
-    extracting: '正在提取文件内容...',
-    analyzing: 'AI 正在分析你的文件...',
-    generating: '正在生成技能配置...',
-    complete: '分析完成！',
-    failed: '分析失败',
-    processing: '处理中...',
+    uploading: 'Uploading files...',
+    extracting: 'Extracting file contents...',
+    analyzing: 'AI is analyzing your files...',
+    generating: 'Generating skill configuration...',
+    complete: 'Analysis complete!',
+    failed: 'Analysis failed',
+    processing: 'Processing...',
   };
 
-  return messages[status] || '处理中...';
+  return messages[status] || 'Processing...';
 }
