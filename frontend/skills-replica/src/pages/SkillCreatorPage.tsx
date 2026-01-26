@@ -10,18 +10,18 @@ import type { CreationStep, Skill, AnalysisResult } from '../types/skill-creator
 
 interface SkillCreatorPageProps {
   user: any;
-  onComplete: (skill: Skill) => void;
+  onComplete: () => void;
   onCancel: () => void;
 }
 
-export function SkillCreatorPage({ user, onComplete, onCancel }: SkillCreatorPageProps) {
+export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps) {
   const [step, setStep] = useState<CreationStep>('upload');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [generatedSkill, setGeneratedSkill] = useState<Partial<Skill> | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   const { uploadFiles, isUploading } = useFileUpload();
-  const { startAnalysis, isAnalyzing, status, result, error } = useSkillAnalysis();
+  const { startAnalysis, status, result, error } = useSkillAnalysis();
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
@@ -69,10 +69,10 @@ export function SkillCreatorPage({ user, onComplete, onCancel }: SkillCreatorPag
 
   const handleSaveSkill = async (updatedSkill: Partial<Skill>) => {
     try {
-      const saved = await apiClient.saveSkill(updatedSkill);
+      await apiClient.saveSkill(updatedSkill);
       setStep('complete');
       setTimeout(() => {
-        onComplete(saved);
+        onComplete();
       }, 2000);
     } catch (err) {
       console.error('Save error:', err);

@@ -4,7 +4,6 @@ import { apiClient } from '../../lib/api-client';
 import type { Skill, SkillCategory } from '../../types/skill-creator';
 
 interface MySkillsLibraryProps {
-  user: any;
   onCreateNew: () => void;
   onUseSkill: (skill: Skill) => void;
 }
@@ -18,7 +17,7 @@ const CATEGORY_LABELS: Record<SkillCategory, string> = {
   Custom: '自定义',
 };
 
-export function MySkillsLibrary({ user, onCreateNew, onUseSkill }: MySkillsLibraryProps) {
+export function MySkillsLibrary({ onCreateNew, onUseSkill }: MySkillsLibraryProps) {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,7 +32,7 @@ export function MySkillsLibrary({ user, onCreateNew, onUseSkill }: MySkillsLibra
     setIsLoading(true);
     try {
       const data = await apiClient.getUserSkills({
-        category: categoryFilter || undefined,
+        category: categoryFilter as SkillCategory | undefined,
         searchQuery: searchQuery || undefined,
       });
       setSkills(data);

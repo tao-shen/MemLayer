@@ -1,13 +1,18 @@
 // Error handling utilities
 
 export class AppError extends Error {
+  public code?: string;
+  public statusCode?: number;
+
   constructor(
     message: string,
-    public code?: string,
-    public statusCode?: number
+    code?: string,
+    statusCode?: number
   ) {
     super(message);
     this.name = 'AppError';
+    this.code = code;
+    this.statusCode = statusCode;
   }
 }
 

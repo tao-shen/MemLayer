@@ -127,7 +127,7 @@ function AppContent() {
           element={
             <SkillCreatorPage
               user={user}
-              onComplete={(skill) => {
+              onComplete={() => {
                 navigate('/skills/library');
               }}
               onCancel={() => navigate('/')}
@@ -139,7 +139,6 @@ function AppContent() {
           element={
             <div className="min-h-screen bg-gray-50 py-12 px-4">
               <MySkillsLibrary
-                user={user}
                 onCreateNew={() => navigate('/skills/create')}
                 onUseSkill={(skill) => setExecutingSkill(skill)}
               />
