@@ -15,14 +15,14 @@ export function Layout({ children, onOpenAuth, user }: LayoutProps) {
       </main>
       
       {/* Simple Footer Placeholder */}
-      <footer className="w-full border-t border-border py-6 mt-12 bg-white/50 relative">
-        <div className="container max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-text-muted">
-          <p className="font-candy">🍬 Made with sugar, spice, and AI</p>
+      <footer className="w-full border-t border-pink-200 py-6 mt-12 bg-white/50 relative">
+        <div className="container max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-text-muted font-mono">
+          <p className="font-mono">$ echo "Made with sugar, spice, and AI"</p>
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="hover:text-primary transition-colors font-candy"
+            className="hover:text-primary transition-colors font-mono"
           >
-            Back to Top
+            $ cd top
           </button>
         </div>
       </footer>

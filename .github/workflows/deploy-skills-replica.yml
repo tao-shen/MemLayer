@@ -28,9 +28,8 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm ci
         # If no package-lock.json exists in repo yet (might be gitignored), use install
-        # run: npm install
+        run: npm install
 
       - name: Build
         run: npm run build
