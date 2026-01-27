@@ -22,7 +22,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // For Google/GitHub it is standard.
       // Build redirect URL adapting to the environment (Vercel vs GitHub Pages)
       // BASE_URL is set in vite.config.ts ('/' for Vercel, '/TacitLayer/' for GH Pages)
-      const redirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`;
+      // using URL constructor to safely handle slashes
+      const redirectUrl = new URL('auth/callback', new URL(import.meta.env.BASE_URL, window.location.origin)).toString();
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
