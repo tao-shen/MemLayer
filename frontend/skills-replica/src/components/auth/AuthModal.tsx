@@ -20,10 +20,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // WeChat often requires 'wechat_work' or specific configuration in Supabase. 
       // Using 'wechat' generic if enabled, otherwise might need custom flow.
       // For Google/GitHub it is standard.
-      // Build redirect URL adapting to the environment (Vercel vs GitHub Pages)
-      // BASE_URL is set in vite.config.ts ('/' for Vercel, '/TacitLayer/' for GH Pages)
-      // using URL constructor to safely handle slashes
-      const redirectUrl = new URL('auth/callback', new URL(import.meta.env.BASE_URL, window.location.origin)).toString();
+      // Build redirect URL to root (matching Supabase Site URL setting)
+      // This is often safer than appending paths which might not be in the Allow List
+      const redirectUrl = window.location.origin;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
