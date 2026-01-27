@@ -263,7 +263,7 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter basename="/TacitLayer">
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AppContent />
     </BrowserRouter>
   );

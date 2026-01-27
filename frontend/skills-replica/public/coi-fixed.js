@@ -94,8 +94,9 @@ if (typeof window === 'undefined') {
     let scriptSrc = window.document.currentScript?.src;
     if (!scriptSrc) {
       // Fallback for when currentScript is null (e.g. sub-routes on SPA)
-      // Explicitly point to the Service Worker at the root of the deployment
-      scriptSrc = `${window.location.origin}/TacitLayer/coi-fixed.js`;
+      // Dynamic path detection for Vercel vs GitHub Pages
+      const pathPrefix = window.location.pathname.startsWith('/TacitLayer') ? '/TacitLayer' : '';
+      scriptSrc = `${window.location.origin}${pathPrefix}/coi-fixed.js`;
     }
     const registration = await navigator.serviceWorker.register(scriptSrc).catch((e) => console.error("COI Service Worker failed to register:", e));
     if (registration) {
