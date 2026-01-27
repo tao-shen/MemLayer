@@ -22,7 +22,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // For Google/GitHub it is standard.
       // Build redirect URL to root (matching Supabase Site URL setting)
       // This is often safer than appending paths which might not be in the Allow List
-      const redirectUrl = window.location.origin;
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
