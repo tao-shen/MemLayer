@@ -24,6 +24,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // This is often safer than appending paths which might not be in the Allow List
       const redirectUrl = `${window.location.origin}/auth/callback`;
       
+      // DEBUG: Remove this after fixing
+      alert(`Debug Info:\nRedirect URL: ${redirectUrl}\nSupabase URL: ${import.meta.env.VITE_SUPABASE_URL}`);
+
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any,
         options: {
