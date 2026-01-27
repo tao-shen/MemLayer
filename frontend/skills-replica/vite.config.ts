@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/TacitLayer/',
+  // On Vercel, we want '/', on GitHub Pages we want '/TacitLayer/'
+  base: process.env.VERCEL ? '/' : '/TacitLayer/',
   server: {
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
