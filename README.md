@@ -1,4 +1,4 @@
-# TacitLayer - Agent Tacit Knowledge Platform
+# Tacits - Agent Tacit Knowledge Platform
 
 <div align="center">
 
@@ -20,7 +20,7 @@ Empowering everyone to own, share, and monetize their experience in the age of A
 
 **AI Democratization: Every Individual Deserves Their Own AI**
 
-We are building TacitLayer to realize a future where AI is truly personal and accessible to everyone.
+We are building Tacits to realize a future where AI is truly personal and accessible to everyone.
 
 - **Experience to Tacit Knowledge**: Transform your personal life experiences into structured, AI-readable tacit knowledge.
 - **Shared Value**: Participate in a collaborative ecosystem where you can share your tacit knowledge to train better AIs, and **get paid for it**.
@@ -76,8 +76,8 @@ Visit http://localhost:3000
 
 ```bash
 # Clone the repository
-git clone https://github.com/tao-shen/TacitLayer.git
-cd TacitLayer
+git clone https://github.com/tao-shen/Tacits.git
+cd Tacits
 
 # Install dependencies
 pnpm install
@@ -119,7 +119,7 @@ pnpm dev
 ## 📦 Project Structure
 
 ```
-TacitLayer/
+Tacits/
 ├── packages/                # Shared packages
 │   ├── shared/              # Shared types and utilities
 │   ├── database/            # Database client (Prisma)
@@ -166,5 +166,5 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/tao-shen/TacitLayer)
-- [Report Issues](https://github.com/tao-shen/TacitLayer/issues)
+- [GitHub Repository](https://github.com/tao-shen/Tacits)
+- [Report Issues](https://github.com/tao-shen/Tacits/issues)

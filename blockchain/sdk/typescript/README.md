@@ -341,7 +341,7 @@ See the `/examples` directory for complete working examples:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/tao-shen/TacitLayer/issues
+- GitHub Issues: https://github.com/tao-shen/Tacits/issues
 - Documentation: https://docs.memoryplatform.com
 - Discord: https://discord.gg/memoryplatform
 

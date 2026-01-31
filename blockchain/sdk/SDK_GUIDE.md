@@ -559,7 +559,7 @@ Complete examples are available in the repository:
 
 - Documentation: https://docs.memoryplatform.io
 - API Reference: https://api.memoryplatform.io/docs
-- GitHub Issues: https://github.com/tao-shen/TacitLayer/issues
+- GitHub Issues: https://github.com/tao-shen/Tacits/issues
 - Discord: https://discord.gg/memoryplatform
 
 ## License

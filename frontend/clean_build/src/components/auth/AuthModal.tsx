@@ -21,7 +21,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // Using 'wechat' generic if enabled, otherwise might need custom flow.
       // For Google/GitHub it is standard.
       // Build redirect URL preserving the basename
-      const basePath = window.location.pathname.replace(/\/[^/]*$/, '') || '/TacitLayer';
+      const basePath = window.location.pathname.replace(/\/[^/]*$/, '') || '/Tacits';
       const redirectUrl = `${window.location.origin}${basePath}/auth/callback`;
       
       const { error } = await supabase.auth.signInWithOAuth({

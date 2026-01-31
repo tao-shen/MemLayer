@@ -13,7 +13,7 @@ This guide explains how to deploy the `frontend/skills-replica` application to V
 
 1.  Log in to your [Vercel Dashboard](https://vercel.com/dashboard).
 2.  Click **"Add New..."** -> **"Project"**.
-3.  Find your `MemLayer` (or `TacitLayer`) repository in the list and click **"Import"**.
+3.  Find your `Tacits` repository in the list and click **"Import"**.
 
 ### 2. Configure Project
 

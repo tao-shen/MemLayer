@@ -95,7 +95,7 @@ if (typeof window === 'undefined') {
     if (!scriptSrc) {
       // Fallback for when currentScript is null (e.g. sub-routes on SPA)
       // Dynamic path detection for Vercel vs GitHub Pages
-      const pathPrefix = window.location.pathname.startsWith('/TacitLayer') ? '/TacitLayer' : '';
+      const pathPrefix = window.location.pathname.startsWith('/Tacits') ? '/Tacits' : '';
       scriptSrc = `${window.location.origin}${pathPrefix}/coi-fixed.js`;
     }
     const registration = await navigator.serviceWorker.register(scriptSrc).catch((e) => console.error("COI Service Worker failed to register:", e));

@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Memory Platform Team"]
 description = "Rust SDK for Memory Platform blockchain integration"
 license = "MIT"
-repository = "https://github.com/tao-shen/TacitLayer"
+repository = "https://github.com/tao-shen/Tacits"
 
 [dependencies]
 anchor-client = "0.29"
