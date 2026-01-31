@@ -11,13 +11,17 @@
 
 @layer base {
   :root {
-    /* HSL Color Variables - Light Theme (Default) */
+    /* Original Candy Shop Colors - Light Theme */
     --color-background: 0 0% 100%;
     --color-foreground: 222.2 84% 4.9%;
-    --color-primary: 222.2 47.4% 11.2%;
+
+    /* Brand Colors */
+    --color-primary: 244 70 93; /* Pink - Brand accent */
     --color-primary-foreground: 210 40% 98%;
-    --color-secondary: 210 40% 96.1%;
+    --color-secondary: 270 65% 60%; /* Purple */
     --color-secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* Semantic Colors */
     --color-muted: 210 40% 96.1%;
     --color-muted-foreground: 215.4 16.3% 46.9%;
     --color-accent: 210 40% 96.1%;
@@ -29,15 +33,26 @@
     --color-ring: 222.2 84% 4.9%;
     --color-card: 0 0% 100%;
     --color-card-foreground: 222.2 84% 4.9%;
+
+    /* Syntax Colors */
+    --color-syntax-keyword: 255 121 198;
+    --color-syntax-string: 241 250 140;
+    --color-syntax-comment: 98 114 164;
+    --color-syntax-variable: 189 147 249;
+    --color-syntax-function: 80 250 123;
   }
 
   .dark {
     --color-background: 222.2 84% 4.9%;
     --color-foreground: 210 40% 98%;
-    --color-primary: 210 40% 98%;
+
+    /* Brand Colors in Dark Mode */
+    --color-primary: 244 70 93;
     --color-primary-foreground: 222.2 47.4% 11.2%;
-    --color-secondary: 217.2 32.6% 17.5%;
+    --color-secondary: 270 65% 60%;
     --color-secondary-foreground: 210 40% 98%;
+
+    /* Semantic Colors in Dark Mode */
     --color-muted: 217.2 32.6% 17.5%;
     --color-muted-foreground: 215 20.2% 65.1%;
     --color-accent: 217.2 32.6% 17.5%;
@@ -144,7 +159,7 @@
 }
 
 .animate-zoom-out {
-  animation: zoom-out 0.2s ease-in;
+  animation: zoom-out 0.2s ease-out;
 }
 
 /* Dialog Animations */
