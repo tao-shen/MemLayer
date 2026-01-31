@@ -210,21 +210,41 @@ export function Sidebar({
               collapsed ? 'justify-center' : ''
             )}
           >
-            {user.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="Avatar"
-                className="w-8 h-8 rounded-full border border-border"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-4 h-4 text-primary" />
-              </div>
-            )}
+            {/* Avatar with multiple fallback sources */}
+            {(() => {
+              const avatarUrl =
+                user.user_metadata?.avatar_url ||
+                user.user_metadata?.picture ||
+                user.picture ||
+                user.identities?.[0]?.identity_data?.avatar_url;
+
+              if (avatarUrl) {
+                return (
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full border border-border"
+                    onError={(e) => {
+                      // Fallback to default icon on error
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                );
+              }
+              return (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+              );
+            })()}
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {user.user_metadata?.full_name || user.email?.split('@')[0] || 'Agent'}
+                  {user.user_metadata?.full_name ||
+                    user.user_metadata?.name ||
+                    user.email?.split('@')[0] ||
+                    'Agent'}
                 </p>
               </div>
             )}
