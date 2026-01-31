@@ -344,6 +344,9 @@ importers:
       axios:
         specifier: ^1.13.2
         version: 1.13.2
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       lucide-react:
         specifier: ^0.563.0
         version: 0.563.0(react@19.2.4)
@@ -359,6 +362,9 @@ importers:
       react-router-dom:
         specifier: ^7.13.0
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.4.0
       vite:
         specifier: ^7.2.4
         version: 7.3.1(@types/node@24.10.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -673,7 +679,7 @@ importers:
         version: 9.0.10
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/embedding-service:
     dependencies:
@@ -701,7 +707,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/management-service:
     dependencies:
@@ -735,7 +741,7 @@ importers:
         version: 3.0.11
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/reflection-service:
     dependencies:
@@ -772,7 +778,7 @@ importers:
         version: 9.0.8
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/retrieval-service:
     dependencies:
@@ -797,7 +803,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/skill-creator-service:
     dependencies:
@@ -904,7 +910,7 @@ importers:
         version: 8.15.6
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/visualization-service:
     dependencies:
@@ -7508,6 +7514,9 @@ packages:
 
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
+
+  tailwind-merge@3.4.0:
+    resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
 
   tailwindcss@3.4.19:
     resolution: {integrity: sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==}
@@ -17461,6 +17470,8 @@ snapshots:
 
   tabbable@6.4.0: {}
 
+  tailwind-merge@3.4.0: {}
+
   tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@alloc/quick-lru': 5.2.0
@@ -17619,7 +17630,7 @@ snapshots:
 
   ts-mixer@6.0.4: {}
 
-  ts-node-dev@2.0.0(@types/node@24.10.9)(typescript@5.9.3):
+  ts-node-dev@2.0.0(@types/node@20.19.24)(typescript@5.9.3):
     dependencies:
       chokidar: 3.6.0
       dynamic-dedupe: 0.3.0
@@ -17629,7 +17640,7 @@ snapshots:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 10.9.2(@types/node@24.10.9)(typescript@5.9.3)
+      ts-node: 10.9.2(@types/node@20.19.24)(typescript@5.9.3)
       tsconfig: 7.0.0
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -17672,6 +17683,7 @@ snapshots:
       typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    optional: true
 
   tsconfig@7.0.0:
     dependencies:
