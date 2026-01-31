@@ -9,57 +9,77 @@ export default {
         sans: ['"Inter"', 'sans-serif'],
       },
       colors: {
-        // Semantic color names mapping to CSS variables
-        background: 'hsl(var(--color-background))',
-        foreground: 'hsl(var(--color-foreground))',
-        primary: 'hsl(var(--color-primary))',
-        'primary-foreground': 'hsl(var(--color-primary-foreground))',
-        secondary: 'hsl(var(--color-secondary))',
-        'secondary-foreground': 'hsl(var(--color-secondary-foreground))',
-        muted: 'hsl(var(--color-muted))',
-        'muted-foreground': 'hsl(var(--color-muted-foreground))',
-        accent: 'hsl(var(--color-accent))',
-        'accent-foreground': 'hsl(var(--color-accent-foreground))',
-        destructive: 'hsl(var(--color-destructive))',
-        'destructive-foreground': 'hsl(var(--color-destructive-foreground))',
-        border: 'hsl(var(--color-border))',
-        input: 'hsl(var(--color-input))',
-        ring: 'hsl(var(--color-ring))',
-        card: 'hsl(var(--color-card))',
-        'card-foreground': 'hsl(var(--color-card-foreground))',
+        // 背景色
+        background: 'var(--color-background)',
+        backgroundSecondary: 'var(--color-background-secondary)',
+        backgroundTertiary: 'var(--color-background-tertiary)',
 
-        // Brand colors
-        brand: {
-          primary: 'rgb(var(--color-brand-primary) / <alpha-value>)',
-          secondary: 'rgb(var(--color-brand-secondary) / <alpha-value>)',
-          indigo: 'rgb(var(--color-brand-indigo) / <alpha-value>)',
-        },
+        // 卡片
+        card: 'var(--color-card)',
+        'card-foreground': 'var(--color-card-foreground)',
 
-        // Syntax highlighting
+        // 文本色 - 高对比度
+        foreground: 'var(--color-foreground)',
+        'foreground-secondary': 'var(--color-foreground-secondary)',
+        'foreground-tertiary': 'var(--color-foreground-tertiary)',
+        'foreground-muted': 'var(--color-foreground-muted)',
+
+        // 主色调 - 靛蓝
+        primary: 'var(--color-primary)',
+        'primary-hover': 'var(--color-primary-hover)',
+        'primary-active': 'var(--color-primary-active)',
+        'primary-foreground': 'var(--color-primary-foreground)',
+
+        // 次要色
+        secondary: 'var(--color-secondary)',
+        'secondary-foreground': 'var(--color-secondary-foreground)',
+
+        // 强调色
+        accent: 'var(--color-accent)',
+        'accent-foreground': 'var(--color-accent-foreground)',
+
+        // 语义色
+        success: 'var(--color-success)',
+        'success-foreground': 'var(--color-success-foreground)',
+        warning: 'var(--color-warning)',
+        'warning-foreground': 'var(--color-warning-foreground)',
+        error: 'var(--color-error)',
+        'error-foreground': 'var(--color-error-foreground)',
+        info: 'var(--color-info)',
+        'info-foreground': 'var(--color-info-foreground)',
+
+        // 边框和分隔
+        border: 'var(--color-border)',
+        'border-hover': 'var(--color-border-hover)',
+
+        // 输入框
+        input: 'var(--color-input)',
+        'input-border': 'var(--color-input-border)',
+        ring: 'var(--color-ring)',
+
+        // 语法高亮
         syntax: {
-          keyword: 'hsl(var(--color-syntax-keyword))',
-          string: 'hsl(var(--color-syntax-string))',
-          comment: 'hsl(var(--color-syntax-comment))',
-          variable: 'hsl(var(--color-syntax-variable))',
-          function: 'hsl(var(--color-syntax-function))',
+          keyword: 'var(--color-syntax-keyword)',
+          string: 'var(--color-syntax-string)',
+          comment: 'var(--color-syntax-comment)',
+          variable: 'var(--color-syntax-variable)',
+          function: 'var(--color-syntax-function)',
         },
       },
       borderRadius: {
-        DEFAULT: 'var(--radius)',
-        sm: 'var(--radius-sm)',
-        lg: 'var(--radius-lg)',
-        xl: 'var(--radius-xl)',
+        DEFAULT: '0.5rem',
+        sm: '0.25rem',
+        lg: '0.75rem',
+        xl: '1rem',
       },
       boxShadow: {
-        window: 'var(--shadow-window)',
-        card: 'var(--shadow-card)',
-        hover: 'var(--shadow-hover)',
+        window: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',
         'fade-out': 'fade-out 0.2s ease-in',
         'zoom-in': 'zoom-in 0.2s ease-out',
-        'zoom-out': 'zoom-out 0.2s ease-in',
+        'zoom-out': 'zoom-out 0.2s ease-out',
       },
       keyframes: {
         fadeIn: {

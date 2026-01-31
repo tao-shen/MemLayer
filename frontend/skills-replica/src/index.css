@@ -11,71 +11,132 @@
 
 @layer base {
   :root {
-    /* Original Candy Shop Colors - Light Theme */
-    --color-background: 0 0% 100%;
-    --color-foreground: 222.2 84% 4.9%;
+    /* ==================== 浅色主题 ==================== */
 
-    /* Brand Colors */
-    --color-primary: 244 70 93; /* Pink - Brand accent */
-    --color-primary-foreground: 210 40% 98%;
-    --color-secondary: 270 65% 60%; /* Purple */
-    --color-secondary-foreground: 222.2 47.4% 11.2%;
+    /* 背景色 - 清晰的层次 */
+    --color-background: #ffffff;
+    --color-background-secondary: #fafafa;
+    --color-background-tertiary: #f4f4f5;
 
-    /* Semantic Colors */
-    --color-muted: 210 40% 96.1%;
-    --color-muted-foreground: 215.4 16.3% 46.9%;
-    --color-accent: 210 40% 96.1%;
-    --color-accent-foreground: 222.2 47.4% 11.2%;
-    --color-destructive: 0 84.2% 60.2%;
-    --color-destructive-foreground: 210 40% 98%;
-    --color-border: 214.3 31.8% 91.4%;
-    --color-input: 214.3 31.8% 91.4%;
-    --color-ring: 222.2 84% 4.9%;
-    --color-card: 0 0% 100%;
-    --color-card-foreground: 222.2 84% 4.9%;
+    /* 卡片背景 */
+    --color-card: #ffffff;
+    --color-card-foreground: #18181b;
 
-    /* Syntax Colors */
-    --color-syntax-keyword: 255 121 198;
-    --color-syntax-string: 241 250 140;
-    --color-syntax-comment: 98 114 164;
-    --color-syntax-variable: 189 147 249;
-    --color-syntax-function: 80 250 123;
+    /* 文本色 - 高对比度，AAA 级可读性 */
+    --color-foreground: #18181b; /* 主要文本 - AAA */
+    --color-foreground-secondary: #71717a; /* 次要文本 - AA */
+    --color-foreground-tertiary: #a1a1aa; /* 第三级文本 */
+    --color-foreground-muted: #d4d4d8; /* 禁用/弱化 */
+
+    /* 主色调 - 靛蓝色专业风格 */
+    --color-primary: #5e6ad2; /* 主品牌色 */
+    --color-primary-hover: #4f5cc0; /* Hover 状态 */
+    --color-primary-active: #434db0; /* Active 状态 */
+    --color-primary-foreground: #ffffff;
+
+    /* 次要色 - 中性灰为主，点缀色 */
+    --color-secondary: #f4f4f5;
+    --color-secondary-foreground: #18181b;
+
+    /* 强调色 - 糖果感的点缀（保留品牌特色） */
+    --color-accent: #f0abfc; /* 淡紫色点缀 */
+    --color-accent-foreground: #86198f;
+
+    /* 语义色 */
+    --color-success: #10b981;
+    --color-success-foreground: #ffffff;
+    --color-warning: #f59e0b;
+    --color-warning-foreground: #ffffff;
+    --color-error: #ef4444;
+    --color-error-foreground: #ffffff;
+    --color-info: #3b82f6;
+    --color-info-foreground: #ffffff;
+
+    /* 边框和分隔 */
+    --color-border: #e4e4e7;
+    --color-border-hover: #d4d4d8;
+
+    /* 输入框 */
+    --color-input: #ffffff;
+    --color-input-border: #e4e4e7;
+    --color-ring: #5e6ad2;
+
+    /* 语法高亮 - 代码编辑器风格 */
+    --color-syntax-keyword: #7c3aed; /* 紫色关键词 */
+    --color-syntax-string: #059669; /* 绿色字符串 */
+    --color-syntax-comment: #9ca3af; /* 灰色注释 */
+    --color-syntax-variable: #db2777; /* 粉色变量 */
+    --color-syntax-function: #2563eb; /* 蓝色函数 */
   }
 
   .dark {
-    --color-background: 222.2 84% 4.9%;
-    --color-foreground: 210 40% 98%;
+    /* ==================== 深色主题 ==================== */
 
-    /* Brand Colors in Dark Mode */
-    --color-primary: 244 70 93;
-    --color-primary-foreground: 222.2 47.4% 11.2%;
-    --color-secondary: 270 65% 60%;
-    --color-secondary-foreground: 210 40% 98%;
+    /* 背景色 - 深灰而非纯黑，减少眼疲劳 */
+    --color-background: #0a0a0a;
+    --color-background-secondary: #141414;
+    --color-background-tertiary: #1c1c1c;
 
-    /* Semantic Colors in Dark Mode */
-    --color-muted: 217.2 32.6% 17.5%;
-    --color-muted-foreground: 215 20.2% 65.1%;
-    --color-accent: 217.2 32.6% 17.5%;
-    --color-accent-foreground: 210 40% 98%;
-    --color-destructive: 0 62.8% 30.6%;
-    --color-destructive-foreground: 210 40% 98%;
-    --color-border: 217.2 32.6% 17.5%;
-    --color-input: 217.2 32.6% 17.5%;
-    --color-ring: 212.7 26.8% 83.9%;
-    --color-card: 222.2 84% 4.9%;
-    --color-card-foreground: 210 40% 98%;
+    /* 卡片背景 */
+    --color-card: #141414;
+    --color-card-foreground: #fafafa;
+
+    /* 文本色 - 高对比度 */
+    --color-foreground: #fafafa; /* 主要文本 */
+    --color-foreground-secondary: #a1a1aa; /* 次要文本 */
+    --color-foreground-tertiary: #71717a; /* 第三级文本 */
+    --color-foreground-muted: #52525b; /* 禁用/弱化 */
+
+    /* 主色调 - 深色模式下稍亮 */
+    --color-primary: #818cf8; /* 亮靛蓝 */
+    --color-primary-hover: #a5b4fc; /* Hover */
+    --color-primary-active: #6366f1; /* Active */
+    --color-primary-foreground: #0a0a0a;
+
+    /* 次要色 */
+    --color-secondary: #1c1c1c;
+    --color-secondary-foreground: #fafafa;
+
+    /* 强调色 - 深色模式下调整 */
+    --color-accent: #c084fc; /* 亮紫色点缀 */
+    --color-accent-foreground: #581c87;
+
+    /* 语义色 - 深色模式调整 */
+    --color-success: #34d399;
+    --color-success-foreground: #064e3b;
+    --color-warning: #fbbf24;
+    --color-warning-foreground: #78350f;
+    --color-error: #f87171;
+    --color-error-foreground: #7f1d1d;
+    --color-info: #60a5fa;
+    --color-info-foreground: #1e3a8a;
+
+    /* 边框和分隔 */
+    --color-border: #27272a;
+    --color-border-hover: #3f3f46;
+
+    /* 输入框 */
+    --color-input: #141414;
+    --color-input-border: #27272a;
+    --color-ring: #818cf8;
+
+    /* 语法高亮 - 深色模式下调整亮度 */
+    --color-syntax-keyword: #c084fc;
+    --color-syntax-string: #34d399;
+    --color-syntax-comment: #6b7280;
+    --color-syntax-variable: #f472b6;
+    --color-syntax-function: #60a5fa;
   }
 }
 
 @layer base {
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-image: radial-gradient(hsl(var(--color-border) / 0.5) 1px, transparent 1px);
-    background-size: 24px 24px;
+    /* 简洁背景，无点阵装饰 */
   }
 }
 
-/* Custom Scrollbar */
+/* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -86,26 +147,25 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded-full;
+  @apply bg-foreground-muted rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
+  @apply bg-foreground-tertiary;
 }
 
-/* Utility Classes */
+/* 实用工具类 */
 .window-shadow {
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .btn-candy {
   @apply px-6 py-2 rounded-md font-mono font-medium transition-colors;
 }
 
-/* Animations */
+/* 动画 */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -162,7 +222,7 @@
   animation: zoom-out 0.2s ease-out;
 }
 
-/* Dialog Animations */
+/* Dialog 动画 */
 .data-[state='open']:animate-in {
   animation: zoom-in 0.2s ease-out;
 }
