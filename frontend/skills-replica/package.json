@@ -16,6 +16,7 @@
     "@fontsource/fredoka": "^5.2.10",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/quicksand": "^5.2.10",
+    "@opencode-ai/sdk": "^1.1.48",
     "@supabase/supabase-js": "^2.91.1",
     "@vitejs/plugin-react": "^5.1.1",
     "@webcontainer/api": "^1.1.7",

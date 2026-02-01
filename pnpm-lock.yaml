@@ -332,6 +332,9 @@ importers:
       '@fontsource/quicksand':
         specifier: ^5.2.10
         version: 5.2.10
+      '@opencode-ai/sdk':
+        specifier: ^1.1.48
+        version: 1.1.48
       '@supabase/supabase-js':
         specifier: ^2.91.1
         version: 2.93.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)

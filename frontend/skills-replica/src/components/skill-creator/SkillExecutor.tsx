@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, Loader2, Sparkles, FileCode, Terminal as TerminalIcon } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
+import { opencodeService } from '../../lib/opencode-client';
 
 interface SkillExecutorProps {
   skill: Skill;
@@ -18,7 +19,13 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'terminal' | 'files'>('chat');
 
-  useEffect(() => {}, [skill]);
+  useEffect(() => {
+    console.log('[SkillExecutor] Skill loaded:', skill.name);
+    console.log(
+      '[SkillExecutor] System prompt:',
+      skill.config.systemPrompt?.substring(0, 100) + '...'
+    );
+  }, [skill]);
 
   const handleExecute = async () => {
     if (!input.trim()) return;
@@ -30,35 +37,26 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     setActiveTab('chat');
 
     try {
-      const userId = 'user-123';
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+      console.log('[SkillExecutor] Executing skill:', skill.id);
 
-      const response = await fetch(`${API_BASE_URL}/api/skills/${skill.id}/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          input: userMsg.content,
-        }),
-      });
+      const result = await opencodeService.executeSkill(
+        skill.id,
+        skill.config.systemPrompt || '',
+        userMsg.content
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Execution failed');
+      if (result.success) {
+        const assistantMsg: Message = {
+          role: 'assistant',
+          content: result.output || '(No output returned)',
+        };
+        setMessages((prev: Message[]) => [...prev, assistantMsg]);
+        console.log('[SkillExecutor] Skill executed successfully');
+      } else {
+        throw new Error(result.error || 'Execution failed');
       }
-
-      const result = await response.json();
-
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: result.output || '(No output returned)',
-      };
-
-      setMessages((prev: Message[]) => [...prev, assistantMsg]);
     } catch (error: any) {
-      console.error(error);
+      console.error('[SkillExecutor] Error:', error);
       setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
     } finally {
       setIsExecuting(false);
