@@ -17,10 +17,9 @@ class OpenCodeService {
   private client: any = null;
 
   async connect(config: OpenCodeConfig = {}): Promise<void> {
-    // For Cloudflare tunnel deployment, use the base URL from env or default
     const baseUrl = config.hostname
-      ? `http://${config.hostname}:${config.port || 4096}`
-      : import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
+      ? `http://${config.hostname}:${config.port || 80}`
+      : import.meta.env.VITE_API_BASE_URL || 'http://oracle.tao-shen.com';
 
     try {
       this.client = createOpencodeClient({

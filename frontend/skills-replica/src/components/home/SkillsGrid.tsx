@@ -35,12 +35,15 @@ export function SkillsGrid({
 
   const handleLike = (skillId: string) => {
     const isLiked = likedSkills.has(skillId);
+    console.log('[Like] Clicked on skill:', skillId);
+    console.log('[Like] Currently liked:', isLiked);
 
     if (isLiked) {
       storageUtils.removeLike(skillId);
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.delete(skillId);
+        console.log('[Like] Removed like, new state:', Array.from(next));
         return next;
       });
     } else {
@@ -48,6 +51,7 @@ export function SkillsGrid({
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.add(skillId);
+        console.log('[Like] Added like, new state:', Array.from(next));
         return next;
       });
     }
@@ -196,14 +200,18 @@ export function SkillsGrid({
 
                     <button
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
+                        console.log('[Like] Button clicked for skill:', skill.id);
                         handleLike(skill.id);
                       }}
-                      className="hover:text-destructive transition-colors"
+                      className="hover:text-destructive transition-colors p-1 rounded"
+                      type="button"
+                      aria-label={likedSkills.has(skill.id) ? 'Unlike skill' : 'Like skill'}
                     >
                       <Heart
                         className={cn(
-                          'w-3.5 h-3.5 transition-colors',
+                          'w-3.5 h-3.5 transition-colors pointer-events-none',
                           likedSkills.has(skill.id) ? 'fill-destructive text-destructive' : ''
                         )}
                       />
