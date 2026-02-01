@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Send, Loader2, Sparkles, FileCode, Terminal as TerminalIcon } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import { opencodeService } from '../../lib/opencode-client';
@@ -11,6 +11,7 @@ interface SkillExecutorProps {
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  isStreaming?: boolean;
 }
 
 export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
@@ -18,6 +19,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [isExecuting, setIsExecuting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'terminal' | 'files'>('chat');
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     console.log('[SkillExecutor] Skill loaded:', skill.name);
@@ -27,7 +31,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     );
   }, [skill]);
 
-  const handleExecute = async () => {
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, terminalOutput]);
+
+  const handleExecute = useCallback(async () => {
     if (!input.trim()) return;
 
     const userMsg: Message = { role: 'user', content: input };
@@ -35,33 +43,73 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     setInput('');
     setIsExecuting(true);
     setActiveTab('chat');
+    setTerminalOutput([]);
+
+    const assistantIndex = messages.length + 1;
 
     try {
       console.log('[SkillExecutor] Executing skill:', skill.id);
 
-      const result = await opencodeService.executeSkill(
+      const streamCallbacks = {
+        onChunk: (chunk: string) => {
+          setMessages((prev: Message[]) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantIndex] && newMessages[assistantIndex].role === 'assistant') {
+              newMessages[assistantIndex].content += chunk;
+            } else {
+              newMessages.push({
+                role: 'assistant',
+                content: chunk,
+                isStreaming: true,
+              });
+            }
+            return newMessages;
+          });
+          setTerminalOutput((prev) => [...prev, chunk]);
+        },
+        onComplete: () => {
+          setMessages((prev: Message[]) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantIndex]) {
+              newMessages[assistantIndex].isStreaming = false;
+            }
+            return newMessages;
+          });
+          setIsExecuting(false);
+          console.log('[SkillExecutor] Skill executed successfully');
+        },
+        onError: (error: string) => {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', content: `Error: ${error}`, isStreaming: false },
+          ]);
+          setTerminalOutput((prev) => [...prev, `Error: ${error}`]);
+          setIsExecuting(false);
+          console.error('[SkillExecutor] Error:', error);
+        },
+      };
+
+      const newSessionId = await opencodeService.executeSkillStream(
         skill.id,
         skill.config.systemPrompt || '',
-        userMsg.content
+        userMsg.content,
+        streamCallbacks,
+        sessionIdRef.current || undefined
       );
 
-      if (result.success) {
-        const assistantMsg: Message = {
-          role: 'assistant',
-          content: result.output || '(No output returned)',
-        };
-        setMessages((prev: Message[]) => [...prev, assistantMsg]);
-        console.log('[SkillExecutor] Skill executed successfully');
-      } else {
-        throw new Error(result.error || 'Execution failed');
+      if (newSessionId) {
+        sessionIdRef.current = newSessionId;
       }
     } catch (error: any) {
       console.error('[SkillExecutor] Error:', error);
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
-    } finally {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `Error: ${error.message}`, isStreaming: false },
+      ]);
+      setTerminalOutput((prev) => [...prev, `Error: ${error.message}`]);
       setIsExecuting(false);
     }
-  };
+  }, [input, skill, messages.length]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -112,17 +160,20 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[90%] p-3 rounded-lg text-sm shadow-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground'}`}
+                    className={`max-w-[90%] p-3 rounded-lg text-sm shadow-sm ${
+                      m.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-card border border-border text-foreground'
+                    }`}
                   >
                     <pre className="whitespace-pre-wrap font-sans">{m.content}</pre>
+                    {m.isStreaming && (
+                      <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse" />
+                    )}
                   </div>
                 </div>
               ))}
-              {isExecuting && (
-                <div className="text-foreground-secondary text-xs flex items-center gap-2 p-2">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Agent is working...
-                </div>
-              )}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 bg-background border-t border-border">
@@ -146,6 +197,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
               </div>
               <div className="flex justify-between items-center mt-2 px-1">
                 <span className="text-xs text-foreground-secondary">Cmd + Enter to send</span>
+                {isExecuting && (
+                  <span className="text-xs text-foreground-secondary flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Agent is working...
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -168,11 +224,30 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
               </button>
             </div>
 
-            <div className="flex-1 relative overflow-hidden flex items-center justify-center text-foreground-secondary text-sm">
-              <div className="text-center p-8">
-                <p>Terminal output is not available in simple mode.</p>
-                <p className="text-xs mt-2 opacity-70">Backend execution via OpenCode</p>
-              </div>
+            <div className="flex-1 relative overflow-hidden">
+              {activeTab === 'terminal' && (
+                <div className="absolute inset-0 overflow-auto p-4 font-mono text-xs text-foreground">
+                  {terminalOutput.length === 0 ? (
+                    <div className="text-foreground-secondary text-center mt-20">
+                      Terminal output will appear here...
+                    </div>
+                  ) : (
+                    terminalOutput.map((line, i) => (
+                      <div key={i} className="py-0.5 break-words">
+                        <span className="text-primary">$</span> {line}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+              {activeTab === 'files' && (
+                <div className="absolute inset-0 flex items-center justify-center text-foreground-secondary text-sm">
+                  <div className="text-center p-8">
+                    <p>File view is not available in simple mode.</p>
+                    <p className="text-xs mt-2 opacity-70">Backend execution via OpenCode</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
