@@ -11,9 +11,9 @@ const CATEGORIES = [
 
 export function Categories({ onSelectCategory }: { onSelectCategory: (cat: string) => void }) {
   return (
-    <section className="py-20 bg-pink-50 border-t border-pink-200" id="categories-section">
+    <section className="py-20 bg-primary/10 border-t border-primary/20" id="categories-section">
       <div className="container max-w-7xl mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-8 font-candy flex items-center gap-3 text-text-main">
+        <h2 className="text-2xl font-bold mb-8 font-candy flex items-center gap-3 text-foreground">
           <Folder className="w-6 h-6 text-primary" />
           <span>Skill Directories</span>
         </h2>
@@ -23,14 +23,14 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
             <div
               key={i}
               onClick={() => onSelectCategory(cat.name)}
-              className="group bg-white p-6 rounded-xl border border-pink-200 shadow-sm hover:shadow-candy transition-all cursor-pointer"
+              className="group bg-white p-6 rounded-xl border border-primary/20 shadow-sm hover:shadow-lg transition-all cursor-pointer"
             >
               <div className="font-mono text-sm">
-                <div className="text-pink-300 mb-2">// {cat.count} modules</div>
+                <div className="text-primary/70 mb-2">// {cat.count} modules</div>
                 <div className="text-primary mb-1">
-                  "{cat.name.toLowerCase()}": <span className="text-text-main">{'{'}</span>
+                  "{cat.name.toLowerCase()}": <span className="text-foreground">{'{'}</span>
                 </div>
-                <div className="pl-4 text-text-muted">
+                <div className="pl-4 text-foreground-secondary">
                   <span className="text-secondary">exports</span>: [
                   {cat.exports.map((e, idx) => (
                     <span key={idx}>
@@ -40,10 +40,10 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
                   ))}
                   ]
                 </div>
-                <div className="text-text-main">{'}'}</div>
+                <div className="text-foreground">{'}'}</div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-pink-100 flex items-center justify-between text-xs font-mono text-text-muted group-hover:text-primary transition-colors">
+              <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-mono text-foreground-secondary group-hover:text-primary transition-colors">
                 <span>$ cd ./{cat.name.toLowerCase()} && ls</span>
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </div>

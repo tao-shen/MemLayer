@@ -18,7 +18,9 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [generatedSkill, setGeneratedSkill] = useState<Partial<Skill> | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
+    null
+  );
   const [isUploading, setIsUploading] = useState(false);
 
   const { startAnalysis, status, result, error } = useSkillAnalysis();
@@ -38,10 +40,10 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
     try {
       // For GitHub Pages, simulate file upload
       setFeedback({ type: 'success', message: 'Files prepared for analysis...' });
-      
+
       // Create mock file IDs
       const mockFileIds = selectedFiles.map((_, i) => `file-${i}-${Date.now()}`);
-      
+
       // Start analysis
       await startAnalysis(mockFileIds);
     } catch (err) {
@@ -70,13 +72,13 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
         description: analysisResult.suggestedDescription,
         category: analysisResult.suggestedCategory,
         icon: '✨',
-        color: 'bg-indigo-100 border-indigo-200 text-indigo-700',
+        color: 'bg-primary/10 border-primary/20 text-primary',
         config: {
           capabilities: analysisResult.suggestedCapabilities,
           systemPrompt: analysisResult.systemPrompt,
           parameters: {},
         },
-        sourceFiles: selectedFiles.map(f => f.name),
+        sourceFiles: selectedFiles.map((f) => f.name),
         analysisContext: analysisResult,
         installCommand: `skill install ${analysisResult.suggestedName.toLowerCase().replace(/\s+/g, '-')}`,
         popularity: 0,
@@ -85,7 +87,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
+
       setGeneratedSkill(skill);
       setStep('preview');
       setFeedback({ type: 'success', message: 'Skill generated successfully!' });
@@ -99,11 +101,11 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
   const handleSaveSkill = async (updatedSkill: Partial<Skill>) => {
     try {
       storageUtils.saveSkill(updatedSkill);
-      
+
       setStep('complete');
       setFeedback({ type: 'success', message: 'Skill saved successfully!' });
       setIsUploading(false);
-      
+
       setTimeout(() => {
         onComplete();
       }, 2000);
@@ -135,9 +137,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
           <ArrowLeft className="w-5 h-5" />
           Back
         </button>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Create AI Skill
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create AI Skill</h1>
         <p className="text-gray-600">
           Upload your files and let AI analyze and generate a custom skill
         </p>
@@ -145,8 +145,12 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
 
       {/* Feedback Messages */}
       {feedback && (
-        <div className={`p-4 rounded-lg ${feedback.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          <p className={`text-sm ${feedback.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+        <div
+          className={`p-4 rounded-lg ${feedback.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+        >
+          <p
+            className={`text-sm ${feedback.type === 'success' ? 'text-green-800' : 'text-red-800'}`}
+          >
             {feedback.message}
           </p>
         </div>
@@ -170,7 +174,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
                   <div
                     className={`
                       w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all
-                      ${isActive ? 'bg-pink-500 text-white scale-110' : ''}
+                      ${isActive ? 'bg-primary text-white scale-110' : ''}
                       ${isComplete ? 'bg-green-500 text-white' : ''}
                       ${!isActive && !isComplete ? 'bg-gray-200 text-gray-500' : ''}
                     `}
@@ -181,9 +185,7 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
                 </div>
                 {index < 3 && (
                   <div
-                    className={`w-16 h-1 rounded ${
-                      isComplete ? 'bg-green-500' : 'bg-gray-200'
-                    }`}
+                    className={`w-16 h-1 rounded ${isComplete ? 'bg-green-500' : 'bg-gray-200'}`}
                   />
                 )}
               </div>
@@ -197,13 +199,13 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
         {step === 'upload' && (
           <div className="space-y-6">
             <FileUploadZone onFilesSelected={handleFilesSelected} />
-            
+
             {selectedFiles.length > 0 && (
               <div className="flex justify-end">
                 <button
                   onClick={handleStartAnalysis}
                   disabled={isUploading}
-                  className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploading ? 'Uploading...' : 'Start Analysis'}
                 </button>
@@ -242,12 +244,8 @@ export function SkillCreatorPage({ onComplete, onCancel }: SkillCreatorPageProps
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Skill Created Successfully!
-            </h2>
-            <p className="text-gray-600">
-              Redirecting to skills library...
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Skill Created Successfully!</h2>
+            <p className="text-gray-600">Redirecting to skills library...</p>
           </div>
         )}
       </div>

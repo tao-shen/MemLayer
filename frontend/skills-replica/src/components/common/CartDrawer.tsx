@@ -72,7 +72,7 @@ export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear, onPurc
               {/* List */}
               <div className="space-y-3">
                 {cartItems.map(item => (
-                  <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 border border-gray-100 rounded-xl group hover:border-pink-200 transition-colors">
+                  <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 border border-gray-100 rounded-xl group hover:border-primary/20 transition-colors">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${item.color}`}>
                       {item.icon}
                     </div>
@@ -120,7 +120,7 @@ export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear, onPurc
           <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-3">
             <button 
               onClick={handleCopy}
-              className="w-full py-3 bg-primary text-white rounded-xl font-bold font-candy text-lg shadow-lg shadow-pink-200 hover:bg-pink-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary text-white rounded-xl font-bold font-candy text-lg shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Download className="w-5 h-5" />
               checkout --merge

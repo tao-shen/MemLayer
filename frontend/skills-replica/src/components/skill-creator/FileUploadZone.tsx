@@ -68,8 +68,8 @@ export function FileUploadZone({ onFilesSelected, maxFiles = 10 }: FileUploadZon
           border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
           transition-all duration-200
           ${isDragActive 
-            ? 'border-pink-500 bg-pink-50' 
-            : 'border-gray-300 bg-gray-50 hover:border-pink-400 hover:bg-pink-50/50'
+            ? 'border-primary bg-primary/10' 
+            : 'border-gray-300 bg-gray-50 hover:border-primary/50 hover:bg-primary/5'
           }
         `}
       >
@@ -78,9 +78,9 @@ export function FileUploadZone({ onFilesSelected, maxFiles = 10 }: FileUploadZon
         <div className="flex flex-col items-center gap-4">
           <div className={`
             w-16 h-16 rounded-full flex items-center justify-center
-            ${isDragActive ? 'bg-pink-200' : 'bg-gray-200'}
+            ${isDragActive ? 'bg-primary/30' : 'bg-gray-200'}
           `}>
-            <Upload className={`w-8 h-8 ${isDragActive ? 'text-pink-600' : 'text-gray-500'}`} />
+            <Upload className={`w-8 h-8 ${isDragActive ? 'text-primary' : 'text-gray-500'}`} />
           </div>
           
           <div>

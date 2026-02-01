@@ -87,7 +87,9 @@ export function GitHubImportForm({ onImport, onCancel }: GitHubImportFormProps) 
       const match = githubUrl.match(urlPattern);
 
       if (!match) {
-        throw new Error('Invalid GitHub URL. Please use format: https://github.com/owner/repo or https://github.com/owner/repo/tree/branch');
+        throw new Error(
+          'Invalid GitHub URL. Please use format: https://github.com/owner/repo or https://github.com/owner/repo/tree/branch'
+        );
       }
 
       const [, owner, repo, branch = 'main'] = match;
@@ -125,7 +127,7 @@ export function GitHubImportForm({ onImport, onCancel }: GitHubImportFormProps) 
       description: preview.description,
       category: preview.category as any,
       icon: preview.icon,
-      color: 'bg-indigo-100 border-indigo-200 text-indigo-700',
+      color: 'bg-primary/10 border-primary/20 text-primary',
       config: {
         capabilities: preview.capabilities,
         systemPrompt: preview.systemPrompt,
@@ -168,7 +170,9 @@ export function GitHubImportForm({ onImport, onCancel }: GitHubImportFormProps) 
           Back
         </button>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Import Skill from GitHub</h1>
-        <p className="text-gray-600">Import a skill from a GitHub repository containing a skill.md file</p>
+        <p className="text-gray-600">
+          Import a skill from a GitHub repository containing a skill.md file
+        </p>
       </div>
 
       {/* Import Form */}
@@ -184,7 +188,7 @@ export function GitHubImportForm({ onImport, onCancel }: GitHubImportFormProps) 
               value={githubUrl}
               onChange={(e) => setGithubUrl(e.target.value)}
               placeholder="https://github.com/owner/repo or https://github.com/owner/repo/tree/branch"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p className="text-xs text-gray-500 mt-2">
               The repository must contain a skill.md file in the root or specified branch
@@ -199,10 +203,10 @@ export function GitHubImportForm({ onImport, onCancel }: GitHubImportFormProps) 
           )}
 
           {/* Example */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm font-medium text-blue-900 mb-2">Example skill.md format:</p>
-            <pre className="text-xs text-blue-800 overflow-x-auto">
-{`# Code Reviewer
+          <div className="p-4 bg-secondary/30 border border-border rounded-lg">
+            <p className="text-sm font-medium text-foreground mb-2">Example skill.md format:</p>
+            <pre className="text-xs text-foreground-secondary overflow-x-auto">
+              {`# Code Reviewer
 category: Development
 icon: 👀
 
@@ -230,7 +234,7 @@ You are an expert code reviewer...
             <button
               onClick={handleImport}
               disabled={!githubUrl.trim() || isLoading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -266,7 +270,9 @@ You are an expert code reviewer...
 
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">System Prompt</h3>
-            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg whitespace-pre-wrap">{preview.systemPrompt}</p>
+            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg whitespace-pre-wrap">
+              {preview.systemPrompt}
+            </p>
           </div>
 
           {preview.capabilities.length > 0 && (
@@ -274,7 +280,10 @@ You are an expert code reviewer...
               <h3 className="text-sm font-medium text-gray-700 mb-2">Capabilities</h3>
               <div className="flex flex-wrap gap-2">
                 {preview.capabilities.map((cap, index) => (
-                  <span key={index} className="px-3 py-1 bg-pink-100 text-pink-700 text-sm rounded-full">
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-primary/20 text-primary-active text-sm rounded-full"
+                  >
                     {cap}
                   </span>
                 ))}
@@ -295,7 +304,7 @@ You are an expert code reviewer...
             </button>
             <button
               onClick={handleConfirmImport}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
             >
               Confirm Import
             </button>

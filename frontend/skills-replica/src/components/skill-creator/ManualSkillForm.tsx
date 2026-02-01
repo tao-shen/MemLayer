@@ -7,7 +7,14 @@ interface ManualSkillFormProps {
   onCancel: () => void;
 }
 
-const CATEGORIES: SkillCategory[] = ['Knowledge', 'Tools', 'Productivity', 'Development', 'Analysis', 'Custom'];
+const CATEGORIES: SkillCategory[] = [
+  'Knowledge',
+  'Tools',
+  'Productivity',
+  'Development',
+  'Analysis',
+  'Custom',
+];
 const ICONS = ['✨', '🚀', '🎯', '💡', '🔧', '📚', '🎨', '⚡', '🌟', '🎭'];
 
 export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
@@ -64,7 +71,7 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
       description,
       category,
       icon,
-      color: 'bg-indigo-100 border-indigo-200 text-indigo-700',
+      color: 'bg-primary/10 border-primary/20 text-primary',
       config: {
         capabilities,
         systemPrompt,
@@ -114,15 +121,13 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Skill Name *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Skill Name *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Code Reviewer, Data Analyzer"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -131,15 +136,13 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe what this skill does..."
             rows={3}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none ${
               errors.description ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -149,13 +152,11 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
         {/* Category and Icon */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as SkillCategory)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -166,13 +167,11 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Icon
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Icon</label>
             <select
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {ICONS.map((ico) => (
                 <option key={ico} value={ico}>
@@ -185,25 +184,28 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
 
         {/* System Prompt */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            System Prompt *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">System Prompt *</label>
           <textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             placeholder="Define how this skill should behave and respond..."
             rows={4}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none ${
               errors.systemPrompt ? 'border-red-500' : 'border-gray-300'
             }`}
           />
-          {errors.systemPrompt && <p className="text-sm text-red-600 mt-1">{errors.systemPrompt}</p>}
+          {errors.systemPrompt && (
+            <p className="text-sm text-red-600 mt-1">{errors.systemPrompt}</p>
+          )}
         </div>
 
         {/* Capabilities */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Capabilities * {capabilities.length > 0 && <span className="text-gray-500">({capabilities.length})</span>}
+            Capabilities *{' '}
+            {capabilities.length > 0 && (
+              <span className="text-gray-500">({capabilities.length})</span>
+            )}
           </label>
 
           {/* Add capability input */}
@@ -219,12 +221,12 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
                 }
               }}
               placeholder="Enter a capability and press Enter"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
               type="button"
               onClick={handleAddCapability}
-              className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Add
@@ -252,7 +254,9 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
             </div>
           )}
 
-          {errors.capabilities && <p className="text-sm text-red-600 mt-1">{errors.capabilities}</p>}
+          {errors.capabilities && (
+            <p className="text-sm text-red-600 mt-1">{errors.capabilities}</p>
+          )}
         </div>
 
         {/* Actions */}
@@ -266,7 +270,7 @@ export function ManualSkillForm({ onSave, onCancel }: ManualSkillFormProps) {
           </button>
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
           >
             Create Skill
           </button>

@@ -79,7 +79,7 @@ export function SkillModal({ skill, onClose }: SkillModalProps) {
               <h3 className="text-sm font-bold text-gray-900">Claude Desktop Config</h3>
               <button 
                 onClick={handleCopy}
-                className="flex items-center gap-2 text-sm text-primary font-medium hover:text-pink-600 transition-colors"
+                className="flex items-center gap-2 text-sm text-primary font-medium hover:text-primary transition-colors"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Copied!' : 'Copy Config'}
@@ -96,7 +96,7 @@ export function SkillModal({ skill, onClose }: SkillModalProps) {
         <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
            <button 
              onClick={onClose}
-             className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-pink-600 transition-colors shadow-lg shadow-pink-200"
+             className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
            >
              Done
            </button>

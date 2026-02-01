@@ -93,7 +93,7 @@ export function SkillPreviewEditor({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-active flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -134,8 +134,8 @@ export function SkillPreviewEditor({
               {/* Content */}
               <div className="p-5 font-mono text-sm">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-purple-600 font-bold">export</span>
-                  <span className="text-blue-600 font-bold">
+                  <span className="text-syntax-keyword font-bold">export</span>
+                  <span className="text-syntax-function font-bold">
                     {skill.name?.replace(/\s+/g, '') || 'NewSkill'}
                   </span>
                 </div>
@@ -149,7 +149,7 @@ export function SkillPreviewEditor({
               {/* Footer */}
               <div className="h-10 px-4 border-t border-gray-100 bg-[#FAFAFA] flex items-center justify-between text-xs font-mono text-gray-500">
                 <span>{CATEGORY_LABELS[skill.category as SkillCategory] || 'Category'}</span>
-                <span className="text-pink-500">{skill.icon || '✨'}</span>
+                <span className="text-primary">{skill.icon || '✨'}</span>
               </div>
             </div>
           </div>
@@ -159,15 +159,13 @@ export function SkillPreviewEditor({
         <div className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Skill Name *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Skill Name *</label>
             {isEditing ? (
               <input
                 type="text"
                 value={skill.name || ''}
                 onChange={(e) => setSkill({ ...skill, name: e.target.value })}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="e.g., Data Analysis Expert"
@@ -195,7 +193,7 @@ export function SkillPreviewEditor({
                 value={skill.description || ''}
                 onChange={(e) => setSkill({ ...skill, description: e.target.value })}
                 rows={4}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none ${
                   errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Describe what this skill can do..."
@@ -215,14 +213,12 @@ export function SkillPreviewEditor({
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
             {isEditing ? (
               <select
                 value={skill.category || ''}
                 onChange={(e) => setSkill({ ...skill, category: e.target.value as SkillCategory })}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring ${
                   errors.category ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -247,9 +243,9 @@ export function SkillPreviewEditor({
           </div>
 
           {/* Analysis Context */}
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">AI Analysis Results</h4>
-            <div className="space-y-2 text-xs text-blue-800">
+          <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+            <h4 className="text-sm font-medium text-foreground mb-2">AI Analysis Results</h4>
+            <div className="space-y-2 text-xs text-foreground-secondary">
               <div>
                 <span className="font-medium">Work Domain:</span>{' '}
                 {analysisContext.workDomain.join(', ')}
@@ -279,7 +275,7 @@ export function SkillPreviewEditor({
         <button
           onClick={handleSave}
           disabled={isSaving || Object.keys(errors).length > 0 || !hasChanges}
-          className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-primary-active rounded-lg hover:from-primary-hover hover:to-primary-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? (
             <>

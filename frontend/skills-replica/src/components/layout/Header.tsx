@@ -16,13 +16,13 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-pink-200 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
         {/* Logo Area */}
         <div className="flex items-center gap-2 font-mono text-sm md:text-base">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-2xl leading-none">🍬</span>
-            <span className="font-bold text-text-main font-candy text-lg">
+            <span className="font-bold text-foreground font-candy text-lg">
               ~/ Candy-Shop
             </span>
           </button>
@@ -36,7 +36,7 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
         </div>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-mono text-text-muted">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-mono text-foreground-secondary">
           <button onClick={onNavFind} className="hover:text-primary transition-colors flex items-center gap-2 group">
             <span className="text-secondary">$</span>
             <span className="group-hover:translate-x-0.5 transition-transform">find --sweet</span>
@@ -95,7 +95,7 @@ export function Header({ onOpenAuth, onOpenCart, user, cartCount, onNavFind, onN
               </div>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                className="p-1.5 text-foreground-secondary hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />

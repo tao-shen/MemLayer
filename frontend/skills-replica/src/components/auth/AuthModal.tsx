@@ -52,7 +52,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
 
         <div className="text-center mb-8">
-          <div className="mx-auto w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center mb-4 text-2xl">
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-2xl">
             🍬
           </div>
           <h2 className="text-2xl font-bold text-gray-900 font-sans">

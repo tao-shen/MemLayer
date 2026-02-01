@@ -170,7 +170,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         </div>
         <button
           onClick={onCreateNew}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all shadow-md"
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all shadow-md"
         >
           <Plus className="w-5 h-5" />
           Create New Skill
@@ -196,7 +196,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search skills..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -206,7 +206,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           <select
             value={categoryFilter || ''}
             onChange={(e) => setCategoryFilter(e.target.value || null)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">All Categories</option>
             {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -223,7 +223,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         <button
           onClick={() => { setActiveTab('all'); loadSkills(); }}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'all'
-              ? 'border-pink-500 text-pink-600'
+              ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
@@ -232,7 +232,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         <button
           onClick={() => { setActiveTab('created'); loadSkills(); }}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'created'
-              ? 'border-pink-500 text-pink-600'
+              ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
@@ -241,7 +241,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         <button
           onClick={() => { setActiveTab('store'); loadSkills(); }}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'store'
-              ? 'border-pink-500 text-pink-600'
+              ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
@@ -250,7 +250,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         <button
           onClick={() => { setActiveTab('liked'); loadSkills(); }}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'liked'
-              ? 'border-pink-500 text-pink-600'
+              ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
@@ -261,7 +261,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
       {/* Skills Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredSkills.length === 0 ? (
         <div className="text-center py-20">
@@ -283,7 +283,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           {!searchQuery && !categoryFilter && (
             <button
               onClick={onCreateNew}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
             >
               <Plus className="w-5 h-5" />
               Create Your First Skill
@@ -341,7 +341,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
                   {activeTab === 'liked' ? (
                     <button
                       onClick={() => onUseSkill(skill as any)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-active text-white text-sm font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
                     >
                       <Play className="w-4 h-4" />
                       View Details
@@ -350,7 +350,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
                     <>
                       <button
                         onClick={() => onUseSkill(skill)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-active text-white text-sm font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
                       >
                         <Play className="w-4 h-4" />
                         Use

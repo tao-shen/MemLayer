@@ -38,9 +38,9 @@
     --color-secondary: #f4f4f5;
     --color-secondary-foreground: #18181b;
 
-    /* 强调色 - 糖果感的点缀（保留品牌特色） */
-    --color-accent: #f0abfc; /* 淡紫色点缀 */
-    --color-accent-foreground: #86198f;
+    /* 强调色 - 使用青色代替粉色 */
+    --color-accent: #2dd4bf; /* Teal-400 */
+    --color-accent-foreground: #0f766e;
 
     /* 语义色 */
     --color-success: #10b981;
@@ -65,7 +65,7 @@
     --color-syntax-keyword: #7c3aed; /* 紫色关键词 */
     --color-syntax-string: #059669; /* 绿色字符串 */
     --color-syntax-comment: #9ca3af; /* 灰色注释 */
-    --color-syntax-variable: #db2777; /* 粉色变量 */
+    --color-syntax-variable: #ea580c; /* 橙色变量，代替粉色 */
     --color-syntax-function: #2563eb; /* 蓝色函数 */
   }
 
@@ -73,12 +73,12 @@
     /* ==================== 深色主题 ==================== */
 
     /* 背景色 - 深灰而非纯黑，减少眼疲劳 */
-    --color-background: #0a0a0a;
-    --color-background-secondary: #141414;
-    --color-background-tertiary: #1c1c1c;
+    --color-background: #09090b; /* Zinc-950 */
+    --color-background-secondary: #18181b; /* Zinc-900 */
+    --color-background-tertiary: #27272a; /* Zinc-800 */
 
     /* 卡片背景 */
-    --color-card: #141414;
+    --color-card: #18181b;
     --color-card-foreground: #fafafa;
 
     /* 文本色 - 高对比度 */
@@ -91,15 +91,15 @@
     --color-primary: #818cf8; /* 亮靛蓝 */
     --color-primary-hover: #a5b4fc; /* Hover */
     --color-primary-active: #6366f1; /* Active */
-    --color-primary-foreground: #0a0a0a;
+    --color-primary-foreground: #09090b;
 
     /* 次要色 */
-    --color-secondary: #1c1c1c;
+    --color-secondary: #27272a;
     --color-secondary-foreground: #fafafa;
 
-    /* 强调色 - 深色模式下调整 */
-    --color-accent: #c084fc; /* 亮紫色点缀 */
-    --color-accent-foreground: #581c87;
+    /* 强调色 - 深色模式调整 */
+    --color-accent: #2dd4bf; /* Teal-400 */
+    --color-accent-foreground: #115e59;
 
     /* 语义色 - 深色模式调整 */
     --color-success: #34d399;
@@ -116,7 +116,7 @@
     --color-border-hover: #3f3f46;
 
     /* 输入框 */
-    --color-input: #141414;
+    --color-input: #18181b;
     --color-input-border: #27272a;
     --color-ring: #818cf8;
 
@@ -124,7 +124,7 @@
     --color-syntax-keyword: #c084fc;
     --color-syntax-string: #34d399;
     --color-syntax-comment: #6b7280;
-    --color-syntax-variable: #f472b6;
+    --color-syntax-variable: #fb923c; /* 橙色 */
     --color-syntax-function: #60a5fa;
   }
 }

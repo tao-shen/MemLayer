@@ -1,6 +1,14 @@
 // Trigger deployment refresh
 import { useState, useEffect } from 'react';
-import { X, Send, Loader2, Sparkles, Upload, FileCode, Terminal as TerminalIcon } from 'lucide-react';
+import {
+  X,
+  Send,
+  Loader2,
+  Sparkles,
+  Upload,
+  FileCode,
+  Terminal as TerminalIcon,
+} from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import { Terminal } from '../common/Terminal';
 import { getWebContainerInstance } from '../../lib/webcontainer';
@@ -46,7 +54,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         setWebContainer(instance);
         refreshFiles(instance);
       } catch (e) {
-        console.error("Failed to boot WebContainer", e);
+        console.error('Failed to boot WebContainer', e);
       }
     };
     boot();
@@ -63,7 +71,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       const fileList = await wc.fs.readdir('.');
       setFiles(fileList);
     } catch (e) {
-      console.error("Error listing files", e);
+      console.error('Error listing files', e);
     }
   };
 
@@ -81,11 +89,17 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       for (const file of e.target.files) {
         const content = await file.arrayBuffer(); // WebContainer writes binary as Uint8Array usually
         await webContainer.fs.writeFile(file.name, new Uint8Array(content));
-        setMessages(prev => [...prev, { role: 'assistant', content: `Uploaded file: ${file.name}` }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `Uploaded file: ${file.name}` },
+        ]);
       }
       await refreshFiles(webContainer);
     } catch (err: any) {
-      setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: `Upload failed: ${err.message}` }]);
+      setMessages((prev: Message[]) => [
+        ...prev,
+        { role: 'assistant', content: `Upload failed: ${err.message}` },
+      ]);
     } finally {
       setIsExecuting(false);
     }
@@ -106,22 +120,26 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
     // Removed unused skillContext variable
 
-    // If it's the first message, prefix with skill context? 
+    // If it's the first message, prefix with skill context?
     // Actually, let's just push the raw input, but maybe hint the agent about the skill in the system prompt.
     // implementation_plan said we'd use generic agent logic, so let's stick to that but maybe prepend context
 
-    const effectiveInput = anthropicMessages.length === 0
-      ? `[Skill Context: ${skill.name} - ${skill.description}]\n${input}`
-      : input;
+    const effectiveInput =
+      anthropicMessages.length === 0
+        ? `[Skill Context: ${skill.name} - ${skill.description}]\n${input}`
+        : input;
 
-    const newHistory: Anthropic.MessageParam[] = [...anthropicMessages, { role: 'user', content: effectiveInput }];
+    const newHistory: Anthropic.MessageParam[] = [
+      ...anthropicMessages,
+      { role: 'user', content: effectiveInput },
+    ];
     setAnthropicMessages(newHistory);
 
     try {
       const context: AgentContext = {
         webContainer,
         apiKey,
-        onLog: (_msg: string) => { } // Logs go to terminal automatically via pipe
+        onLog: (_msg: string) => {}, // Logs go to terminal automatically via pipe
       };
 
       let currentHistory = newHistory;
@@ -131,10 +149,16 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       while (response.stop_reason === 'tool_use') {
         const toolUseContent = response.content.find((c: any) => c.type === 'tool_use');
         if (toolUseContent && toolUseContent.type === 'tool_use') {
-          const assistantMsg: Anthropic.MessageParam = { role: 'assistant', content: response.content };
+          const assistantMsg: Anthropic.MessageParam = {
+            role: 'assistant',
+            content: response.content,
+          };
           currentHistory = [...currentHistory, assistantMsg];
 
-          setMessages((prev: Message[]) => [...prev, { role: 'assistant', content: `Executing: ${toolUseContent.name}...` }]);
+          setMessages((prev: Message[]) => [
+            ...prev,
+            { role: 'assistant', content: `Executing: ${toolUseContent.name}...` },
+          ]);
           setActiveTab('terminal'); // Auto-switch to terminal for tool output? Optional.
 
           const toolResult = await executeToolCall(toolUseContent, context);
@@ -157,10 +181,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         setMessages((prev: Message[]) => [...prev, assistantMsg]);
         setAnthropicMessages([...currentHistory, { role: 'assistant', content: response.content }]);
       }
-
     } catch (error: any) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
     } finally {
       setIsExecuting(false);
     }
@@ -178,13 +201,19 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-2xl shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-active flex items-center justify-center text-2xl shadow-sm">
               {skill.icon}
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{skill.name}</h2>
               <p className="text-sm text-gray-500 flex items-center gap-2">
-                {webContainer ? <span className="text-green-600 flex items-center gap-1">● Environment Ready</span> : <span className="text-amber-600 flex items-center gap-1">● Booting Environment...</span>}
+                {webContainer ? (
+                  <span className="text-success flex items-center gap-1">● Environment Ready</span>
+                ) : (
+                  <span className="text-warning flex items-center gap-1">
+                    ● Booting Environment...
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -192,7 +221,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             <input
               type="password"
               placeholder="Anthropic API Key"
-              className="bg-white text-xs p-2 rounded border border-gray-300 focus:border-pink-500 outline-none w-48 shadow-sm"
+              className="bg-background text-xs p-2 rounded border border-border focus:border-primary outline-none w-48 shadow-sm text-foreground"
               value={apiKey}
               onChange={handleApiKeyChange}
             />
@@ -208,23 +237,34 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         {/* Main Content - Split Config */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Chat & Input */}
-          <div className={`w-1/2 flex flex-col border-r border-gray-200 transition-all ${activeTab !== 'chat' ? 'hidden md:flex' : 'flex'}`}>
+          <div
+            className={`w-1/2 flex flex-col border-r border-gray-200 transition-all ${activeTab !== 'chat' ? 'hidden md:flex' : 'flex'}`}
+          >
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
               {messages.length === 0 && (
                 <div className="text-center mt-20 opacity-50">
-                  <Sparkles className="w-12 h-12 mx-auto mb-2 text-pink-400" />
+                  <Sparkles className="w-12 h-12 mx-auto mb-2 text-primary" />
                   <p>Enter your API Key and start the task.</p>
                   <p className="text-sm mt-2">You can upload files or just ask questions.</p>
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[90%] p-3 rounded-lg text-sm shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-800'}`}>
+                <div
+                  key={i}
+                  className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[90%] p-3 rounded-lg text-sm shadow-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground'}`}
+                  >
                     <pre className="whitespace-pre-wrap font-sans">{m.content}</pre>
                   </div>
                 </div>
               ))}
-              {isExecuting && <div className="text-gray-500 text-xs flex items-center gap-2 p-2"><Loader2 className="w-3 h-3 animate-spin" /> Agent is working...</div>}
+              {isExecuting && (
+                <div className="text-gray-500 text-xs flex items-center gap-2 p-2">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Agent is working...
+                </div>
+              )}
             </div>
 
             <div className="p-4 bg-white border-t border-gray-200">
@@ -236,18 +276,18 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   placeholder="What should the agent do?"
                   rows={3}
                   disabled={!webContainer || !apiKey || isExecuting}
-                  className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none bg-gray-50 focus:bg-white transition-colors"
+                  className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none bg-gray-50 focus:bg-white transition-colors"
                 />
                 <button
                   onClick={handleExecute}
                   disabled={isExecuting || !input.trim() || !apiKey}
-                  className="absolute right-2 bottom-2 p-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:shadow-none transition-all"
+                  className="absolute right-2 bottom-2 p-2 bg-gradient-to-r from-primary to-primary-active text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:shadow-none transition-all"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex justify-between items-center mt-2 px-1">
-                <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-pink-600 transition-colors">
+                <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer hover:text-primary transition-colors">
                   <Upload className="w-4 h-4" />
                   <span>Upload File</span>
                   <input type="file" className="hidden" multiple onChange={handleFileUpload} />
@@ -258,39 +298,52 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           </div>
 
           {/* Right Panel - Terminal & Files */}
-          <div className={`w-1/2 flex flex-col bg-[#0f0f10] ${activeTab !== 'terminal' && activeTab !== 'files' ? 'hidden md:flex' : 'flex'}`}>
+          <div
+            className={`w-1/2 flex flex-col bg-background-tertiary ${activeTab !== 'terminal' && activeTab !== 'files' ? 'hidden md:flex' : 'flex'}`}
+          >
             {/* Tabs */}
-            <div className="flex border-b border-gray-800">
+            <div className="flex border-b border-border">
               <button
                 onClick={() => setActiveTab('terminal')}
-                className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${activeTab === 'terminal' ? 'text-white border-b-2 border-pink-500 bg-gray-900' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${activeTab === 'terminal' ? 'text-white border-b-2 border-primary bg-gray-900' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 <TerminalIcon className="w-3 h-3" /> Terminal
               </button>
               <button
                 onClick={() => setActiveTab('files')}
-                className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${activeTab === 'files' ? 'text-white border-b-2 border-pink-500 bg-gray-900' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${activeTab === 'files' ? 'text-white border-b-2 border-primary bg-gray-900' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 <FileCode className="w-3 h-3" /> Files ({files.length})
               </button>
             </div>
 
             <div className="flex-1 relative overflow-hidden">
-              <div className={`absolute inset-0 ${activeTab === 'terminal' || activeTab === 'chat' ? 'block' : 'hidden'}`}>
-                {webContainer ? <Terminal webContainer={webContainer} /> : <div className="text-gray-600 p-4 text-sm font-mono">Terminal Waiting...</div>}
-                    </div>
-              <div className={`absolute inset-0 p-4 overflow-y-auto ${activeTab === 'files' ? 'block' : 'hidden'}`}>
+              <div
+                className={`absolute inset-0 ${activeTab === 'terminal' || activeTab === 'chat' ? 'block' : 'hidden'}`}
+              >
+                {webContainer ? (
+                  <Terminal webContainer={webContainer} />
+                ) : (
+                  <div className="text-gray-600 p-4 text-sm font-mono">Terminal Waiting...</div>
+                )}
+              </div>
+              <div
+                className={`absolute inset-0 p-4 overflow-y-auto ${activeTab === 'files' ? 'block' : 'hidden'}`}
+              >
                 {files.length === 0 ? (
                   <div className="text-gray-600 text-sm italic">No files in virtual system.</div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    {files.map(f => (
-                      <div key={f} className="p-2 bg-gray-900 rounded border border-gray-800 text-gray-300 text-xs font-mono flex items-center gap-2">
-                        <FileCode className="w-4 h-4 text-blue-400" />
+                    {files.map((f) => (
+                      <div
+                        key={f}
+                        className="p-2 bg-background-secondary rounded border border-border text-foreground-secondary text-xs font-mono flex items-center gap-2"
+                      >
+                        <FileCode className="w-4 h-4 text-primary" />
                         {f}
-                                  </div>
-                                ))}
-                    </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

@@ -8,7 +8,12 @@ interface AnalysisProgressProps {
   message: string;
 }
 
-export function AnalysisProgress({ status, progress, currentFile, message }: AnalysisProgressProps) {
+export function AnalysisProgress({
+  status,
+  progress,
+  currentFile,
+  message,
+}: AnalysisProgressProps) {
   const steps = [
     { key: 'uploading', label: 'Upload Files', icon: FileText },
     { key: 'extracting', label: 'Extract Content', icon: FileText },
@@ -16,7 +21,7 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
     { key: 'generating', label: 'Generate Skill', icon: Sparkles },
   ];
 
-  const currentStepIndex = steps.findIndex(s => s.key === status);
+  const currentStepIndex = steps.findIndex((s) => s.key === status);
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -24,13 +29,11 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
       <div className="relative">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-primary to-primary-active transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="absolute -top-1 right-0 text-xs font-mono text-gray-500">
-          {progress}%
-        </div>
+        <div className="absolute -top-1 right-0 text-xs font-mono text-gray-500">{progress}%</div>
       </div>
 
       {/* Steps */}
@@ -46,9 +49,9 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
               <div
                 className={`
                   w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
-                  ${isActive ? 'bg-pink-500 text-white scale-110' : ''}
-                  ${isComplete ? 'bg-green-500 text-white' : ''}
-                  ${isPending ? 'bg-gray-200 text-gray-400' : ''}
+                  ${isActive ? 'bg-primary text-white scale-110' : ''}
+                  ${isComplete ? 'bg-success text-success-foreground' : ''}
+                  ${isPending ? 'bg-secondary text-foreground-muted' : ''}
                 `}
               >
                 {isComplete ? (
@@ -62,9 +65,9 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
               <span
                 className={`
                   text-xs font-medium text-center
-                  ${isActive ? 'text-pink-600' : ''}
-                  ${isComplete ? 'text-green-600' : ''}
-                  ${isPending ? 'text-gray-400' : ''}
+                  ${isActive ? 'text-primary' : ''}
+                  ${isComplete ? 'text-success' : ''}
+                  ${isPending ? 'text-foreground-muted' : ''}
                 `}
               >
                 {step.label}
@@ -77,13 +80,11 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
       {/* Status Message */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
         <div className="flex items-start gap-3">
-          <Loader2 className="w-5 h-5 text-pink-500 animate-spin flex-shrink-0 mt-0.5" />
+          <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-700 mb-1">{message}</p>
             {currentFile && (
-              <p className="text-xs text-gray-500 font-mono">
-                Processing: {currentFile}
-              </p>
+              <p className="text-xs text-gray-500 font-mono">Processing: {currentFile}</p>
             )}
           </div>
         </div>
@@ -91,9 +92,7 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
 
       {/* Fun Loading Messages */}
       <div className="text-center">
-        <p className="text-xs text-gray-400 italic">
-          {getLoadingMessage(status)}
-        </p>
+        <p className="text-xs text-gray-400 italic">{getLoadingMessage(status)}</p>
       </div>
     </div>
   );
@@ -101,10 +100,7 @@ export function AnalysisProgress({ status, progress, currentFile, message }: Ana
 
 function getLoadingMessage(status: string): string {
   const messages: Record<string, string[]> = {
-    uploading: [
-      'Uploading your files to the cloud...',
-      'File upload in progress, please wait...',
-    ],
+    uploading: ['Uploading your files to the cloud...', 'File upload in progress, please wait...'],
     extracting: [
       'Reading your file content...',
       'AI is understanding your documents...',
