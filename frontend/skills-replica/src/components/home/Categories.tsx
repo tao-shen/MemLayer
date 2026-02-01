@@ -17,7 +17,7 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
           <Folder className="w-6 h-6 text-primary" />
           <span>Skill Directories</span>
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat, i) => (
             <div
@@ -31,7 +31,7 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
                   "{cat.name.toLowerCase()}": <span className="text-foreground">{'{'}</span>
                 </div>
                 <div className="pl-4 text-foreground-secondary">
-                  <span className="text-secondary">exports</span>: [
+                  <span className="text-foreground-secondary">exports</span>: [
                   {cat.exports.map((e, idx) => (
                     <span key={idx}>
                       <span className="text-accent">'{e}'</span>

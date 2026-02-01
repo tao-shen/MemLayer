@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
+import { OpenCodeRunner } from './opencode-runner';
 import type { Skill } from './skill-generator';
 
 const prisma = new PrismaClient();
@@ -12,9 +13,11 @@ export interface SkillFilter {
 
 export class SkillManagerService {
   private openai: OpenAI;
+  private opencode: OpenCodeRunner;
 
   constructor(apiKey: string) {
     this.openai = new OpenAI({ apiKey });
+    this.opencode = new OpenCodeRunner();
   }
 
   async saveSkill(skill: Skill): Promise<Skill> {
@@ -100,7 +103,7 @@ export class SkillManagerService {
 
   async executeSkill(skillId: string, userId: string, input: string): Promise<any> {
     const skill = await this.getSkill(skillId);
-    
+
     if (!skill) {
       throw new Error('Skill not found');
     }
@@ -108,25 +111,39 @@ export class SkillManagerService {
     const startTime = Date.now();
 
     try {
-      // Execute using OpenAI with skill's system prompt
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: skill.config.systemPrompt,
-          },
-          {
-            role: 'user',
-            content: input,
-          },
-        ],
-        temperature: 0.7,
-      });
+      let output = '';
+      let tokensUsed = 0;
 
-      const output = response.choices[0].message.content || '';
+      // Try OpenCode first if available (configured via env in Runner)
+      try {
+        console.log(`[Execute] Attempting execution via OpenCode for skill ${skill.name}`);
+        output = await this.opencode.run(skill.config.systemPrompt, input);
+        // Estimate tokens or get from response if possible
+        tokensUsed = output.length / 4; // Rough estimate
+      } catch (opencodeError) {
+        console.warn('[Execute] OpenCode execution failed, falling back to OpenAI:', opencodeError);
+
+        // Fallback to OpenAI
+        const response = await this.openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: skill.config.systemPrompt,
+            },
+            {
+              role: 'user',
+              content: input,
+            },
+          ],
+          temperature: 0.7,
+        });
+
+        output = response.choices[0].message.content || '';
+        tokensUsed = response.usage?.total_tokens || 0;
+      }
+
       const duration = Date.now() - startTime;
-      const tokensUsed = response.usage?.total_tokens || 0;
 
       // Save execution record
       const execution = await prisma.skillExecution.create({
@@ -193,7 +210,7 @@ export class SkillManagerService {
       take: 50,
     });
 
-    return executions.map(e => ({
+    return executions.map((e: any) => ({
       id: e.id,
       skillId: e.skillId,
       input: e.input,
