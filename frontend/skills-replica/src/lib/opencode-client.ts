@@ -19,13 +19,13 @@ export interface StreamCallbacks {
   onError: (error: string) => void;
 }
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
+
 class OpenCodeService {
   private client: any = null;
 
   async connect(config: OpenCodeConfig = {}): Promise<void> {
-    const baseUrl = config.hostname
-      ? `http://${config.hostname}:${config.port || 80}`
-      : import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
+    const baseUrl = config.hostname ? `http://${config.hostname}:${config.port || 80}` : BASE_URL;
 
     try {
       this.client = createOpencodeClient({
@@ -39,6 +39,140 @@ class OpenCodeService {
     }
   }
 
+  // Native fetch implementation for streaming
+  async executeSkillStream(
+    skillId: string,
+    systemPrompt: string,
+    userInput: string,
+    callbacks: StreamCallbacks,
+    sessionId?: string
+  ): Promise<string | null> {
+    let currentSessionId: string | null = sessionId ?? null;
+
+    // Create session if needed
+    if (!currentSessionId) {
+      try {
+        const resp = await fetch(`${BASE_URL}/session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: window.location.origin,
+          },
+          body: JSON.stringify({ title: `Skill: ${skillId}` }),
+        });
+        const data = await resp.json();
+        currentSessionId = data.id || null;
+        if (!currentSessionId) {
+          callbacks.onError('Failed to create session');
+          return null;
+        }
+        console.log('[OpenCode] Created session:', currentSessionId);
+      } catch (error: any) {
+        callbacks.onError(`Failed to create session: ${error.message}`);
+        return null;
+      }
+    }
+
+    try {
+      // Send system prompt
+      if (systemPrompt) {
+        await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: window.location.origin,
+          },
+          body: JSON.stringify({ parts: [{ type: 'text', text: systemPrompt }] }),
+        });
+      }
+
+      // Send user input
+      await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: window.location.origin,
+        },
+        body: JSON.stringify({ parts: [{ type: 'text', text: userInput }] }),
+      });
+
+      // Poll for messages
+      await this.pollMessages(currentSessionId, callbacks);
+
+      return currentSessionId;
+    } catch (error: any) {
+      console.error('[OpenCode] Execution error:', error);
+      callbacks.onError(error.message);
+      return currentSessionId;
+    }
+  }
+
+  private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
+    let lastMessageCount = 0;
+    let lastContent = '';
+    let pollCount = 0;
+    const maxPolls = 300;
+    let isComplete = false;
+
+    const poll = async () => {
+      if (isComplete || pollCount >= maxPolls) {
+        if (!isComplete) {
+          callbacks.onComplete();
+        }
+        return;
+      }
+
+      pollCount++;
+
+      try {
+        // Get session status
+        const sessionResp = await fetch(`${BASE_URL}/session/${sessionId}`, {
+          headers: { Origin: window.location.origin },
+        });
+        const session = await sessionResp.json();
+
+        // Get messages
+        const msgsResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
+          headers: { Origin: window.location.origin },
+        });
+        const messages = await msgsResp.json();
+
+        const assistantMessages = messages.filter((m: any) => m.info?.role === 'assistant');
+
+        if (assistantMessages.length > lastMessageCount) {
+          const latestMessage = assistantMessages[assistantMessages.length - 1];
+          const fullContent = latestMessage.info?.parts?.[0]?.text || '';
+
+          if (fullContent.length > lastContent.length) {
+            const delta = fullContent.substring(lastContent.length);
+            callbacks.onChunk(delta);
+            lastContent = fullContent;
+          }
+
+          lastMessageCount = assistantMessages.length;
+        }
+
+        if (
+          session.status === 'completed' ||
+          session.status === 'error' ||
+          session.status === 'idle'
+        ) {
+          isComplete = true;
+          callbacks.onComplete();
+          return;
+        }
+
+        setTimeout(poll, 1000);
+      } catch (error: any) {
+        console.error('[OpenCode] Poll error:', error);
+        setTimeout(poll, 2000);
+      }
+    };
+
+    poll();
+  }
+
+  // Fallback non-streaming method using SDK
   async executeSkill(
     skillId: string,
     systemPrompt: string,
@@ -70,150 +204,26 @@ class OpenCodeService {
         });
       }
 
-      const promptResp = await this.client.session.prompt({
+      await this.client.session.prompt({
         sessionId: currentSessionId,
         body: { parts: [{ type: 'text', text: userInput }] },
       });
 
-      const msgsResp = await this.client.session.messages({ sessionId: currentSessionId });
-      const messages = msgsResp.data || [];
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const msgsResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
+        headers: { Origin: window.location.origin },
+      });
+      const messages = await msgsResp.json();
 
       const lastAssistant = messages.filter((m: any) => m.info?.role === 'assistant').pop();
 
-      const output =
-        lastAssistant?.info?.parts?.[0]?.text ||
-        promptResp.data?.info?.parts?.[0]?.text ||
-        'No output';
+      const output = lastAssistant?.info?.parts?.[0]?.text || 'No output';
 
       return { success: true, output, sessionId: currentSessionId };
     } catch (error: any) {
       console.error('[OpenCode] Execution error:', error);
       return { success: false, output: '', sessionId: currentSessionId, error: error.message };
     }
-  }
-
-  // Streaming execution using polling
-  async executeSkillStream(
-    skillId: string,
-    systemPrompt: string,
-    userInput: string,
-    callbacks: StreamCallbacks,
-    sessionId?: string
-  ): Promise<string | null> {
-    if (!this.client) {
-      await this.connect();
-    }
-
-    let currentSessionId: string | null = sessionId ?? null;
-
-    if (!currentSessionId) {
-      try {
-        const createResp = await this.client.session.create({
-          body: { title: `Skill: ${skillId}` },
-        });
-        currentSessionId = createResp.id || createResp.data?.id || null;
-        if (!currentSessionId) {
-          callbacks.onError('Failed to create session: no session ID returned');
-          return null;
-        }
-        console.log('[OpenCode] Created session:', currentSessionId);
-      } catch (error: any) {
-        callbacks.onError(`Failed to create session: ${error.message}`);
-        return null;
-      }
-    }
-
-    try {
-      if (systemPrompt) {
-        await this.client.session.prompt({
-          sessionId: currentSessionId,
-          body: { parts: [{ type: 'text', text: systemPrompt }] },
-        });
-      }
-
-      await this.client.session.prompt({
-        sessionId: currentSessionId,
-        body: { parts: [{ type: 'text', text: userInput }] },
-      });
-
-      // Start polling for messages
-      await this.pollMessages(currentSessionId, callbacks);
-
-      return currentSessionId;
-    } catch (error: any) {
-      console.error('[OpenCode] Execution error:', error);
-      callbacks.onError(error.message);
-      return currentSessionId;
-    }
-  }
-
-  // Poll messages and stream them
-  private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
-    let lastMessageCount = 0;
-    let lastContent = '';
-    let pollCount = 0;
-    const maxPolls = 300; // 5 minutes at 1 second intervals
-    let isComplete = false;
-
-    const poll = async () => {
-      if (isComplete || pollCount >= maxPolls) {
-        if (!isComplete) {
-          callbacks.onComplete();
-        }
-        return;
-      }
-
-      pollCount++;
-
-      try {
-        // Get session status
-        const sessionResp = await this.client.session.get({ sessionId });
-        const session = sessionResp.data || sessionResp;
-
-        // Get messages
-        const msgsResp = await this.client.session.messages({ sessionId });
-        const messages = msgsResp.data || [];
-
-        // Find assistant messages
-        const assistantMessages = messages.filter((m: any) => m.info?.role === 'assistant');
-
-        if (assistantMessages.length > lastMessageCount) {
-          // Get the latest assistant message content
-          const latestMessage = assistantMessages[assistantMessages.length - 1];
-          const fullContent = latestMessage.info?.parts?.[0]?.text || '';
-
-          // Only send the delta (new content)
-          if (fullContent.length > lastContent.length) {
-            const delta = fullContent.substring(lastContent.length);
-            callbacks.onChunk(delta);
-            lastContent = fullContent;
-          }
-
-          lastMessageCount = assistantMessages.length;
-        }
-
-        // Check if session is complete or error
-        if (
-          session.status === 'completed' ||
-          session.status === 'error' ||
-          session.status === 'idle'
-        ) {
-          isComplete = true;
-          callbacks.onComplete();
-          return;
-        }
-
-        // Continue polling
-        setTimeout(poll, 1000);
-      } catch (error: any) {
-        console.error('[OpenCode] Poll error:', error);
-        // Don't stop on error, try again
-        setTimeout(poll, 2000);
-      }
-    };
-
-    // Start polling
-    poll();
   }
 
   isConnected(): boolean {
