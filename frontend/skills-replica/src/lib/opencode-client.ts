@@ -19,7 +19,7 @@ class OpenCodeService {
   async connect(config: OpenCodeConfig = {}): Promise<void> {
     const baseUrl = config.hostname
       ? `http://${config.hostname}:${config.port || 80}`
-      : import.meta.env.VITE_API_BASE_URL || 'http://oracle.tao-shen.com';
+      : import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
 
     try {
       this.client = createOpencodeClient({
