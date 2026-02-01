@@ -17,15 +17,17 @@ class OpenCodeService {
   private client: any = null;
 
   async connect(config: OpenCodeConfig = {}): Promise<void> {
-    const hostname = config.hostname || 'oracle.tao-shen.com';
-    const port = config.port || 4096; // HTTP port for oracle.tao-shen.com
+    // For Cloudflare tunnel deployment, use the base URL from env or default
+    const baseUrl = config.hostname
+      ? `http://${config.hostname}:${config.port || 4096}`
+      : import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
 
     try {
       this.client = createOpencodeClient({
-        baseUrl: `http://${hostname}:${port}`,
+        baseUrl,
         directory: config.directory,
       });
-      console.log('[OpenCode] Connected to', `http://${hostname}:${port}`);
+      console.log('[OpenCode] Connected to', baseUrl);
     } catch (error) {
       console.error('[OpenCode] Failed to connect:', error);
       throw new Error('Failed to connect to OpenCode server');

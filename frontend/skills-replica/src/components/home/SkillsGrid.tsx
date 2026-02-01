@@ -34,16 +34,13 @@ export function SkillsGrid({
   }, []);
 
   const handleLike = (skillId: string) => {
-    console.log('[Like] Clicked on skill:', skillId);
     const isLiked = likedSkills.has(skillId);
-    console.log('[Like] Currently liked:', isLiked);
 
     if (isLiked) {
       storageUtils.removeLike(skillId);
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.delete(skillId);
-        console.log('[Like] Removed like, new state:', Array.from(next));
         return next;
       });
     } else {
@@ -51,7 +48,6 @@ export function SkillsGrid({
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.add(skillId);
-        console.log('[Like] Added like, new state:', Array.from(next));
         return next;
       });
     }

@@ -109,125 +109,141 @@ async function startDevServer() {
 async function runPlaywrightTest(serverProcess) {
   log('🧪 正在运行 Playwright 测试...', 'cyan');
 
+  // 写入临时测试文件
+  const testFile = '/tmp/playwright-test.mjs';
   const playwrightTestScript = `
-const { chromium } = require('playwright');
+import { chromium } from 'playwright';
 
-(async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  
-  const results = {
-    pageLoaded: false,
-    consoleErrors: [],
-    likeButtonFound: false,
-    runButtonFound: false,
-    openCodeConnected: false,
-    testPassed: false
-  };
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
 
-  // 监听控制台
-  page.on('console', msg => {
-    const text = msg.text();
-    if (text.includes('[OpenCode] Connected')) {
-      results.openCodeConnected = true;
-      console.log('✅ OpenCode 连接成功');
-    }
-    if (text.includes('[Like]')) {
-      console.log('📝 Like 事件:', text);
-    }
-  });
+const results = {
+  pageLoaded: false,
+  consoleErrors: [],
+  likeButtonFound: false,
+  runButtonFound: false,
+  openCodeConnected: false,
+  testPassed: false
+};
 
-  // 监听错误
-  page.on('pageerror', error => {
-    results.consoleErrors.push(error.message);
-    console.log('❌ 页面错误:', error.message);
-  });
+// 监听控制台
+page.on('console', msg => {
+  const text = msg.text();
+  if (text.includes('[OpenCode] Connected')) {
+    results.openCodeConnected = true;
+    console.log('✅ OpenCode 连接成功');
+  }
+  if (text.includes('[Like]')) {
+    console.log('📝 Like 事件:', text);
+  }
+});
 
-  try {
-    // 1. 加载页面
-    console.log('📄 加载页面...');
-    await page.goto('${TEST_URL}', { waitUntil: 'networkidle', timeout: 30000 });
-    results.pageLoaded = true;
-    console.log('✅ 页面加载成功');
+// 监听错误
+page.on('pageerror', error => {
+  results.consoleErrors.push(error.message);
+  console.log('❌ 页面错误:', error.message);
+});
 
-    // 2. 查找 Like 按钮
-    console.log('🔍 查找 Like 按钮...');
-    const likeButton = await page.$('button[title="Run skill"]');
-    if (likeButton) {
-      results.runButtonFound = true;
-      console.log('✅ Run 按钮找到');
-    } else {
-      console.log('⚠️ Run 按钮未找到');
-    }
+try {
+  // 1. 加载页面
+  console.log('📄 加载页面...');
+  await page.goto('${TEST_URL}', { waitUntil: 'networkidle', timeout: 30000 });
+  results.pageLoaded = true;
+  console.log('✅ 页面加载成功');
 
-    // 查找 heart 图标按钮
-    const heartButtons = await page.$$('svg[class*="lucide-heart"]');
-    if (heartButtons.length > 0) {
-      results.likeButtonFound = true;
-      console.log('✅ Like 按钮找到:', heartButtons.length, '个');
-      
-      // 3. 测试点击 Like
-      console.log('🖱️ 测试点击 Like...');
-      await heartButtons[0].click();
-      await page.waitForTimeout(500);
-      console.log('✅ Like 点击完成');
-    }
-
-    // 4. 测试点击 Run
-    console.log('🖱️ 测试点击 Run...');
-    if (likeButton) {
-      await likeButton.click();
-      await page.waitForTimeout(2000);
-      console.log('✅ Run 点击完成');
-    }
-
-    // 5. 检查结果
-    await page.waitForTimeout(2000);
-    
-    results.testPassed = results.pageLoaded && 
-                         results.likeButtonFound && 
-                         results.runButtonFound &&
-                         results.consoleErrors.length === 0;
-
-    console.log('\\n📊 测试结果:');
-    console.log('  页面加载:', results.pageLoaded ? '✅' : '❌');
-    console.log('  Like 按钮:', results.likeButtonFound ? '✅' : '❌');
-    console.log('  Run 按钮:', results.runButtonFound ? '✅' : '❌');
-    console.log('  控制台错误:', results.consoleErrors.length === 0 ? '✅ 无' : '❌ ' + results.consoleErrors.length + '个');
-    console.log('  OpenCode 连接:', results.openCodeConnected ? '✅' : '⚠️ 未检测到');
-    console.log('  综合结果:', results.testPassed ? '✅ 通过' : '❌ 失败');
-
-  } catch (error) {
-    console.log('❌ 测试错误:', error.message);
-    results.testPassed = false;
-  } finally {
-    await browser.close();
+  // 2. 查找 Run 按钮
+  console.log('🔍 查找 Run 按钮...');
+  const runButton = await page.$('button[title="Run skill"]');
+  if (runButton) {
+    results.runButtonFound = true;
+    console.log('✅ Run 按钮找到');
+  } else {
+    console.log('⚠️ Run 按钮未找到');
   }
 
-  process.exit(results.testPassed ? 0 : 1);
-})();
+  // 查找 heart 图标按钮
+  const heartButtons = await page.$$('svg[class*="lucide-heart"]');
+  if (heartButtons.length > 0) {
+    results.likeButtonFound = true;
+    console.log('✅ Like 按钮找到:', heartButtons.length, '个');
+    
+    // 3. 测试点击 Like
+    console.log('🖱️ 测试点击 Like...');
+    await heartButtons[0].click();
+    await page.waitForTimeout(500);
+    console.log('✅ Like 点击完成');
+  }
+
+  // 4. 测试点击 Run
+  console.log('🖱️ 测试点击 Run...');
+  if (runButton) {
+    await runButton.click();
+    await page.waitForTimeout(2000);
+    console.log('✅ Run 点击完成');
+  }
+
+  // 5. 检查结果
+  await page.waitForTimeout(2000);
+  
+  results.testPassed = results.pageLoaded && 
+                       results.likeButtonFound && 
+                       results.runButtonFound &&
+                       results.consoleErrors.length === 0;
+
+  console.log('\\n📊 测试结果:');
+  console.log('  页面加载:', results.pageLoaded ? '✅' : '❌');
+  console.log('  Like 按钮:', results.likeButtonFound ? '✅' : '❌');
+  console.log('  Run 按钮:', results.runButtonFound ? '✅' : '❌');
+  console.log('  控制台错误:', results.consoleErrors.length === 0 ? '✅ 无' : '❌ ' + results.consoleErrors.length + '个');
+  console.log('  OpenCode 连接:', results.openCodeConnected ? '✅' : '⚠️ 未检测到');
+  console.log('  综合结果:', results.testPassed ? '✅ 通过' : '❌ 失败');
+
+} catch (error) {
+  console.log('❌ 测试错误:', error.message);
+  results.testPassed = false;
+} finally {
+  await browser.close();
+}
+
+process.exit(results.testPassed ? 0 : 1);
   `;
 
-  // 写入临时测试文件
-  const testFile = '/tmp/playwright-test.js';
   fs.writeFileSync(testFile, playwrightTestScript);
 
   return new Promise((resolve) => {
-    exec(`node ${testFile}`, { timeout: 60000 }, (error, stdout, stderr) => {
+    // 使用 npx 直接运行，设置正确的 NODE_PATH
+    const child = spawn('/opt/homebrew/bin/node', [testFile], {
+      cwd: PROJECT_DIR,
+      shell: '/bin/zsh',
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        NODE_PATH: '/opt/homebrew/anaconda3/lib/node_modules',
+      },
+    });
+
+    let stdout = '';
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+      process.stdout.write(data);
+    });
+
+    child.stderr.on('data', (data) => {
+      process.stderr.write(data);
+    });
+
+    child.on('close', (code) => {
       // 清理测试文件
       try {
         fs.unlinkSync(testFile);
       } catch (e) {}
 
-      if (error) {
-        log('❌ Playwright 测试失败', 'red');
-        console.log(stdout);
-        console.log(stderr);
-        resolve({ success: false, error });
-      } else {
+      if (code === 0) {
         log('✅ Playwright 测试完成', 'green');
-        console.log(stdout);
-        resolve({ success: true, output: stdout });
+        resolve({ success: true });
+      } else {
+        log('❌ Playwright 测试失败', 'red');
+        resolve({ success: false, error: `Exit code: ${code}` });
       }
     });
   });
