@@ -1,4 +1,4 @@
-import { createOpencodeClient } from '@opencode-ai/sdk';
+import { createOpencodeClient } from '@opencode-ai/sdk/client';
 
 export interface OpenCodeConfig {
   hostname?: string;
