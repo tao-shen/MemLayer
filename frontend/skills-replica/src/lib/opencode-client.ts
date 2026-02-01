@@ -63,7 +63,6 @@ class OpenCodeService {
     }
 
     try {
-      // Send system prompt as context
       if (systemPrompt) {
         await this.client.session.prompt({
           sessionId: currentSessionId,
@@ -71,13 +70,11 @@ class OpenCodeService {
         });
       }
 
-      // Send user input
       const promptResp = await this.client.session.prompt({
         sessionId: currentSessionId,
         body: { parts: [{ type: 'text', text: userInput }] },
       });
 
-      // Get messages to find assistant response
       const msgsResp = await this.client.session.messages({ sessionId: currentSessionId });
       const messages = msgsResp.data || [];
 
@@ -95,7 +92,7 @@ class OpenCodeService {
     }
   }
 
-  // New streaming execution method
+  // Streaming execution using polling
   async executeSkillStream(
     skillId: string,
     systemPrompt: string,
@@ -127,7 +124,6 @@ class OpenCodeService {
     }
 
     try {
-      // Send system prompt as context (non-streaming)
       if (systemPrompt) {
         await this.client.session.prompt({
           sessionId: currentSessionId,
@@ -135,60 +131,13 @@ class OpenCodeService {
         });
       }
 
-      // Send user input
       await this.client.session.prompt({
         sessionId: currentSessionId,
         body: { parts: [{ type: 'text', text: userInput }] },
       });
 
-      // Use SSE to stream messages
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
-      const eventSource = new EventSource(`${baseUrl}/session/${currentSessionId}/events`);
-
-      let fullOutput = '';
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('[OpenCode] SSE event:', data);
-
-          // Handle different event types
-          if (data.type === 'message' && data.data?.info?.parts) {
-            const text = data.data.info.parts[0]?.text || '';
-            if (text) {
-              fullOutput += text;
-              callbacks.onChunk(text);
-            }
-          } else if (data.type === 'complete') {
-            eventSource.close();
-            callbacks.onComplete();
-          } else if (data.type === 'error') {
-            eventSource.close();
-            callbacks.onError(data.error || 'Unknown error');
-          }
-        } catch (e) {
-          // Not JSON, treat as plain text
-          fullOutput += event.data;
-          callbacks.onChunk(event.data);
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('[OpenCode] SSE error:', error);
-        eventSource.close();
-        // Don't call onError here, as the stream might have completed successfully
-        // Only call onComplete if we haven't already
-        if (fullOutput) {
-          callbacks.onComplete();
-        } else {
-          callbacks.onError('Connection error');
-        }
-      };
-
-      // Also poll for messages as fallback
-      this.pollMessages(currentSessionId, callbacks, () => {
-        eventSource.close();
-      });
+      // Start polling for messages
+      await this.pollMessages(currentSessionId, callbacks);
 
       return currentSessionId;
     } catch (error: any) {
@@ -198,52 +147,72 @@ class OpenCodeService {
     }
   }
 
-  // Poll messages as fallback
-  private async pollMessages(
-    sessionId: string,
-    callbacks: StreamCallbacks,
-    onStop: () => void,
-    lastMessageId?: string
-  ): Promise<void> {
-    let currentLastMessageId = lastMessageId;
+  // Poll messages and stream them
+  private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
+    let lastMessageCount = 0;
+    let lastContent = '';
+    let pollCount = 0;
+    const maxPolls = 300; // 5 minutes at 1 second intervals
+    let isComplete = false;
 
     const poll = async () => {
+      if (isComplete || pollCount >= maxPolls) {
+        if (!isComplete) {
+          callbacks.onComplete();
+        }
+        return;
+      }
+
+      pollCount++;
+
       try {
-        const messagesParams: any = { sessionId };
-        if (currentLastMessageId) {
-          messagesParams.after = currentLastMessageId;
-        }
-        const msgsResp = await this.client.session.messages(messagesParams);
-        const messages = msgsResp.data || [];
-
-        for (const msg of messages) {
-          if (msg.info?.role === 'assistant' && msg.info?.parts) {
-            const text = msg.info.parts[0]?.text || '';
-            if (text) {
-              callbacks.onChunk(text);
-            }
-          }
-          lastMessageId = msg.id;
-        }
-
-        // Check if session is complete
+        // Get session status
         const sessionResp = await this.client.session.get({ sessionId });
         const session = sessionResp.data || sessionResp;
 
-        if (session.status === 'completed' || session.status === 'error') {
-          onStop();
+        // Get messages
+        const msgsResp = await this.client.session.messages({ sessionId });
+        const messages = msgsResp.data || [];
+
+        // Find assistant messages
+        const assistantMessages = messages.filter((m: any) => m.info?.role === 'assistant');
+
+        if (assistantMessages.length > lastMessageCount) {
+          // Get the latest assistant message content
+          const latestMessage = assistantMessages[assistantMessages.length - 1];
+          const fullContent = latestMessage.info?.parts?.[0]?.text || '';
+
+          // Only send the delta (new content)
+          if (fullContent.length > lastContent.length) {
+            const delta = fullContent.substring(lastContent.length);
+            callbacks.onChunk(delta);
+            lastContent = fullContent;
+          }
+
+          lastMessageCount = assistantMessages.length;
+        }
+
+        // Check if session is complete or error
+        if (
+          session.status === 'completed' ||
+          session.status === 'error' ||
+          session.status === 'idle'
+        ) {
+          isComplete = true;
           callbacks.onComplete();
           return;
         }
 
         // Continue polling
         setTimeout(poll, 1000);
-      } catch (error) {
+      } catch (error: any) {
         console.error('[OpenCode] Poll error:', error);
+        // Don't stop on error, try again
         setTimeout(poll, 2000);
       }
     };
 
+    // Start polling
     poll();
   }
 
