@@ -13,8 +13,26 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3001',
+  'https://tacits-candy-shop.vercel.app',
+  'https://opencode.tao-shen.com',
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        return callback(new Error('CORS policy violation'), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 
 // File upload configuration
 const uploadDir = path.join(__dirname, '../uploads');
@@ -53,7 +71,7 @@ const jobs = new Map<string, any>();
 app.post('/api/upload', upload.array('files', 10), async (req, res) => {
   try {
     const files = req.files as Express.Multer.File[];
-    
+
     if (!files || files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -61,7 +79,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
       });
     }
 
-    const fileIds = files.map(f => ({
+    const fileIds = files.map((f) => ({
       id: path.basename(f.filename, path.extname(f.filename)),
       name: f.originalname,
       path: f.path,
@@ -70,7 +88,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 
     res.json({
       success: true,
-      fileIds: fileIds.map(f => f.id),
+      fileIds: fileIds.map((f) => f.id),
       files: fileIds,
     });
   } catch (error) {
@@ -89,7 +107,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 app.post('/api/analyze', async (req, res) => {
   try {
     const { fileIds } = req.body;
-    
+
     if (!fileIds || !Array.isArray(fileIds)) {
       return res.status(400).json({
         error: 'Invalid fileIds',
@@ -97,7 +115,7 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     const jobId = uuidv4();
-    
+
     // Start async analysis
     jobs.set(jobId, {
       status: 'processing',
@@ -107,7 +125,7 @@ app.post('/api/analyze', async (req, res) => {
     });
 
     // Process in background
-    processAnalysis(jobId, fileIds).catch(error => {
+    processAnalysis(jobId, fileIds).catch((error) => {
       jobs.set(jobId, {
         status: 'failed',
         progress: 100,
@@ -132,7 +150,7 @@ app.post('/api/analyze', async (req, res) => {
 app.get('/api/status/:jobId', (req, res) => {
   const { jobId } = req.params;
   const job = jobs.get(jobId);
-  
+
   if (!job) {
     return res.status(404).json({
       error: 'Job not found',
@@ -149,7 +167,7 @@ app.get('/api/status/:jobId', (req, res) => {
 app.post('/api/generate', async (req, res) => {
   try {
     const { userId, analysisResult, sourceFileIds, preferences } = req.body;
-    
+
     if (!userId || !analysisResult) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -196,7 +214,7 @@ app.post('/api/skills', async (req, res) => {
 app.get('/api/skills', async (req, res) => {
   try {
     const { userId, category, status, searchQuery } = req.query;
-    
+
     if (!userId) {
       return res.status(400).json({
         error: 'userId is required',
@@ -226,7 +244,7 @@ app.get('/api/skills/:skillId', async (req, res) => {
   try {
     const { skillId } = req.params;
     const skill = await skillManager.getSkill(skillId);
-    
+
     if (!skill) {
       return res.status(404).json({
         error: 'Skill not found',
@@ -250,7 +268,7 @@ app.put('/api/skills/:skillId', async (req, res) => {
   try {
     const { skillId } = req.params;
     const updates = req.body;
-    
+
     const updated = await skillManager.updateSkill(skillId, updates);
     res.json(updated);
   } catch (error) {
@@ -286,7 +304,7 @@ app.post('/api/skills/:skillId/execute', async (req, res) => {
   try {
     const { skillId } = req.params;
     const { userId, input } = req.body;
-    
+
     if (!userId || !input) {
       return res.status(400).json({
         error: 'userId and input are required',
@@ -335,7 +353,7 @@ async function processAnalysis(jobId: string, fileIds: string[]) {
     const uploadedFiles = await Promise.all(
       fileIds.map(async (id) => {
         const files = await fs.readdir(uploadDir);
-        const matchingFile = files.find(f => f.startsWith(id));
+        const matchingFile = files.find((f) => f.startsWith(id));
         if (!matchingFile) {
           throw new Error(`File not found: ${id}`);
         }

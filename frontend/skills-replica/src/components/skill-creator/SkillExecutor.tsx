@@ -31,8 +31,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
     try {
       const userId = 'user-123';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-      const response = await fetch(`/api/skills/${skill.id}/execute`, {
+      const response = await fetch(`${API_BASE_URL}/api/skills/${skill.id}/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
