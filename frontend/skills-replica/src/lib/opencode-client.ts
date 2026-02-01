@@ -18,14 +18,14 @@ class OpenCodeService {
 
   async connect(config: OpenCodeConfig = {}): Promise<void> {
     const hostname = config.hostname || 'opencode.tao-shen.com';
-    const port = config.port || 4096;
+    const port = config.port || 4443; // Default to HTTPS port 4443
 
     try {
       this.client = createOpencodeClient({
-        baseUrl: `http://${hostname}:${port}`,
+        baseUrl: `https://${hostname}:${port}`,
         directory: config.directory,
       });
-      console.log('[OpenCode] Connected to', `http://${hostname}:${port}`);
+      console.log('[OpenCode] Connected to', `https://${hostname}:${port}`);
     } catch (error) {
       console.error('[OpenCode] Failed to connect:', error);
       throw new Error('Failed to connect to OpenCode server');

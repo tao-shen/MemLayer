@@ -25,6 +25,7 @@ function HomePage({
   onOpenAuth,
   onOpenCart,
   onOpenDocs,
+  onRunSkill,
 }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -49,11 +50,13 @@ function HomePage({
       onNavMan={onOpenDocs}
     >
       <Hero onOpenDocs={onOpenDocs} />
-      <Categories onSelectCategory={(cat) => {
-        setCategoryFilter(cat);
-        setSearchQuery('');
-        document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
-      }} />
+      <Categories
+        onSelectCategory={(cat) => {
+          setCategoryFilter(cat);
+          setSearchQuery('');
+          document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
       <SkillsGrid
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -61,8 +64,7 @@ function HomePage({
         setCategoryFilter={setCategoryFilter}
         cart={cart}
         onToggleCart={onToggleCart}
-        user={user}
-        onOpenAuth={onOpenAuth}
+        onRunSkill={onRunSkill}
       />
       <ExternalResources />
       <FAQ />
@@ -85,7 +87,9 @@ function AppContent() {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -93,7 +97,7 @@ function AppContent() {
   }, []);
 
   const handleAddToCart = (id: string) => {
-    setCart(prev => {
+    setCart((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -102,7 +106,7 @@ function AppContent() {
   };
 
   const handleRemoveFromCart = (id: string) => {
-    setCart(prev => {
+    setCart((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
@@ -119,11 +123,13 @@ function AppContent() {
     }
 
     // Convert store skills to user skills
-    const storeSkills = SKILLS_DATA.filter(skill => cart.has(skill.id));
+    const storeSkills = SKILLS_DATA.filter((skill) => cart.has(skill.id));
 
-    storeSkills.forEach(storeSkill => {
+    storeSkills.forEach((storeSkill) => {
       // Check if already owned
-      const existing = storageUtils.getSkills().find(s => s.name === storeSkill.name && s.origin === 'store');
+      const existing = storageUtils
+        .getSkills()
+        .find((s) => s.name === storeSkill.name && s.origin === 'store');
 
       if (!existing) {
         storageUtils.saveSkill({
@@ -136,12 +142,12 @@ function AppContent() {
             capabilities: [],
             systemPrompt: '',
             parameters: storeSkill.config,
-            tools: []
+            tools: [],
           },
           origin: 'store',
           status: 'active',
           sourceFiles: [],
-          installCommand: storeSkill.installCommand
+          installCommand: storeSkill.installCommand,
         });
       }
     });
@@ -149,6 +155,47 @@ function AppContent() {
     setCart(new Set());
     setIsCartOpen(false);
     navigate('/skills/library');
+  };
+
+  const handleRunSkill = (storeSkill: any) => {
+    // Convert store skill to Skill format for executor
+    const skill: Skill = {
+      id: `store-${storeSkill.id}`,
+      userId: user?.id || 'anonymous',
+      name: storeSkill.name,
+      description: storeSkill.description,
+      category: storeSkill.category as SkillCategory,
+      icon: storeSkill.icon,
+      color: storeSkill.color,
+      config: {
+        capabilities: [],
+        systemPrompt: '',
+        parameters: storeSkill.config,
+        tools: [],
+      },
+      sourceFiles: [],
+      analysisContext: {
+        workDomain: [],
+        technicalSkills: [],
+        experiencePatterns: [],
+        keyTopics: [],
+        suggestedName: storeSkill.name,
+        suggestedDescription: storeSkill.description,
+        suggestedCategory: storeSkill.category as SkillCategory,
+        suggestedCapabilities: [],
+        filesSummary: [],
+        confidence: 0,
+        systemPrompt: '',
+      },
+      installCommand: storeSkill.installCommand,
+      popularity: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'active',
+      isPublic: true,
+      origin: 'store',
+    };
+    setExecutingSkill(skill);
   };
 
   return (
@@ -164,6 +211,7 @@ function AppContent() {
               onOpenAuth={() => setIsAuthOpen(true)}
               onOpenCart={() => setIsCartOpen(true)}
               onOpenDocs={() => setIsDocsOpen(true)}
+              onRunSkill={handleRunSkill}
             />
           }
         />
@@ -185,7 +233,9 @@ function AppContent() {
               onNavCd={() => {
                 navigate('/');
                 setTimeout(() => {
-                  document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
+                  document
+                    .getElementById('categories-section')
+                    ?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
               }}
               onNavMan={() => setIsDocsOpen(true)}
@@ -217,7 +267,9 @@ function AppContent() {
               onNavCd={() => {
                 navigate('/');
                 setTimeout(() => {
-                  document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
+                  document
+                    .getElementById('categories-section')
+                    ?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
               }}
               onNavMan={() => setIsDocsOpen(true)}
@@ -246,16 +298,10 @@ function AppContent() {
         onPurchase={handlePurchase}
       />
 
-      <DocsModal
-        isOpen={isDocsOpen}
-        onClose={() => setIsDocsOpen(false)}
-      />
+      <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
 
       {executingSkill && (
-        <SkillExecutor
-          skill={executingSkill}
-          onClose={() => setExecutingSkill(null)}
-        />
+        <SkillExecutor skill={executingSkill} onClose={() => setExecutingSkill(null)} />
       )}
     </>
   );

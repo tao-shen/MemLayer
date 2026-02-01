@@ -1,4 +1,4 @@
-import { Search, ShoppingBag, Check, X, Calendar, Heart } from 'lucide-react';
+import { Search, ShoppingBag, Check, X, Calendar, Heart, Play } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { SKILLS_DATA, type Skill } from '../../data/skillsData';
 import { SkillModal } from '../common/SkillModal';
@@ -12,8 +12,7 @@ interface SkillsGridProps {
   setCategoryFilter: (c: string | null) => void;
   cart: Set<string>;
   onToggleCart: (id: string) => void;
-  user: any;
-  onOpenAuth: () => void;
+  onRunSkill: (skill: Skill) => void;
 }
 
 export function SkillsGrid({
@@ -23,8 +22,7 @@ export function SkillsGrid({
   setCategoryFilter,
   cart,
   onToggleCart,
-  user,
-  onOpenAuth,
+  onRunSkill,
 }: SkillsGridProps) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [likedSkills, setLikedSkills] = useState<Set<string>>(new Set());
@@ -36,11 +34,6 @@ export function SkillsGrid({
   }, []);
 
   const handleLike = (skillId: string) => {
-    if (!user) {
-      onOpenAuth();
-      return;
-    }
-
     const isLiked = likedSkills.has(skillId);
     if (isLiked) {
       storageUtils.removeLike(skillId);
@@ -184,6 +177,18 @@ export function SkillsGrid({
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {/* Run Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRunSkill(skill);
+                      }}
+                      className="hover:text-green-600 transition-colors"
+                      title="Run skill"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                    </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -238,7 +243,7 @@ export function SkillsGrid({
         </div>
       </section>
 
-      <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />
+      <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} onRun={onRunSkill} />
     </>
   );
 }
