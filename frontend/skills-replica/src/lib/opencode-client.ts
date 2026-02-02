@@ -154,6 +154,7 @@ class OpenCodeService {
       let buffer = '';
 
       const processStream = async () => {
+
         while (!abortController.signal.aborted) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -169,23 +170,48 @@ class OpenCodeService {
 
             const event = parsed.data as any;
 
-            // Check if this event is for our session
-            const eventSessionId = event.properties?.sessionID ||
-                                  event.properties?.info?.sessionID ||
-                                  event.sessionID;
+            // Debug: log all events to understand the structure
+            console.log('[OpenCode] Raw event:', JSON.stringify(event).substring(0, 200));
 
-            if (eventSessionId !== currentSessionId) continue;
+            // Extract event type and properties
+            let eventType = event.type;
+            let eventProps = event.properties || {};
+
+            // Handle wrapped events (some servers send { payload: {...} })
+            if (!eventType && event.payload) {
+              eventType = event.payload.type;
+              eventProps = event.payload.properties || event.payload;
+            }
+
+            // Check if this event is for our session
+            const eventSessionId = eventProps.sessionID ||
+                                  eventProps.info?.sessionID ||
+                                  event.sessionID ||
+                                  eventProps.sessionId;
+
+            console.log('[OpenCode] Event type:', eventType, 'Session:', eventSessionId, 'Target:', currentSessionId);
+
+            if (eventSessionId && eventSessionId !== currentSessionId) {
+              console.log('[OpenCode] Skipping event for different session');
+              continue;
+            }
 
             // Handle message.part.updated - this is the key to showing complete process!
-            if (event.type === 'message.part.updated') {
-              const part = event.properties?.part;
-              if (!part) continue;
+            if (eventType === 'message.part.updated') {
+              const part = eventProps.part;
+              if (!part) {
+                console.log('[OpenCode] No part in message.part.updated event');
+                continue;
+              }
 
               hasReceivedParts = true;
 
               // Generate unique key for this part
               const partKey = `${part.id || ''}-${part.type || ''}-${part.callID || ''}`;
-              if (seenParts.has(partKey)) continue;
+              if (seenParts.has(partKey)) {
+                console.log('[OpenCode] Duplicate part, skipping:', partKey);
+                continue;
+              }
               seenParts.add(partKey);
 
               // Extract content based on part type
@@ -209,20 +235,24 @@ class OpenCodeService {
               }
 
               if (content) {
-                console.log(`[OpenCode] Part received: ${part.type} (${content.length} chars)`);
+                console.log(`[OpenCode] ✅ Part received: ${part.type} (${content.length} chars)`);
                 callbacks.onChunk(content);
+              } else {
+                console.log(`[OpenCode] ⚠️ Empty content for part type: ${part.type}`);
               }
             }
 
             // Handle message.updated - completion signal
-            else if (event.type === 'message.updated') {
-              const messageInfo = event.properties?.info || event.properties;
+            else if (eventType === 'message.updated') {
+              const messageInfo = eventProps.info || eventProps;
               const role = messageInfo?.role;
               const finish = messageInfo?.finish;
 
+              console.log('[OpenCode] message.updated - role:', role, 'finish:', finish);
+
               // Only complete when assistant message has finish=stop
               if (role === 'assistant' && finish === 'stop') {
-                console.log('[OpenCode] Message completed');
+                console.log('[OpenCode] ✓ Message completed (finish=stop)');
                 isCompleted = true;
                 abortController.abort();
                 callbacks.onComplete();
@@ -231,10 +261,11 @@ class OpenCodeService {
             }
 
             // Handle session status changes
-            else if (event.type === 'session.status') {
-              const status = event.properties?.status?.type;
+            else if (eventType === 'session.status') {
+              const status = eventProps.status?.type;
+              console.log('[OpenCode] Session status:', status);
               if (status === 'idle' && hasReceivedParts) {
-                console.log('[OpenCode] Session idle, completing');
+                console.log('[OpenCode] ✓ Session idle, completing');
                 isCompleted = true;
                 abortController.abort();
                 callbacks.onComplete();
@@ -250,11 +281,20 @@ class OpenCodeService {
           const parsed = this.parseSseBlock(remaining);
           if (parsed?.data) {
             const event = parsed.data as any;
-            const eventSessionId = event.properties?.sessionID || event.sessionID;
 
-            if (eventSessionId === currentSessionId && event.type === 'message.updated') {
-              const finish = event.properties?.info?.finish;
+            let eventType = event.type;
+            let eventProps = event.properties || {};
+            if (!eventType && event.payload) {
+              eventType = event.payload.type;
+              eventProps = event.payload.properties || event.payload;
+            }
+
+            const eventSessionId = eventProps.sessionID || event.sessionID;
+
+            if (eventSessionId === currentSessionId && eventType === 'message.updated') {
+              const finish = eventProps.info?.finish;
               if (finish === 'stop') {
+                console.log('[OpenCode] ✓ Completion detected in remaining buffer');
                 isCompleted = true;
                 callbacks.onComplete();
               }
@@ -280,6 +320,9 @@ class OpenCodeService {
         console.error('[OpenCode] Stream processing error:', error);
         callbacks.onError(error.message);
       });
+
+      // Wait a bit for stream to be ready
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Now send the message
       console.log('[OpenCode] Sending message to session...');
