@@ -81,7 +81,7 @@ class OpenCodeService {
 
       console.log('[OpenCode] Sending message to /session/.../message endpoint...');
 
-      // Send message with model specification (using /message endpoint, not /prompt)
+      // Send message (no model parameter needed - matches opencode-web implementation)
       const messageResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
@@ -89,10 +89,6 @@ class OpenCodeService {
           Origin: window.location.origin,
         },
         body: JSON.stringify({
-          model: {
-            providerID: 'anthropic',
-            modelID: 'claude-3-5-sonnet-20241022',
-          },
           parts: [{ type: 'text', text: combinedText }],
         }),
       });
@@ -120,7 +116,7 @@ class OpenCodeService {
   private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
     let lastContent = '';
     let pollCount = 0;
-    const maxPolls = 300;
+    const maxPolls = 120; // 2 minutes max (same as opencode-web)
     let isComplete = false;
 
     console.log('[OpenCode] Starting message polling...');
@@ -137,51 +133,59 @@ class OpenCodeService {
       pollCount++;
 
       try {
-        // Get session status from /session/status endpoint
-        const statusResp = await fetch(`${BASE_URL}/session/status`, {
+        // Get session data (matches opencode-web implementation)
+        const sessionResp = await fetch(`${BASE_URL}/session/${sessionId}`, {
           headers: { Origin: window.location.origin },
         });
-        const allStatus = await statusResp.json();
-        const sessionStatus = allStatus[sessionId];
 
-        console.log(
-          `[OpenCode] Poll #${pollCount}: status=${sessionStatus?.type || 'unknown'}`
-        );
-
-        // Get messages
-        const msgsResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
-          headers: { Origin: window.location.origin },
-        });
-        const messages = await msgsResp.json();
-
-        // Find the latest assistant message
-        const assistantMessages = messages.filter((m: any) => m.info?.role === 'assistant');
-
-        if (assistantMessages.length > 0) {
-          const latestMessage = assistantMessages[assistantMessages.length - 1];
-          const fullContent = latestMessage.info?.parts?.[0]?.text || '';
-
-          // Check if content has grown (streaming updates)
-          if (fullContent.length > lastContent.length) {
-            const delta = fullContent.substring(lastContent.length);
-            console.log(`[OpenCode] New content delta: ${delta.length} chars`);
-            callbacks.onChunk(delta);
-            lastContent = fullContent;
-          }
-        } else {
-          console.log('[OpenCode] No assistant messages yet');
+        if (!sessionResp.ok) {
+          console.error('[OpenCode] Failed to fetch session');
+          setTimeout(poll, 2000);
+          return;
         }
 
-        // Check if session is complete (status is idle and we have messages)
-        if (
-          sessionStatus?.type === 'idle' &&
-          assistantMessages.length > 0 &&
-          lastContent.length > 0
-        ) {
-          console.log('[OpenCode] Session idle with content, completing poll');
-          isComplete = true;
-          callbacks.onComplete();
-          return;
+        const sessionData = await sessionResp.json();
+
+        console.log(`[OpenCode] Poll #${pollCount}: checking messages...`);
+
+        // Extract messages from session data (matches opencode-web)
+        if (sessionData.messages && Array.isArray(sessionData.messages)) {
+          const assistantMessages = sessionData.messages.filter(
+            (m: any) => m.role === 'assistant'
+          );
+
+          if (assistantMessages.length > 0) {
+            const lastMsg = assistantMessages[assistantMessages.length - 1];
+
+            // Extract content from parts array
+            let content = '';
+            if (lastMsg.parts && Array.isArray(lastMsg.parts)) {
+              content = lastMsg.parts
+                .filter((part: any) => part.type === 'text')
+                .map((part: any) => part.text || part.content || '')
+                .join('\n');
+            } else if (lastMsg.content) {
+              content = lastMsg.content;
+            }
+
+            // Check if content has grown (streaming updates)
+            if (content.length > lastContent.length) {
+              const delta = content.substring(lastContent.length);
+              console.log(`[OpenCode] New content delta: ${delta.length} chars`);
+              callbacks.onChunk(delta);
+              lastContent = content;
+            }
+
+            // If we have content and it hasn't changed for a while, consider it complete
+            if (content.length > 0 && content.length === lastContent.length && pollCount > 2) {
+              console.log('[OpenCode] Content stable, completing poll');
+              isComplete = true;
+              callbacks.onComplete();
+              return;
+            }
+          } else {
+            console.log('[OpenCode] No assistant messages yet');
+          }
         }
 
         // Continue polling
