@@ -118,9 +118,6 @@ class OpenCodeService {
     }
 
     try {
-      // Combine system prompt and user input
-      const combinedText = systemPrompt ? `${systemPrompt}\n\n---\n\n${userInput}` : userInput;
-
       console.log('[OpenCode] Connecting to global event stream...');
 
       // Clean up any existing connection
@@ -175,7 +172,7 @@ class OpenCodeService {
 
             const event = parsed.data as any;
 
-            // Debug: log all events to understand the structure
+            // Debug: log all events to understand structure
             console.log('[OpenCode] Raw event:', JSON.stringify(event).substring(0, 200));
 
             // Extract event type and properties
@@ -226,6 +223,7 @@ class OpenCodeService {
               const messageInfo = eventProps.info;
               const messageRole = messageInfo?.role;
 
+              // Only show assistant messages (skip user message echo)
               if (messageRole && messageRole !== 'assistant') {
                 console.log('[OpenCode] Skipping non-assistant part (role:', messageRole, ')');
                 continue;
@@ -395,7 +393,7 @@ class OpenCodeService {
         }
 
         if (!isCompleted) {
-          console.log('[OpenCode] Stream ended without completion');
+          console.log('[OpenCode] Stream ended');
           if (hasReceivedParts) {
             callbacks.onComplete();
           } else {
@@ -413,14 +411,20 @@ class OpenCodeService {
         callbacks.onError(error.message);
       });
 
-      // Wait a bit for stream to be ready
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Now send the message
       console.log('[OpenCode] Sending message to session...');
-      console.log('[OpenCode] Message content length:', combinedText.length);
+      console.log(
+        '[OpenCode] User input:',
+        userInput.length > 100 ? userInput.substring(0, 100) + '...' : userInput
+      );
+      if (systemPrompt) {
+        console.log(
+          '[OpenCode] System prompt:',
+          systemPrompt.length > 100 ? systemPrompt.substring(0, 100) + '...' : systemPrompt
+        );
+      }
 
-      // Use provided model config or default
       const model = modelConfig || {
         providerID: 'anthropic',
         modelID: 'claude-3-5-sonnet-20241022',
@@ -433,10 +437,13 @@ class OpenCodeService {
           providerID: model.providerID,
           modelID: model.modelID,
         },
-        parts: [{ type: 'text', text: combinedText || 'Hello' }],
+        parts: [{ type: 'text', text: userInput }],
       };
 
-      // Add agent if specified
+      if (systemPrompt) {
+        messageBody.system = systemPrompt;
+      }
+
       if (model.agent || modelConfig?.agent) {
         messageBody.agent = model.agent || modelConfig?.agent;
         console.log('[OpenCode] Using agent:', messageBody.agent);
