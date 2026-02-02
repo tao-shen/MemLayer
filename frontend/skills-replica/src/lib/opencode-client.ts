@@ -39,7 +39,7 @@ class OpenCodeService {
     }
   }
 
-  // Native fetch implementation for streaming
+  // SSE-based streaming implementation (official OpenCode way)
   async executeSkillStream(
     skillId: string,
     systemPrompt: string,
@@ -74,14 +74,58 @@ class OpenCodeService {
     }
 
     try {
-      // Combine system prompt and user input into a single message
+      // Combine system prompt and user input
       const combinedText = systemPrompt
         ? `${systemPrompt}\n\n---\n\n${userInput}`
         : userInput;
 
-      console.log('[OpenCode] Sending message to /session/.../message endpoint...');
+      console.log('[OpenCode] Subscribing to event stream...');
 
-      // Send message (no model parameter needed - matches opencode-web implementation)
+      // Connect to SSE event stream FIRST
+      const eventSource = new EventSource(`${BASE_URL}/event`);
+      let accumulatedContent = '';
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('[OpenCode] Event received:', data.type);
+
+          // Handle message events
+          if (data.type === 'message' && data.properties?.sessionID === currentSessionId) {
+            const parts = data.properties?.info?.parts || [];
+            const textParts = parts
+              .filter((p: any) => p.type === 'text')
+              .map((p: any) => p.text || '')
+              .join('\n');
+
+            if (textParts && textParts.length > accumulatedContent.length) {
+              const delta = textParts.substring(accumulatedContent.length);
+              console.log(`[OpenCode] 📝 Streaming: ${delta.length} chars`);
+              callbacks.onChunk(delta);
+              accumulatedContent = textParts;
+            }
+          }
+
+          // Handle completion
+          if (data.type === 'session' && data.properties?.status === 'idle') {
+            if (data.properties?.sessionID === currentSessionId) {
+              console.log('[OpenCode] ✓ Session completed');
+              eventSource.close();
+              callbacks.onComplete();
+            }
+          }
+        } catch (e) {
+          console.error('[OpenCode] Event parse error:', e);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('[OpenCode] EventSource error:', error);
+        eventSource.close();
+      };
+
+      // Now send the message
+      console.log('[OpenCode] Sending message...');
       const messageResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
@@ -89,6 +133,10 @@ class OpenCodeService {
           Origin: window.location.origin,
         },
         body: JSON.stringify({
+          model: {
+            providerID: 'anthropic',
+            modelID: 'claude-3-5-sonnet-20241022',
+          },
           parts: [{ type: 'text', text: combinedText }],
         }),
       });
@@ -96,14 +144,25 @@ class OpenCodeService {
       if (!messageResp.ok) {
         const errorText = await messageResp.text();
         console.error('[OpenCode] Failed to send message:', errorText);
+        eventSource.close();
         callbacks.onError(`Failed to send message: ${errorText.substring(0, 200)}`);
         return currentSessionId;
       }
 
-      console.log('[OpenCode] Message sent successfully, starting to poll...');
+      console.log('[OpenCode] Message sent, waiting for events...');
 
-      // Poll for messages
-      await this.pollMessages(currentSessionId, callbacks);
+      // Timeout fallback
+      setTimeout(() => {
+        if (eventSource.readyState !== EventSource.CLOSED) {
+          console.log('[OpenCode] Timeout, closing event source');
+          eventSource.close();
+          if (accumulatedContent.length === 0) {
+            callbacks.onError('No response received');
+          } else {
+            callbacks.onComplete();
+          }
+        }
+      }, 120000); // 2 minutes
 
       return currentSessionId;
     } catch (error: any) {
