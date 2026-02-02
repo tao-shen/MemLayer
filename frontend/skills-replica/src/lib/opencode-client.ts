@@ -74,27 +74,49 @@ class OpenCodeService {
     }
 
     try {
-      // Send system prompt
+      // Send system prompt with noReply (to avoid triggering a response)
       if (systemPrompt) {
-        await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
+        const systemResp = await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Origin: window.location.origin,
           },
-          body: JSON.stringify({ parts: [{ type: 'text', text: systemPrompt }] }),
+          body: JSON.stringify({
+            noReply: true,
+            parts: [{ type: 'text', text: systemPrompt }],
+          }),
         });
+
+        if (!systemResp.ok) {
+          console.error('[OpenCode] Failed to send system prompt:', await systemResp.text());
+        }
       }
 
-      // Send user input
-      await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
+      // Send user input with model specification
+      const userResp = await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Origin: window.location.origin,
         },
-        body: JSON.stringify({ parts: [{ type: 'text', text: userInput }] }),
+        body: JSON.stringify({
+          model: {
+            providerID: 'anthropic',
+            modelID: 'claude-3-5-sonnet-20241022',
+          },
+          parts: [{ type: 'text', text: userInput }],
+        }),
       });
+
+      if (!userResp.ok) {
+        const errorText = await userResp.text();
+        console.error('[OpenCode] Failed to send user prompt:', errorText);
+        callbacks.onError(`Failed to send prompt: ${errorText.substring(0, 200)}`);
+        return currentSessionId;
+      }
+
+      console.log('[OpenCode] Prompt sent successfully, starting to poll messages...');
 
       // Poll for messages
       await this.pollMessages(currentSessionId, callbacks);
@@ -108,15 +130,17 @@ class OpenCodeService {
   }
 
   private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
-    let lastMessageCount = 0;
     let lastContent = '';
     let pollCount = 0;
     const maxPolls = 300;
     let isComplete = false;
 
+    console.log('[OpenCode] Starting message polling...');
+
     const poll = async () => {
       if (isComplete || pollCount >= maxPolls) {
         if (!isComplete) {
+          console.log('[OpenCode] Polling timeout, completing...');
           callbacks.onComplete();
         }
         return;
@@ -131,40 +155,49 @@ class OpenCodeService {
         });
         const session = await sessionResp.json();
 
+        console.log(`[OpenCode] Poll #${pollCount}: status=${session.status}`);
+
         // Get messages
         const msgsResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
           headers: { Origin: window.location.origin },
         });
         const messages = await msgsResp.json();
 
+        // Find the latest assistant message
         const assistantMessages = messages.filter((m: any) => m.info?.role === 'assistant');
 
-        if (assistantMessages.length > lastMessageCount) {
+        if (assistantMessages.length > 0) {
           const latestMessage = assistantMessages[assistantMessages.length - 1];
           const fullContent = latestMessage.info?.parts?.[0]?.text || '';
 
+          // Check if content has grown (streaming updates)
           if (fullContent.length > lastContent.length) {
             const delta = fullContent.substring(lastContent.length);
+            console.log(`[OpenCode] New content delta: ${delta.length} chars`);
             callbacks.onChunk(delta);
             lastContent = fullContent;
           }
-
-          lastMessageCount = assistantMessages.length;
+        } else {
+          console.log('[OpenCode] No assistant messages yet');
         }
 
+        // Check if session is complete
         if (
           session.status === 'completed' ||
           session.status === 'error' ||
           session.status === 'idle'
         ) {
+          console.log(`[OpenCode] Session ${session.status}, completing poll`);
           isComplete = true;
           callbacks.onComplete();
           return;
         }
 
+        // Continue polling
         setTimeout(poll, 1000);
       } catch (error: any) {
         console.error('[OpenCode] Poll error:', error);
+        // Retry with longer delay on error
         setTimeout(poll, 2000);
       }
     };
