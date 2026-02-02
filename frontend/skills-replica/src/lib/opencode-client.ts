@@ -135,23 +135,23 @@ class OpenCodeService {
       pollCount++;
 
       try {
-        // Get session data
-        const sessionResp = await fetch(`${BASE_URL}/session/${sessionId}`, {
+        // Get messages separately (not from session object)
+        const messagesResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
           headers: { Origin: window.location.origin },
         });
 
-        if (!sessionResp.ok) {
-          console.error('[OpenCode] Failed to fetch session');
+        if (!messagesResp.ok) {
+          console.error('[OpenCode] Failed to fetch messages');
           setTimeout(poll, 1000);
           return;
         }
 
-        const sessionData = await sessionResp.json();
+        const messages = await messagesResp.json();
 
-        // Extract messages from session data
-        if (sessionData.messages && Array.isArray(sessionData.messages)) {
-          const assistantMessages = sessionData.messages.filter(
-            (m: any) => m.role === 'assistant'
+        // Filter assistant messages
+        if (Array.isArray(messages)) {
+          const assistantMessages = messages.filter(
+            (m: any) => m.info?.role === 'assistant'
           );
 
           if (assistantMessages.length > 0) {
@@ -159,13 +159,11 @@ class OpenCodeService {
 
             // Extract content from parts array
             let content = '';
-            if (lastMsg.parts && Array.isArray(lastMsg.parts)) {
-              content = lastMsg.parts
+            if (lastMsg.info?.parts && Array.isArray(lastMsg.info.parts)) {
+              content = lastMsg.info.parts
                 .filter((part: any) => part.type === 'text')
-                .map((part: any) => part.text || part.content || '')
+                .map((part: any) => part.text || '')
                 .join('\n');
-            } else if (lastMsg.content) {
-              content = lastMsg.content;
             }
 
             // Stream new content immediately
@@ -187,8 +185,8 @@ class OpenCodeService {
           } else if (pollCount <= 3) {
             console.log(`[OpenCode] ⏳ Waiting for response... (poll #${pollCount})`);
           }
-        } else if (pollCount <= 3) {
-          console.log(`[OpenCode] ⚠️ No messages array in session data (poll #${pollCount})`);
+        } else {
+          console.log(`[OpenCode] ⚠️ Messages is not an array (poll #${pollCount})`);
         }
 
         // Continue polling
