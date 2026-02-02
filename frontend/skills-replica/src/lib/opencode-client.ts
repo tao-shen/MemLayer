@@ -25,7 +25,8 @@ export interface ModelConfig {
   agent?: string;
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
 
 class OpenCodeService {
   private client: any = null;
@@ -118,9 +119,7 @@ class OpenCodeService {
 
     try {
       // Combine system prompt and user input
-      const combinedText = systemPrompt
-        ? `${systemPrompt}\n\n---\n\n${userInput}`
-        : userInput;
+      const combinedText = systemPrompt ? `${systemPrompt}\n\n---\n\n${userInput}` : userInput;
 
       console.log('[OpenCode] Connecting to global event stream...');
 
@@ -138,7 +137,7 @@ class OpenCodeService {
       const response = await fetch(globalEndpoint, {
         method: 'GET',
         headers: {
-          'Accept': 'text/event-stream',
+          Accept: 'text/event-stream',
           'Cache-Control': 'no-cache',
         },
         signal: abortController.signal,
@@ -161,7 +160,6 @@ class OpenCodeService {
       let buffer = '';
 
       const processStream = async () => {
-
         while (!abortController.signal.aborted) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -195,13 +193,21 @@ class OpenCodeService {
             // - message.part.updated: eventProps.part.sessionID
             // - message.updated: eventProps.info.sessionID
             // - session.status: eventProps.sessionID
-            const eventSessionId = eventProps.sessionID ||
-                                  eventProps.info?.sessionID ||
-                                  eventProps.part?.sessionID ||  // For message.part.updated
-                                  event.sessionID ||
-                                  eventProps.sessionId;
+            const eventSessionId =
+              eventProps.sessionID ||
+              eventProps.info?.sessionID ||
+              eventProps.part?.sessionID || // For message.part.updated
+              event.sessionID ||
+              eventProps.sessionId;
 
-            console.log('[OpenCode] Event type:', eventType, 'Session:', eventSessionId, 'Target:', currentSessionId);
+            console.log(
+              '[OpenCode] Event type:',
+              eventType,
+              'Session:',
+              eventSessionId,
+              'Target:',
+              currentSessionId
+            );
 
             if (eventSessionId && eventSessionId !== currentSessionId) {
               console.log('[OpenCode] Skipping event for different session');
@@ -242,18 +248,83 @@ class OpenCodeService {
               if (part.type === 'text') {
                 content = part.text || part.content || '';
               } else if (part.type === 'tool') {
-                // Show tool usage
                 const toolName = part.name || 'tool';
+                const toolState = part.state || 'pending';
                 const toolInput = part.input ? JSON.stringify(part.input, null, 2) : '';
-                content = `\n[Tool: ${toolName}]\n${toolInput}\n`;
+                const toolOutput = part.output || '';
+                const toolError = part.error || '';
+                const toolTitle = part.title || '';
+
+                content = `\n[Tool: ${toolName}]\n`;
+                content += `State: ${toolState}\n`;
+
+                if (toolTitle) {
+                  content += `Title: ${toolTitle}\n`;
+                }
+
+                if (toolInput) {
+                  content += `Input:\n${toolInput}\n`;
+                }
+
+                if (toolState === 'running') {
+                  content += `[Executing...]\n`;
+                } else if (toolState === 'completed') {
+                  content += `[Completed]\n`;
+                  if (toolOutput) {
+                    content += `Output:\n${toolOutput}\n`;
+                  }
+                } else if (toolState === 'error') {
+                  content += `[Error]\n`;
+                  if (toolError) {
+                    content += `${toolError}\n`;
+                  }
+                } else if (toolState === 'pending') {
+                  content += `[Pending...]\n`;
+                }
+
+                if (part.metadata && Object.keys(part.metadata).length > 0) {
+                  content += `Metadata: ${JSON.stringify(part.metadata, null, 2)}\n`;
+                }
               } else if (part.type === 'reasoning') {
-                // Show reasoning
                 const reasoningText = part.text || part.content || '';
                 content = `\n[Thinking]\n${reasoningText}\n`;
               } else if (part.type === 'step-start') {
                 content = `\n[Step Started]\n`;
               } else if (part.type === 'step-finish') {
                 content = `\n[Step Finished]\n`;
+                if (part.cost !== undefined) {
+                  content += `Cost: ${part.cost}\n`;
+                }
+                if (part.tokens) {
+                  content += `Tokens - Input: ${part.tokens.input}, Output: ${part.tokens.output}, Reasoning: ${part.tokens.reasoning}\n`;
+                  if (part.tokens.cache) {
+                    content += `Cache - Read: ${part.tokens.cache.read}, Write: ${part.tokens.cache.write}\n`;
+                  }
+                }
+              } else if (part.type === 'file') {
+                const filename = part.filename || 'unknown';
+                const fileUrl = part.url || '';
+                const fileType = part.mime || '';
+
+                content = `\n[File Operation]\n`;
+                content += `File: ${filename}\n`;
+                content += `Type: ${fileType}\n`;
+                if (fileUrl) {
+                  content += `URL: ${fileUrl}\n`;
+                }
+              } else if (part.type === 'snapshot') {
+                content = `\n[Snapshot Created]\n`;
+                if (part.snapshot) {
+                  content += `Snapshot ID: ${part.snapshot.substring(0, 8)}...\n`;
+                }
+              } else if (part.type === 'patch') {
+                content = `\n[Code Patch]\n`;
+                if (part.hash) {
+                  content += `Hash: ${part.hash}\n`;
+                }
+                if (part.files && part.files.length > 0) {
+                  content += `Files modified: ${part.files.join(', ')}\n`;
+                }
               }
 
               if (content) {
@@ -344,7 +415,7 @@ class OpenCodeService {
       });
 
       // Wait a bit for stream to be ready
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Now send the message
       console.log('[OpenCode] Sending message to session...');
