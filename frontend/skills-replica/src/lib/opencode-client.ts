@@ -226,7 +226,6 @@ class OpenCodeService {
               const messageInfo = eventProps.info;
               const messageRole = messageInfo?.role;
 
-              // Only show assistant messages (skip user message echo)
               if (messageRole && messageRole !== 'assistant') {
                 console.log('[OpenCode] Skipping non-assistant part (role:', messageRole, ')');
                 continue;
@@ -434,7 +433,7 @@ class OpenCodeService {
           providerID: model.providerID,
           modelID: model.modelID,
         },
-        parts: [{ type: 'text', text: combinedText }],
+        parts: [{ type: 'text', text: combinedText || 'Hello' }],
       };
 
       // Add agent if specified
