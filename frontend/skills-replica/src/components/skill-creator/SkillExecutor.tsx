@@ -1,7 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Send, Loader2, Sparkles, FileCode, Terminal as TerminalIcon } from 'lucide-react';
+import { X, Send, Loader2, Sparkles, FileCode, Terminal as TerminalIcon, Settings } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
-import { opencodeService } from '../../lib/opencode-client';
+import { opencodeService, type ModelConfig } from '../../lib/opencode-client';
+
+const AVAILABLE_MODELS: Array<{ label: string; config: ModelConfig }> = [
+  {
+    label: 'Claude 3.5 Sonnet (推荐)',
+    config: { providerID: 'anthropic', modelID: 'claude-3-5-sonnet-20241022' },
+  },
+  {
+    label: 'Claude 3.7 Sonnet (最新)',
+    config: { providerID: 'anthropic', modelID: 'claude-3-7-sonnet-20250219' },
+  },
+  {
+    label: 'Claude 3 Opus',
+    config: { providerID: 'anthropic', modelID: 'claude-3-opus-20240229' },
+  },
+  {
+    label: 'Claude 3 Haiku',
+    config: { providerID: 'anthropic', modelID: 'claude-3-haiku-20240307' },
+  },
+];
 
 interface SkillExecutorProps {
   skill: Skill;
@@ -20,6 +39,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'terminal' | 'files'>('chat');
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+  const [selectedModelIndex, setSelectedModelIndex] = useState(0);
+  const [showModelSelector, setShowModelSelector] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
 
@@ -34,6 +55,17 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, terminalOutput]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showModelSelector && !(event.target as Element).closest('.model-selector-container')) {
+        setShowModelSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showModelSelector]);
 
   const handleExecute = useCallback(async () => {
     if (!input.trim()) return;
@@ -94,7 +126,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         skill.config.systemPrompt || '',
         userMsg.content,
         streamCallbacks,
-        sessionIdRef.current || undefined
+        sessionIdRef.current || undefined,
+        AVAILABLE_MODELS[selectedModelIndex].config
       );
 
       if (newSessionId) {
@@ -109,7 +142,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       setTerminalOutput((prev) => [...prev, `Error: ${error.message}`]);
       setIsExecuting(false);
     }
-  }, [input, skill, messages.length]);
+  }, [input, skill, messages.length, selectedModelIndex]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -133,6 +166,40 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative model-selector-container">
+              <button
+                onClick={() => setShowModelSelector(!showModelSelector)}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-secondary transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">{AVAILABLE_MODELS[selectedModelIndex].label}</span>
+              </button>
+              {showModelSelector && (
+                <div className="absolute right-0 mt-2 w-64 bg-background border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="p-2 border-b border-border bg-secondary/50">
+                    <p className="text-xs font-medium text-foreground-secondary">选择模型</p>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {AVAILABLE_MODELS.map((model, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedModelIndex(index);
+                          setShowModelSelector(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${
+                          selectedModelIndex === index
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {model.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-2 text-foreground-secondary hover:text-foreground hover:bg-secondary rounded-lg transition-colors"

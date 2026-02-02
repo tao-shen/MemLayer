@@ -19,6 +19,12 @@ export interface StreamCallbacks {
   onError: (error: string) => void;
 }
 
+export interface ModelConfig {
+  providerID: string;
+  modelID: string;
+  agent?: string;
+}
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
 
 class OpenCodeService {
@@ -81,7 +87,8 @@ class OpenCodeService {
     systemPrompt: string,
     userInput: string,
     callbacks: StreamCallbacks,
-    sessionId?: string
+    sessionId?: string,
+    modelConfig?: ModelConfig
   ): Promise<string | null> {
     let currentSessionId: string | null = sessionId ?? null;
 
@@ -184,8 +191,13 @@ class OpenCodeService {
             }
 
             // Check if this event is for our session
+            // Different events have sessionID in different places:
+            // - message.part.updated: eventProps.part.sessionID
+            // - message.updated: eventProps.info.sessionID
+            // - session.status: eventProps.sessionID
             const eventSessionId = eventProps.sessionID ||
                                   eventProps.info?.sessionID ||
+                                  eventProps.part?.sessionID ||  // For message.part.updated
                                   event.sessionID ||
                                   eventProps.sessionId;
 
@@ -201,6 +213,16 @@ class OpenCodeService {
               const part = eventProps.part;
               if (!part) {
                 console.log('[OpenCode] No part in message.part.updated event');
+                continue;
+              }
+
+              // Get the message info to check if it's an assistant message
+              const messageInfo = eventProps.info;
+              const messageRole = messageInfo?.role;
+
+              // Only show assistant messages (skip user message echo)
+              if (messageRole && messageRole !== 'assistant') {
+                console.log('[OpenCode] Skipping non-assistant part (role:', messageRole, ')');
                 continue;
               }
 
@@ -326,19 +348,37 @@ class OpenCodeService {
 
       // Now send the message
       console.log('[OpenCode] Sending message to session...');
+      console.log('[OpenCode] Message content length:', combinedText.length);
+
+      // Use provided model config or default
+      const model = modelConfig || {
+        providerID: 'anthropic',
+        modelID: 'claude-3-5-sonnet-20241022',
+      };
+
+      console.log('[OpenCode] Using model:', model.providerID, '/', model.modelID);
+
+      const messageBody: any = {
+        model: {
+          providerID: model.providerID,
+          modelID: model.modelID,
+        },
+        parts: [{ type: 'text', text: combinedText }],
+      };
+
+      // Add agent if specified
+      if (model.agent || modelConfig?.agent) {
+        messageBody.agent = model.agent || modelConfig?.agent;
+        console.log('[OpenCode] Using agent:', messageBody.agent);
+      }
+
       const messageResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Origin: window.location.origin,
         },
-        body: JSON.stringify({
-          model: {
-            providerID: 'anthropic',
-            modelID: 'claude-3-5-sonnet-20241022',
-          },
-          parts: [{ type: 'text', text: combinedText }],
-        }),
+        body: JSON.stringify(messageBody),
       });
 
       if (!messageResp.ok) {
