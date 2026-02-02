@@ -23,6 +23,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-c
 
 class OpenCodeService {
   private client: any = null;
+  private sseAbortController: AbortController | null = null;
 
   async connect(config: OpenCodeConfig = {}): Promise<void> {
     const baseUrl = config.hostname ? `http://${config.hostname}:${config.port || 80}` : BASE_URL;
@@ -39,7 +40,42 @@ class OpenCodeService {
     }
   }
 
-  // SSE-based streaming implementation (official OpenCode way)
+  private parseSseBlock(block: string): { data: unknown; id?: string } | null {
+    if (!block) return null;
+
+    const lines = block.split('\n');
+    const dataLines: string[] = [];
+    let eventId: string | undefined;
+
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).replace(/^\s/, ''));
+      } else if (line.startsWith('id:')) {
+        const candidate = line.slice(3).trim();
+        if (candidate) {
+          eventId = candidate;
+        }
+      }
+    }
+
+    if (dataLines.length === 0) {
+      return null;
+    }
+
+    const payloadText = dataLines.join('\n').trim();
+    if (!payloadText) {
+      return null;
+    }
+
+    try {
+      const data = JSON.parse(payloadText);
+      return { data, id: eventId };
+    } catch {
+      return null;
+    }
+  }
+
+  // SSE-based streaming implementation following openchamber's approach
   async executeSkillStream(
     skillId: string,
     systemPrompt: string,
@@ -79,53 +115,174 @@ class OpenCodeService {
         ? `${systemPrompt}\n\n---\n\n${userInput}`
         : userInput;
 
-      console.log('[OpenCode] Subscribing to event stream...');
+      console.log('[OpenCode] Connecting to global event stream...');
 
-      // Connect to SSE event stream FIRST
-      const eventSource = new EventSource(`${BASE_URL}/event`);
-      let accumulatedContent = '';
+      // Clean up any existing connection
+      if (this.sseAbortController) {
+        this.sseAbortController.abort();
+      }
 
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('[OpenCode] Event received:', data.type);
+      this.sseAbortController = new AbortController();
+      const abortController = this.sseAbortController;
 
-          // Handle message events
-          if (data.type === 'message' && data.properties?.sessionID === currentSessionId) {
-            const parts = data.properties?.info?.parts || [];
-            const textParts = parts
-              .filter((p: any) => p.type === 'text')
-              .map((p: any) => p.text || '')
-              .join('\n');
+      // Connect to global event stream using manual SSE parsing
+      const globalEndpoint = `${BASE_URL.replace(/\/+$/, '')}/global/event`;
 
-            if (textParts && textParts.length > accumulatedContent.length) {
-              const delta = textParts.substring(accumulatedContent.length);
-              console.log(`[OpenCode] 📝 Streaming: ${delta.length} chars`);
-              callbacks.onChunk(delta);
-              accumulatedContent = textParts;
+      const response = await fetch(globalEndpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        },
+        signal: abortController.signal,
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to connect to event stream: ${response.status}`);
+      }
+
+      console.log('[OpenCode] Connected to global event stream');
+
+      // Track message parts and completion
+      const seenParts = new Set<string>();
+      let isCompleted = false;
+      let hasReceivedParts = false;
+
+      // Process SSE stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const processStream = async () => {
+        while (!abortController.signal.aborted) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!value || value.length === 0) continue;
+
+          buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+          const blocks = buffer.split('\n\n');
+          buffer = blocks.pop() ?? '';
+
+          for (const block of blocks) {
+            const parsed = this.parseSseBlock(block);
+            if (!parsed?.data) continue;
+
+            const event = parsed.data as any;
+
+            // Check if this event is for our session
+            const eventSessionId = event.properties?.sessionID ||
+                                  event.properties?.info?.sessionID ||
+                                  event.sessionID;
+
+            if (eventSessionId !== currentSessionId) continue;
+
+            // Handle message.part.updated - this is the key to showing complete process!
+            if (event.type === 'message.part.updated') {
+              const part = event.properties?.part;
+              if (!part) continue;
+
+              hasReceivedParts = true;
+
+              // Generate unique key for this part
+              const partKey = `${part.id || ''}-${part.type || ''}-${part.callID || ''}`;
+              if (seenParts.has(partKey)) continue;
+              seenParts.add(partKey);
+
+              // Extract content based on part type
+              let content = '';
+
+              if (part.type === 'text') {
+                content = part.text || part.content || '';
+              } else if (part.type === 'tool') {
+                // Show tool usage
+                const toolName = part.name || 'tool';
+                const toolInput = part.input ? JSON.stringify(part.input, null, 2) : '';
+                content = `\n[Tool: ${toolName}]\n${toolInput}\n`;
+              } else if (part.type === 'reasoning') {
+                // Show reasoning
+                const reasoningText = part.text || part.content || '';
+                content = `\n[Thinking]\n${reasoningText}\n`;
+              } else if (part.type === 'step-start') {
+                content = `\n[Step Started]\n`;
+              } else if (part.type === 'step-finish') {
+                content = `\n[Step Finished]\n`;
+              }
+
+              if (content) {
+                console.log(`[OpenCode] Part received: ${part.type} (${content.length} chars)`);
+                callbacks.onChunk(content);
+              }
+            }
+
+            // Handle message.updated - completion signal
+            else if (event.type === 'message.updated') {
+              const messageInfo = event.properties?.info || event.properties;
+              const role = messageInfo?.role;
+              const finish = messageInfo?.finish;
+
+              // Only complete when assistant message has finish=stop
+              if (role === 'assistant' && finish === 'stop') {
+                console.log('[OpenCode] Message completed');
+                isCompleted = true;
+                abortController.abort();
+                callbacks.onComplete();
+                return;
+              }
+            }
+
+            // Handle session status changes
+            else if (event.type === 'session.status') {
+              const status = event.properties?.status?.type;
+              if (status === 'idle' && hasReceivedParts) {
+                console.log('[OpenCode] Session idle, completing');
+                isCompleted = true;
+                abortController.abort();
+                callbacks.onComplete();
+                return;
+              }
             }
           }
+        }
 
-          // Handle completion
-          if (data.type === 'session' && data.properties?.status === 'idle') {
-            if (data.properties?.sessionID === currentSessionId) {
-              console.log('[OpenCode] ✓ Session completed');
-              eventSource.close();
-              callbacks.onComplete();
+        // Process remaining buffer
+        const remaining = buffer.trim();
+        if (remaining && !abortController.signal.aborted) {
+          const parsed = this.parseSseBlock(remaining);
+          if (parsed?.data) {
+            const event = parsed.data as any;
+            const eventSessionId = event.properties?.sessionID || event.sessionID;
+
+            if (eventSessionId === currentSessionId && event.type === 'message.updated') {
+              const finish = event.properties?.info?.finish;
+              if (finish === 'stop') {
+                isCompleted = true;
+                callbacks.onComplete();
+              }
             }
           }
-        } catch (e) {
-          console.error('[OpenCode] Event parse error:', e);
+        }
+
+        if (!isCompleted) {
+          console.log('[OpenCode] Stream ended without completion');
+          if (hasReceivedParts) {
+            callbacks.onComplete();
+          } else {
+            callbacks.onError('Stream ended without receiving any parts');
+          }
         }
       };
 
-      eventSource.onerror = (error) => {
-        console.error('[OpenCode] EventSource error:', error);
-        eventSource.close();
-      };
+      // Start processing stream in background
+      processStream().catch((error) => {
+        if (error.name === 'AbortError' || abortController.signal.aborted) {
+          return;
+        }
+        console.error('[OpenCode] Stream processing error:', error);
+        callbacks.onError(error.message);
+      });
 
       // Now send the message
-      console.log('[OpenCode] Sending message...');
+      console.log('[OpenCode] Sending message to session...');
       const messageResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
@@ -144,119 +301,35 @@ class OpenCodeService {
       if (!messageResp.ok) {
         const errorText = await messageResp.text();
         console.error('[OpenCode] Failed to send message:', errorText);
-        eventSource.close();
+        abortController.abort();
         callbacks.onError(`Failed to send message: ${errorText.substring(0, 200)}`);
         return currentSessionId;
       }
 
-      console.log('[OpenCode] Message sent, waiting for events...');
+      console.log('[OpenCode] Message sent, waiting for streaming parts...');
 
       // Timeout fallback
       setTimeout(() => {
-        if (eventSource.readyState !== EventSource.CLOSED) {
-          console.log('[OpenCode] Timeout, closing event source');
-          eventSource.close();
-          if (accumulatedContent.length === 0) {
-            callbacks.onError('No response received');
-          } else {
+        if (!abortController.signal.aborted && !isCompleted) {
+          console.log('[OpenCode] Timeout, completing');
+          abortController.abort();
+          if (hasReceivedParts) {
             callbacks.onComplete();
+          } else {
+            callbacks.onError('Timeout: No response received');
           }
         }
       }, 120000); // 2 minutes
 
       return currentSessionId;
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        return currentSessionId;
+      }
       console.error('[OpenCode] Execution error:', error);
       callbacks.onError(error.message);
       return currentSessionId;
     }
-  }
-
-  private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
-    let lastContent = '';
-    let pollCount = 0;
-    let stableCount = 0;
-    const maxPolls = 120; // 2 minutes max (60 seconds at 500ms intervals)
-    const stableThreshold = 6; // Content stable for 3 seconds (6 * 500ms)
-    let isComplete = false;
-
-    console.log('[OpenCode] Starting message polling...');
-
-    const poll = async () => {
-      if (isComplete || pollCount >= maxPolls) {
-        if (!isComplete) {
-          console.log('[OpenCode] Polling timeout, completing...');
-          callbacks.onComplete();
-        }
-        return;
-      }
-
-      pollCount++;
-
-      try {
-        // Get messages separately (not from session object)
-        const messagesResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
-          headers: { Origin: window.location.origin },
-        });
-
-        if (!messagesResp.ok) {
-          console.error('[OpenCode] Failed to fetch messages');
-          setTimeout(poll, 1000);
-          return;
-        }
-
-        const messages = await messagesResp.json();
-
-        // Filter assistant messages
-        if (Array.isArray(messages)) {
-          const assistantMessages = messages.filter(
-            (m: any) => m.info?.role === 'assistant'
-          );
-
-          if (assistantMessages.length > 0) {
-            const lastMsg = assistantMessages[assistantMessages.length - 1];
-
-            // Extract content from parts array
-            let content = '';
-            if (lastMsg.info?.parts && Array.isArray(lastMsg.info.parts)) {
-              content = lastMsg.info.parts
-                .filter((part: any) => part.type === 'text')
-                .map((part: any) => part.text || '')
-                .join('\n');
-            }
-
-            // Stream new content immediately
-            if (content.length > lastContent.length) {
-              const delta = content.substring(lastContent.length);
-              console.log(`[OpenCode] 📝 New content: ${delta.length} chars (poll #${pollCount})`);
-              callbacks.onChunk(delta);
-              lastContent = content;
-              stableCount = 0; // Reset counter
-            } else if (content.length > 0) {
-              stableCount++;
-              if (stableCount >= stableThreshold) {
-                console.log(`[OpenCode] ✓ Content stable for ${stableCount} polls, completing`);
-                isComplete = true;
-                callbacks.onComplete();
-                return;
-              }
-            }
-          } else if (pollCount <= 3) {
-            console.log(`[OpenCode] ⏳ Waiting for response... (poll #${pollCount})`);
-          }
-        } else {
-          console.log(`[OpenCode] ⚠️ Messages is not an array (poll #${pollCount})`);
-        }
-
-        // Continue polling
-        setTimeout(poll, 500);
-      } catch (error: any) {
-        console.error('[OpenCode] Poll error:', error);
-        setTimeout(poll, 1000);
-      }
-    };
-
-    poll();
   }
 
   // Fallback non-streaming method using SDK
@@ -315,6 +388,13 @@ class OpenCodeService {
 
   isConnected(): boolean {
     return this.client !== null;
+  }
+
+  cleanup() {
+    if (this.sseAbortController) {
+      this.sseAbortController.abort();
+      this.sseAbortController = null;
+    }
   }
 }
 
