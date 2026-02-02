@@ -19,7 +19,7 @@ export interface StreamCallbacks {
   onError: (error: string) => void;
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://opencode.tao-shen.com';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
 
 class OpenCodeService {
   private client: any = null;
