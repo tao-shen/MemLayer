@@ -74,27 +74,15 @@ class OpenCodeService {
     }
 
     try {
-      // Send system prompt with noReply (to avoid triggering a response)
-      if (systemPrompt) {
-        const systemResp = await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Origin: window.location.origin,
-          },
-          body: JSON.stringify({
-            noReply: true,
-            parts: [{ type: 'text', text: systemPrompt }],
-          }),
-        });
+      // Combine system prompt and user input into a single message
+      const combinedText = systemPrompt
+        ? `${systemPrompt}\n\n---\n\n${userInput}`
+        : userInput;
 
-        if (!systemResp.ok) {
-          console.error('[OpenCode] Failed to send system prompt:', await systemResp.text());
-        }
-      }
+      console.log('[OpenCode] Sending message to /session/.../message endpoint...');
 
-      // Send user input with model specification
-      const userResp = await fetch(`${BASE_URL}/session/${currentSessionId}/prompt`, {
+      // Send message with model specification (using /message endpoint, not /prompt)
+      const messageResp = await fetch(`${BASE_URL}/session/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,18 +93,18 @@ class OpenCodeService {
             providerID: 'anthropic',
             modelID: 'claude-3-5-sonnet-20241022',
           },
-          parts: [{ type: 'text', text: userInput }],
+          parts: [{ type: 'text', text: combinedText }],
         }),
       });
 
-      if (!userResp.ok) {
-        const errorText = await userResp.text();
-        console.error('[OpenCode] Failed to send user prompt:', errorText);
-        callbacks.onError(`Failed to send prompt: ${errorText.substring(0, 200)}`);
+      if (!messageResp.ok) {
+        const errorText = await messageResp.text();
+        console.error('[OpenCode] Failed to send message:', errorText);
+        callbacks.onError(`Failed to send message: ${errorText.substring(0, 200)}`);
         return currentSessionId;
       }
 
-      console.log('[OpenCode] Prompt sent successfully, starting to poll messages...');
+      console.log('[OpenCode] Message sent successfully, starting to poll...');
 
       // Poll for messages
       await this.pollMessages(currentSessionId, callbacks);
@@ -149,13 +137,16 @@ class OpenCodeService {
       pollCount++;
 
       try {
-        // Get session status
-        const sessionResp = await fetch(`${BASE_URL}/session/${sessionId}`, {
+        // Get session status from /session/status endpoint
+        const statusResp = await fetch(`${BASE_URL}/session/status`, {
           headers: { Origin: window.location.origin },
         });
-        const session = await sessionResp.json();
+        const allStatus = await statusResp.json();
+        const sessionStatus = allStatus[sessionId];
 
-        console.log(`[OpenCode] Poll #${pollCount}: status=${session.status}`);
+        console.log(
+          `[OpenCode] Poll #${pollCount}: status=${sessionStatus?.type || 'unknown'}`
+        );
 
         // Get messages
         const msgsResp = await fetch(`${BASE_URL}/session/${sessionId}/message`, {
@@ -181,13 +172,13 @@ class OpenCodeService {
           console.log('[OpenCode] No assistant messages yet');
         }
 
-        // Check if session is complete
+        // Check if session is complete (status is idle and we have messages)
         if (
-          session.status === 'completed' ||
-          session.status === 'error' ||
-          session.status === 'idle'
+          sessionStatus?.type === 'idle' &&
+          assistantMessages.length > 0 &&
+          lastContent.length > 0
         ) {
-          console.log(`[OpenCode] Session ${session.status}, completing poll`);
+          console.log('[OpenCode] Session idle with content, completing poll');
           isComplete = true;
           callbacks.onComplete();
           return;
