@@ -116,12 +116,12 @@ class OpenCodeService {
   private async pollMessages(sessionId: string, callbacks: StreamCallbacks): Promise<void> {
     let lastContent = '';
     let pollCount = 0;
-    let stableCount = 0; // Count how many times content hasn't changed
-    const maxPolls = 300; // 5 minutes max
-    const stableThreshold = 10; // Content must be stable for 10 polls (~10 seconds) before completing
+    let stableCount = 0;
+    const maxPolls = 120; // 2 minutes max (60 seconds at 500ms intervals)
+    const stableThreshold = 6; // Content stable for 3 seconds (6 * 500ms)
     let isComplete = false;
 
-    console.log('[OpenCode] Starting message polling for real-time streaming...');
+    console.log('[OpenCode] Starting message polling...');
 
     const poll = async () => {
       if (isComplete || pollCount >= maxPolls) {
@@ -135,32 +135,18 @@ class OpenCodeService {
       pollCount++;
 
       try {
-        // Get session status to check if still processing
-        const statusResp = await fetch(`${BASE_URL}/session/status`, {
-          headers: { Origin: window.location.origin },
-        });
-
-        let sessionStatus = null;
-        if (statusResp.ok) {
-          const allStatus = await statusResp.json();
-          sessionStatus = allStatus[sessionId];
-        }
-
-        // Get session data (matches opencode-web implementation)
+        // Get session data
         const sessionResp = await fetch(`${BASE_URL}/session/${sessionId}`, {
           headers: { Origin: window.location.origin },
         });
 
         if (!sessionResp.ok) {
           console.error('[OpenCode] Failed to fetch session');
-          setTimeout(poll, 2000);
+          setTimeout(poll, 1000);
           return;
         }
 
         const sessionData = await sessionResp.json();
-
-        const statusType = sessionStatus?.type || 'unknown';
-        console.log(`[OpenCode] Poll #${pollCount}: status=${statusType}, stable=${stableCount}`);
 
         // Extract messages from session data
         if (sessionData.messages && Array.isArray(sessionData.messages)) {
@@ -182,43 +168,34 @@ class OpenCodeService {
               content = lastMsg.content;
             }
 
-            // Check if content has grown (streaming updates) - THIS IS THE KEY FOR REAL-TIME DISPLAY
+            // Stream new content immediately
             if (content.length > lastContent.length) {
               const delta = content.substring(lastContent.length);
-              console.log(`[OpenCode] 🔄 Streaming new content: ${delta.length} chars`);
+              console.log(`[OpenCode] 📝 New content: ${delta.length} chars (poll #${pollCount})`);
               callbacks.onChunk(delta);
               lastContent = content;
-              stableCount = 0; // Reset stable counter when we get new content
+              stableCount = 0; // Reset counter
             } else if (content.length > 0) {
-              // Content hasn't changed
               stableCount++;
+              if (stableCount >= stableThreshold) {
+                console.log(`[OpenCode] ✓ Content stable for ${stableCount} polls, completing`);
+                isComplete = true;
+                callbacks.onComplete();
+                return;
+              }
             }
-
-            // Only complete if:
-            // 1. Status is idle (not busy/retry)
-            // 2. We have content
-            // 3. Content has been stable for the threshold
-            if (
-              statusType === 'idle' &&
-              content.length > 0 &&
-              stableCount >= stableThreshold
-            ) {
-              console.log('[OpenCode] ✓ Session idle and content stable, completing...');
-              isComplete = true;
-              callbacks.onComplete();
-              return;
-            }
-          } else {
-            console.log('[OpenCode] ⏳ Waiting for assistant response...');
+          } else if (pollCount <= 3) {
+            console.log(`[OpenCode] ⏳ Waiting for response... (poll #${pollCount})`);
           }
+        } else if (pollCount <= 3) {
+          console.log(`[OpenCode] ⚠️ No messages array in session data (poll #${pollCount})`);
         }
 
-        // Continue polling more frequently for better streaming
-        setTimeout(poll, 500); // Poll every 500ms for more responsive streaming
+        // Continue polling
+        setTimeout(poll, 500);
       } catch (error: any) {
         console.error('[OpenCode] Poll error:', error);
-        // Retry with longer delay on error
-        setTimeout(poll, 2000);
+        setTimeout(poll, 1000);
       }
     };
 
