@@ -368,7 +368,7 @@ class OpenCodeService {
         console.log('[OpenCode] Using agent:', messageBody.agent);
       }
 
-      await this.client.session.chat(currentSessionId, {
+      await this.client.session.message(currentSessionId, {
         body: messageBody,
       });
 
