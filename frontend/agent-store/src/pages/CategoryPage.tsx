@@ -6,11 +6,11 @@ import { agents } from '../data/mockData';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { getCategory, categories } = useCategoriesStore();
+  const { getCategory } = useCategoriesStore();
   const { sort, setSort, filters, setFilters } = useSearchStore();
 
   const category = getCategory(slug || '');
-  const categoryAgents = agents.filter(a => a.category.slug === slug);
+  const categoryAgents = agents.filter((a) => a.category.slug === slug);
 
   if (!category) {
     return (
@@ -55,7 +55,9 @@ export default function CategoryPage() {
       sortedAgents.sort((a, b) => b.orderCount - a.orderCount);
       break;
     case 'newest':
-      sortedAgents.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      sortedAgents.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
       break;
     case 'price_low':
       sortedAgents.sort((a, b) => a.pricing.startingPrice - b.pricing.startingPrice);
@@ -64,17 +66,18 @@ export default function CategoryPage() {
       sortedAgents.sort((a, b) => b.pricing.startingPrice - a.pricing.startingPrice);
       break;
     default:
-      sortedAgents.sort((a, b) => (b.rating * b.orderCount) - (a.rating * a.orderCount));
+      sortedAgents.sort((a, b) => b.rating * b.orderCount - a.rating * a.orderCount);
   }
 
   // Apply filters
   if (filters.deliveryTime) {
-    sortedAgents = sortedAgents.filter(a => a.deliveryTime <= filters.deliveryTime!);
+    sortedAgents = sortedAgents.filter((a) => a.deliveryTime <= filters.deliveryTime!);
   }
   if (filters.priceRange) {
-    sortedAgents = sortedAgents.filter(a => 
-      a.pricing.startingPrice >= filters.priceRange[0] &&
-      a.pricing.startingPrice <= filters.priceRange[1]
+    sortedAgents = sortedAgents.filter(
+      (a) =>
+        a.pricing.startingPrice >= filters.priceRange[0] &&
+        a.pricing.startingPrice <= filters.priceRange[1]
     );
   }
 
@@ -85,9 +88,13 @@ export default function CategoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
           <nav className="flex items-center text-sm text-gray-500 mb-4">
-            <Link to="/" className="hover:text-primary-500">Home</Link>
+            <Link to="/" className="hover:text-primary-500">
+              Home
+            </Link>
             <ChevronRightIcon className="h-4 w-4 mx-2" />
-            <Link to="/categories" className="hover:text-primary-500">Categories</Link>
+            <Link to="/categories" className="hover:text-primary-500">
+              Categories
+            </Link>
             <ChevronRightIcon className="h-4 w-4 mx-2" />
             <span className="text-gray-900">{category.name}</span>
           </nav>
@@ -153,10 +160,12 @@ export default function CategoryPage() {
                         type="radio"
                         name="price"
                         checked={
-                          filters.priceRange[0] === option.value[0] && 
+                          filters.priceRange[0] === option.value[0] &&
                           filters.priceRange[1] === option.value[1]
                         }
-                        onChange={() => setFilters({ priceRange: option.value as [number, number] })}
+                        onChange={() =>
+                          setFilters({ priceRange: option.value as [number, number] })
+                        }
                         className="h-4 w-4 text-primary-500 focus:ring-primary-500 border-gray-300"
                       />
                       <span className="ml-2 text-sm text-gray-600">{option.label}</span>
