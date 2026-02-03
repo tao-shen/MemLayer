@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@types/react': 18.3.27
+  '@types/react-dom': 18.3.7
+
 importers:
 
   .:
@@ -54,17 +58,17 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-router-dom:
-        specifier: ^6.22.0
+        specifier: ^6.26.2
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zustand:
         specifier: ^5.0.3
         version: 5.0.10(@types/react@18.3.27)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
       '@types/react':
-        specifier: ^18.3.18
+        specifier: 18.3.27
         version: 18.3.27
       '@types/react-dom':
-        specifier: ^18.3.5
+        specifier: 18.3.7
         version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
@@ -176,10 +180,10 @@ importers:
         specifier: ^7.4.3
         version: 7.4.3
       '@types/react':
-        specifier: ^18.3.18
+        specifier: 18.3.27
         version: 18.3.27
       '@types/react-dom':
-        specifier: ^18.3.5
+        specifier: 18.3.7
         version: 18.3.7(@types/react@18.3.27)
       '@types/react-window':
         specifier: ^1.8.8
@@ -276,11 +280,11 @@ importers:
         specifier: ^24.10.1
         version: 24.10.9
       '@types/react':
-        specifier: ^19.2.5
-        version: 19.2.9
+        specifier: 18.3.27
+        version: 18.3.27
       '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.9)
+        specifier: 18.3.7
+        version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
         version: 5.1.2(vite@7.3.1(@types/node@24.10.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -388,11 +392,11 @@ importers:
         specifier: ^24.10.1
         version: 24.10.9
       '@types/react':
-        specifier: ^19.2.5
-        version: 19.2.9
+        specifier: 18.3.27
+        version: 18.3.27
       '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.9)
+        specifier: 18.3.7
+        version: 18.3.7(@types/react@18.3.27)
       autoprefixer:
         specifier: ^10.4.23
         version: 10.4.23(postcss@8.5.6)
@@ -455,10 +459,10 @@ importers:
         specifier: ^7.4.3
         version: 7.4.3
       '@types/react':
-        specifier: ^18.2.37
+        specifier: 18.3.27
         version: 18.3.27
       '@types/react-dom':
-        specifier: ^18.2.15
+        specifier: 18.3.7
         version: 18.3.7(@types/react@18.3.27)
       '@types/react-window':
         specifier: ^1.8.8
@@ -504,10 +508,10 @@ importers:
         specifier: ^7.4.3
         version: 7.4.3
       '@types/react':
-        specifier: ^18.2.37
+        specifier: 18.3.27
         version: 18.3.27
       '@types/react-dom':
-        specifier: ^18.2.15
+        specifier: 18.3.7
         version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^4.2.0
@@ -682,7 +686,7 @@ importers:
         version: 9.0.10
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/embedding-service:
     dependencies:
@@ -710,7 +714,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/management-service:
     dependencies:
@@ -744,7 +748,7 @@ importers:
         version: 3.0.11
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/reflection-service:
     dependencies:
@@ -781,7 +785,7 @@ importers:
         version: 9.0.8
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/retrieval-service:
     dependencies:
@@ -806,7 +810,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/skill-creator-service:
     dependencies:
@@ -919,7 +923,7 @@ importers:
         version: 8.15.6
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
+        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
 
   services/visualization-service:
     dependencies:
@@ -2173,7 +2177,7 @@ packages:
     resolution: {integrity: sha512-MdmoAbQUTOdicCocm5XAFDJWsswxk7hxa6ALnm6Y88p01HFML0W593hAn6qOt9q6IM1KbAcebtH6oOd4gcQy8w==}
     engines: {node: '>= 20.19.4'}
     peerDependencies:
-      '@types/react': ^19.2.0
+      '@types/react': 18.3.27
       react: '*'
       react-native: '*'
     peerDependenciesMeta:
@@ -3476,12 +3480,7 @@ packages:
   '@types/react-dom@18.3.7':
     resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
     peerDependencies:
-      '@types/react': ^18.0.0
-
-  '@types/react-dom@19.2.3':
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
-    peerDependencies:
-      '@types/react': ^19.2.0
+      '@types/react': 18.3.27
 
   '@types/react-syntax-highlighter@15.5.13':
     resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
@@ -3491,9 +3490,6 @@ packages:
 
   '@types/react@18.3.27':
     resolution: {integrity: sha512-cisd7gxkzjBKU2GgdYrTdtQx1SORymWyaAFhaxQPK9bYO9ot3Y5OikQRvY0VYQtvwjeQnizCINJAenh/V7MK2w==}
-
-  '@types/react@19.2.9':
-    resolution: {integrity: sha512-Lpo8kgb/igvMIPeNV2rsYKTgaORYdO1XGVZ4Qz3akwOj0ySGYMPlQWa8BaLn0G63D1aSaAQ5ldR06wCpChQCjA==}
 
   '@types/semver@7.7.1':
     resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
@@ -6960,7 +6956,7 @@ packages:
   react-markdown@9.1.0:
     resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
     peerDependencies:
-      '@types/react': '>=18'
+      '@types/react': 18.3.27
       react: '>=18'
 
   react-modal@3.16.3:
@@ -6974,7 +6970,7 @@ packages:
     engines: {node: '>= 20.19.4'}
     hasBin: true
     peerDependencies:
-      '@types/react': ^19.1.1
+      '@types/react': 18.3.27
       react: ^19.2.0
     peerDependenciesMeta:
       '@types/react':
@@ -7967,7 +7963,7 @@ packages:
     resolution: {integrity: sha512-Qik0o+DSy741TmkqmRfjq+0xpZBXi/Y6+fXZLn0xNF1z/waFMbE3rkivv5Zcf9RrMUp6zswf2J7sbh2KBlba5A==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
-      '@types/react': '>=16.8'
+      '@types/react': 18.3.27
       react: '>=16.8'
     peerDependenciesMeta:
       '@types/react':
@@ -8309,7 +8305,7 @@ packages:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
     peerDependencies:
-      '@types/react': '>=16.8'
+      '@types/react': 18.3.27
       immer: '>=9.0.6'
       react: '>=16.8'
     peerDependenciesMeta:
@@ -8324,7 +8320,7 @@ packages:
     resolution: {integrity: sha512-U1AiltS1O9hSy3rul+Ub82ut2fqIAefiSuwECWt6jlMVUGejvf+5omLcRBSzqbRagSM3hQZbtzdeRc6QVScXTg==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
-      '@types/react': '>=18.0.0'
+      '@types/react': 18.3.27
       immer: '>=9.0.6'
       react: '>=18.0.0'
       use-sync-external-store: '>=1.2.0'
@@ -11698,10 +11694,6 @@ snapshots:
     dependencies:
       '@types/react': 18.3.27
 
-  '@types/react-dom@19.2.3(@types/react@19.2.9)':
-    dependencies:
-      '@types/react': 19.2.9
-
   '@types/react-syntax-highlighter@15.5.13':
     dependencies:
       '@types/react': 18.3.27
@@ -11713,10 +11705,6 @@ snapshots:
   '@types/react@18.3.27':
     dependencies:
       '@types/prop-types': 15.7.15
-      csstype: 3.2.3
-
-  '@types/react@19.2.9':
-    dependencies:
       csstype: 3.2.3
 
   '@types/semver@7.7.1': {}
@@ -17651,7 +17639,7 @@ snapshots:
 
   ts-mixer@6.0.4: {}
 
-  ts-node-dev@2.0.0(@types/node@20.19.24)(typescript@5.9.3):
+  ts-node-dev@2.0.0(@types/node@24.10.9)(typescript@5.9.3):
     dependencies:
       chokidar: 3.6.0
       dynamic-dedupe: 0.3.0
@@ -17661,7 +17649,7 @@ snapshots:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 10.9.2(@types/node@20.19.24)(typescript@5.9.3)
+      ts-node: 10.9.2(@types/node@24.10.9)(typescript@5.9.3)
       tsconfig: 7.0.0
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -17704,7 +17692,6 @@ snapshots:
       typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    optional: true
 
   tsconfig@7.0.0:
     dependencies:

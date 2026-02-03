@@ -2,6 +2,7 @@
   "name": "@agent-memory/skill-creator-service",
   "version": "1.0.0",
   "description": "Skill Creator Service for analyzing files and generating skills",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
