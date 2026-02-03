@@ -54,6 +54,11 @@ class OpenCodeService {
     sessionId?: string,
     modelConfig?: ModelConfig
   ): Promise<string | null> {
+    // Ensure client is connected before using SDK
+    if (!this.client) {
+      await this.connect();
+    }
+
     let currentSessionId: string | null = sessionId ?? null;
 
     // Create session if needed
