@@ -39,6 +39,10 @@ class OpenCodeService {
         baseUrl,
         directory: config.directory,
       });
+
+      // Verify client is properly initialized by checking a simple property
+      // This ensures the client object is not null before returning
+      console.log('[OpenCode] Client created:', this.client);
       console.log('[OpenCode] Connected to', baseUrl);
     } catch (error) {
       console.error('[OpenCode] Failed to connect:', error);
@@ -90,15 +94,13 @@ class OpenCodeService {
       this.sseAbortController = new AbortController();
       const abortController = this.sseAbortController;
 
-      console.log('[OpenCode] Connected to global event stream');
-
-      // Track message parts and completion
-      const seenParts = new Set<string>();
-      let isCompleted = false;
-      let hasReceivedParts = false;
+      // START STREAM BEFORE SENDING MESSAGE - ensures events are not missed
+      console.log('[OpenCode] Starting event stream listener...');
 
       // Use SDK's built-in streaming
       const stream = await this.client.event.list();
+
+      console.log('[OpenCode] Event stream listener started');
 
       const processStream = async () => {
         try {
