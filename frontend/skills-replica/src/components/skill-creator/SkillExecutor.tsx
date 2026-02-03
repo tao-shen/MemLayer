@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Send, Loader2, Sparkles, FileCode, Terminal as TerminalIcon, Settings } from 'lucide-react';
+import {
+  X,
+  Send,
+  Loader2,
+  Sparkles,
+  FileCode,
+  Terminal as TerminalIcon,
+  Settings,
+} from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import { opencodeService, type ModelConfig } from '../../lib/opencode-client';
 
@@ -145,7 +153,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   }, [input, skill, messages.length, selectedModelIndex]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter') {
+      if (e.metaKey || e.ctrlKey) {
+        e.preventDefault();
+        return;
+      }
       handleExecute();
     }
   };
@@ -172,7 +184,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                 className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-secondary transition-colors"
               >
                 <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">{AVAILABLE_MODELS[selectedModelIndex].label}</span>
+                <span className="hidden sm:inline">
+                  {AVAILABLE_MODELS[selectedModelIndex].label}
+                </span>
               </button>
               {showModelSelector && (
                 <div className="absolute right-0 mt-2 w-64 bg-background border border-border rounded-lg shadow-xl z-50 overflow-hidden">
