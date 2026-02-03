@@ -104,8 +104,7 @@ class OpenCodeService {
       // START STREAM BEFORE SENDING MESSAGE - ensures events are not missed
       console.log('[OpenCode] Starting event stream listener...');
 
-      // Use SDK's built-in streaming
-      const stream = await this.client.event.list();
+      const stream = await this.client.event.subscribe();
 
       console.log('[OpenCode] Event stream listener started');
 
