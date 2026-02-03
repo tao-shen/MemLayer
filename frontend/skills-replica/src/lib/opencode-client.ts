@@ -68,16 +68,23 @@ class OpenCodeService {
     // Create session if needed
     if (!currentSessionId) {
       try {
+        console.log('[OpenCode] Creating session with title:', `Skill: ${skillId}`);
         const session = await this.client.session.create({
           body: { title: `Skill: ${skillId}` },
         });
-        currentSessionId = session.id || null;
+        console.log('[OpenCode] Session creation response:', session);
+        currentSessionId = session.id || session.data?.id || session.data?.session?.id || null;
         if (!currentSessionId) {
-          callbacks.onError('Failed to create session');
+          console.error(
+            '[OpenCode] No session ID in response. Full response:',
+            JSON.stringify(session)
+          );
+          callbacks.onError('Failed to create session: No session ID in response');
           return null;
         }
         console.log('[OpenCode] Created session:', currentSessionId);
       } catch (error: any) {
+        console.error('[OpenCode] Session creation error:', error);
         callbacks.onError(`Failed to create session: ${error.message}`);
         return null;
       }
@@ -101,6 +108,10 @@ class OpenCodeService {
       const stream = await this.client.event.list();
 
       console.log('[OpenCode] Event stream listener started');
+
+      let isCompleted = false;
+      let hasReceivedParts = false;
+      const seenParts = new Set<string>();
 
       const processStream = async () => {
         try {
