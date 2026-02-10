@@ -39,6 +39,8 @@ export interface Skill {
 }
 
 export type SkillCategory =
+  | 'Knowledge'
+  | 'Analysis'
   | 'Development'
   | 'Design'
   | 'Marketing'

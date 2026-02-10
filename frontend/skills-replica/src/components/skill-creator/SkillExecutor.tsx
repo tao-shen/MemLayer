@@ -466,8 +466,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           // Not critical – user just can't pick models
         }
 
-        // Fetch SKILL.md for this skill
-        const mdUrl = (skill as Record<string, unknown>).skillMdUrl as string | undefined;
+        // Fetch SKILL.md for this skill (if available)
+        const mdUrl = skill.skillMdUrl;
         if (mdUrl) {
           if (!cancelled) setSkillLoadStatus('loading');
           try {
