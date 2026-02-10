@@ -272,9 +272,13 @@ class OpenCodeClient {
    * the corresponding question in the request.
    */
   async replyQuestion(requestID: string, answers: string[][]): Promise<boolean> {
+    const auth = getBasicAuthHeader();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (auth) headers['Authorization'] = auth;
+
     const resp = await fetch(`${this.baseUrl}/question/${requestID}/reply`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ answers }),
     });
     if (!resp.ok) {
@@ -285,9 +289,13 @@ class OpenCodeClient {
 
   /** Reject / dismiss a question.asked request. */
   async rejectQuestion(requestID: string): Promise<boolean> {
+    const auth = getBasicAuthHeader();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (auth) headers['Authorization'] = auth;
+
     const resp = await fetch(`${this.baseUrl}/question/${requestID}/reject`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
     });
     if (!resp.ok) {
       throw new Error(`Failed to reject question ${requestID}: ${resp.status}`);
