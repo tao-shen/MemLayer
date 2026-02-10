@@ -72,35 +72,68 @@ function mapRawPartToPart(
   sessionId: string,
   messageId: string
 ): Part {
+  const rawType = (raw.type as string) ?? 'text';
+  if (rawType === 'tool-invocation' || rawType === 'tool') {
+    return {
+      id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
+      sessionID: sessionId,
+      messageID: messageId,
+      type: 'tool',
+      tool: (raw.tool as string) ?? (raw.toolName as string) ?? 'tool',
+      callID: (raw.callID as string) ?? (raw.id as string) ?? '',
+      state: ((raw.state as ToolPart['state']) ?? 'completed'),
+      metadata: {
+        input: raw.args,
+        output: raw.result,
+      },
+    };
+  }
+
+  if (rawType === 'reasoning') {
+    return {
+      id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
+      sessionID: sessionId,
+      messageID: messageId,
+      type: 'reasoning',
+      text: (raw.reasoning as string) ?? (raw.text as string) ?? '',
+    };
+  }
+
+  if (rawType === 'step-start' || rawType === 'step-finish') {
+    return {
+      id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
+      sessionID: sessionId,
+      messageID: messageId,
+      type: rawType as Part['type'],
+      ...raw,
+    } as Part;
+  }
+
   return {
     id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
     sessionID: sessionId,
     messageID: messageId,
-    type: (raw.type as string) ?? 'text',
-    ...(raw.type === 'text' ? { text: (raw.text as string) ?? '' } : {}),
-    ...(raw.type === 'reasoning' ? { reasoning: (raw.reasoning as string) ?? '' } : {}),
-    ...(raw.type === 'tool-invocation'
-      ? {
-          toolName: (raw.toolName as string) ?? '',
-          args: raw.args,
-          result: raw.result,
-          state: (raw.state as string) ?? 'completed',
-        }
-      : {}),
+    type: 'text',
+    text: (raw.text as string) ?? '',
   } as Part;
 }
 
 function mapSessionMessagesToEntries(messages: Record<string, unknown>[], sessionId: string): ChatEntry[] {
   const loaded: ChatEntry[] = [];
   for (const msg of messages) {
-    const role = msg.role as string;
+    const role = ((msg.role as string) ?? '').toLowerCase();
     if (role === 'user') {
       const parts = msg.parts as Record<string, unknown>[] | undefined;
-      const text =
+      const textFromParts =
         parts
           ?.filter((p) => p.type === 'text')
           .map((p) => (p as { text?: string }).text ?? '')
           .join('\n') || '';
+      const textFromFallback =
+        (msg.text as string) ??
+        (msg.content as string) ??
+        '';
+      const text = textFromParts || textFromFallback;
       if (text) {
         loaded.push({
           type: 'user',
@@ -111,7 +144,19 @@ function mapSessionMessagesToEntries(messages: Record<string, unknown>[], sessio
     } else if (role === 'assistant') {
       const messageId = (msg.id as string) ?? `msg-${Date.now()}`;
       const rawParts = msg.parts as Record<string, unknown>[] | undefined;
-      const chatParts: Part[] = (rawParts ?? []).map((p) => mapRawPartToPart(p, sessionId, messageId));
+      let chatParts: Part[] = (rawParts ?? []).map((p) => mapRawPartToPart(p, sessionId, messageId));
+      if (chatParts.length === 0) {
+        const fallbackText = (msg.text as string) ?? (msg.content as string) ?? '';
+        if (fallbackText) {
+          chatParts = [{
+            id: `part-fallback-${Date.now()}`,
+            sessionID: sessionId,
+            messageID: messageId,
+            type: 'text',
+            text: fallbackText,
+          }];
+        }
+      }
       loaded.push({
         type: 'assistant',
         messageId,
@@ -603,23 +648,40 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
   const switchSession = useCallback(async (id: string) => {
     if (isRunning) return;
+    if (id === currentSessionId) return;
+
+    const prevEntries = entries;
     setCurrentSessionId(id);
-    setEntries([]);
     setTodos([]);
 
     // Load message history from the server
     try {
-      const session = await opencode.getSession(id);
-      const messages = session.messages as Record<string, unknown>[] | undefined;
-      if (!messages || !Array.isArray(messages) || messages.length === 0) return;
-      const loaded = mapSessionMessagesToEntries(messages, id);
-      if (loaded.length > 0) {
-        setEntries(loaded);
+      const t0 = performance.now();
+      console.log(`[SkillExecutor] switchSession(${id}) start`);
+      const messages = await opencode.getSessionMessages(id);
+      console.log(
+        `[SkillExecutor] switchSession(${id}) got ${messages.length} messages in +${(performance.now() - t0).toFixed(0)}ms`
+      );
+
+      if (!Array.isArray(messages) || messages.length === 0) {
+        console.warn(`[SkillExecutor] switchSession(${id}) has no messages`);
+        setEntries([]);
+        return;
       }
+      const loaded = mapSessionMessagesToEntries(messages, id);
+      console.log(`[SkillExecutor] switchSession(${id}) parsed entries=${loaded.length}`);
+      if (loaded.length === 0) {
+        console.warn(`[SkillExecutor] switchSession(${id}) parse result empty`, messages);
+        setEntries([]);
+        return;
+      }
+      setEntries(loaded);
     } catch (err) {
       console.warn('[SkillExecutor] Failed to load session messages:', err);
+      // Keep previous content if fetch failed, avoid "click -> blank".
+      setEntries(prevEntries);
     }
-  }, [isRunning]);
+  }, [isRunning, currentSessionId, entries]);
 
   // ── Delete session ──────────────────────────────────────────────────────
 

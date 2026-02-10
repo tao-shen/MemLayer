@@ -258,6 +258,48 @@ class OpenCodeClient {
     return (result?.data ?? result) as Record<string, unknown>;
   }
 
+  /**
+   * Fetch message list for a session.
+   * Primary path: `/session/{id}/message`, fallback: `/session/{id}`.
+   * Normalized return is always an array of raw message objects.
+   */
+  async getSessionMessages(id: string): Promise<Record<string, unknown>[]> {
+    this.ensureClient();
+
+    // Preferred API for history
+    try {
+      const result = await this.client.session.messages({ path: { id } });
+      const data = (result?.data ?? result) as unknown;
+      const directList: unknown[] | null = Array.isArray(data) ? data : null;
+      const nestedList: unknown[] | null =
+        !directList && data && typeof data === 'object'
+          ? ((() => {
+              const candidate =
+                (data as { messages?: unknown; items?: unknown; data?: unknown }).messages ??
+                (data as { messages?: unknown; items?: unknown; data?: unknown }).items ??
+                (data as { messages?: unknown; items?: unknown; data?: unknown }).data;
+              return Array.isArray(candidate) ? candidate : null;
+            })())
+          : null;
+
+      const normalized: unknown[] = directList ?? nestedList ?? [];
+
+      if (normalized.length > 0) {
+        return normalized as Record<string, unknown>[];
+      }
+      console.warn(`[OpenCode] getSessionMessages(${id}) returned empty list from /session/{id}/message`);
+    } catch (err) {
+      console.warn(`[OpenCode] getSessionMessages(${id}) failed on /session/{id}/message:`, err);
+    }
+
+    // Backward-compatible fallback
+    const session = await this.getSession(id);
+    const fallbackMessages = session.messages;
+    return Array.isArray(fallbackMessages)
+      ? (fallbackMessages as Record<string, unknown>[])
+      : [];
+  }
+
   // ── Providers / Models ──────────────────────────────────────────────────
 
   async getModels(): Promise<{
