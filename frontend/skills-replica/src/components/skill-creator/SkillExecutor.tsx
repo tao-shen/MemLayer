@@ -39,6 +39,7 @@ import {
   type ProviderModel,
   type TodoItem,
   type SessionInfo,
+  type QuestionEvent,
 } from '../../lib/opencode-client';
 
 // ---------------------------------------------------------------------------
@@ -1001,6 +1002,24 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
       onTodos: (newTodos: TodoItem[]) => {
         setTodos(newTodos);
+      },
+
+      onQuestion: (question: QuestionEvent) => {
+        console.log(`[SkillExec] ${cbTs()} onQuestion:`, question);
+        // When the AI asks a question, it's waiting for user input.
+        // Mark the current response as complete and stop "running" state
+        // so the user can type their answer in the input box.
+        setIsRunning(false);
+        setSessionStatus('idle');
+        // Mark incomplete assistant entries as complete so the UI
+        // doesn't show a perpetual spinner
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e
+          )
+        );
+        // Focus the input so user can immediately type their response
+        setTimeout(() => inputRef.current?.focus(), 100);
       },
     };
 
