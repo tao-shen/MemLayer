@@ -18,8 +18,23 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Hide the initial loading spinner once React has mounted
+const hideLoader = () => {
+  const loader = document.getElementById('app-loader');
+  if (loader) {
+    loader.classList.add('hidden');
+    // Remove from DOM after transition
+    setTimeout(() => loader.remove(), 300);
+  }
+};
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )
+
+// Hide loader after a brief delay to ensure first paint
+requestAnimationFrame(() => {
+  requestAnimationFrame(hideLoader);
+});

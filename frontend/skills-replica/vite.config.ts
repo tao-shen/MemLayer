@@ -6,6 +6,24 @@ export default defineConfig({
   plugins: [react()],
   // On Vercel, we want '/', on GitHub Pages we want '/Tacits/'
   base: process.env.VERCEL ? '/' : '/Tacits/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor: React core
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Vendor: UI libraries
+          'vendor-ui': ['lucide-react', 'react-markdown', 'remark-gfm'],
+          // Vendor: Supabase
+          'vendor-supabase': ['@supabase/supabase-js'],
+          // Skills data (large static data)
+          'skills-data': ['./src/data/skillsData.ts'],
+        },
+      },
+    },
+    // Increase chunk size warning limit slightly (still want to be aware)
+    chunkSizeWarningLimit: 600,
+  },
   server: {
     proxy: {
       '/api': {

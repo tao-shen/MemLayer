@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect, Component, type ReactNode } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
@@ -17,6 +17,99 @@ import { SkillExecutor } from './components/skill-creator/SkillExecutor';
 import type { Skill, SkillCategory } from './types/skill-creator';
 import { storageUtils } from './utils/storage';
 import { SKILLS_DATA } from './data/skillsData';
+
+// ---------------------------------------------------------------------------
+// Error Boundary — prevents blank screen on unhandled errors
+// ---------------------------------------------------------------------------
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary] Uncaught error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          background: '#0f0b15',
+          color: '#f5f0fa',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            Something went wrong
+          </h1>
+          <p style={{ color: '#a097ad', marginBottom: '1.5rem', maxWidth: '400px' }}>
+            {this.state.error?.message || 'An unexpected error occurred.'}
+          </p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.href = import.meta.env.BASE_URL || '/';
+            }}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: '#e91e8c',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+            }}
+          >
+            Reload App
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page title management
+// ---------------------------------------------------------------------------
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Candy Shop — AI Skills Marketplace',
+  '/skills/create': 'Create Skill — Candy Shop',
+  '/skills/library': 'My Library — Candy Shop',
+  '/auth/callback': 'Signing in... — Candy Shop',
+};
+
+function usePageTitle() {
+  const location = useLocation();
+  useEffect(() => {
+    const title = PAGE_TITLES[location.pathname] || 'Candy Shop — AI Skills Marketplace';
+    document.title = title;
+  }, [location.pathname]);
+}
 
 function HomePage({
   user,
@@ -74,6 +167,8 @@ function HomePage({
 
 function AppContent() {
   const navigate = useNavigate();
+  usePageTitle(); // Update document.title on route change
+
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
@@ -312,9 +407,11 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <AppContent />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <AppContent />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

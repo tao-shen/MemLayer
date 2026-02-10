@@ -1,5 +1,5 @@
 import { X, Copy, Check, Terminal, Play } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Skill } from '../../data/skillsData';
 
 interface SkillModalProps {
@@ -10,6 +10,20 @@ interface SkillModalProps {
 
 export function SkillModal({ skill, onClose, onRun }: SkillModalProps) {
   const [copied, setCopied] = useState(false);
+  const [installCopied, setInstallCopied] = useState(false);
+
+  // Close on Escape key
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   if (!skill) return null;
 
@@ -21,59 +35,75 @@ export function SkillModal({ skill, onClose, onRun }: SkillModalProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopyInstall = () => {
+    navigator.clipboard.writeText(skill.installCommand);
+    setInstallCopied(true);
+    setTimeout(() => setInstallCopied(false), 2000);
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${skill.name} details`}
+    >
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
-      ></div>
+        aria-hidden="true"
+      />
 
-      <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh] border border-border">
         {/* Header */}
         <div
           className={`h-32 ${skill.color.replace('text-', 'bg-').replace('100', '50')} relative flex items-center justify-center`}
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 bg-white/50 hover:bg-white rounded-full transition-colors"
+            className="absolute top-4 right-4 p-2.5 bg-white/50 hover:bg-white rounded-full transition-colors duration-200 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/30"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
 
-          <div className="text-6xl animate-bounce duration-[2000ms]">{skill.icon}</div>
+          <div className="text-6xl" aria-hidden="true">{skill.icon}</div>
         </div>
 
         {/* Content */}
         <div className="p-8 overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <div className="text-xs font-bold text-foreground-secondary uppercase tracking-wider">
               {skill.category}
             </div>
-            <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+            <div className="px-3 py-1 bg-green-500/10 text-green-600 rounded-full text-xs font-bold border border-green-500/20">
               Ready to Serve
             </div>
           </div>
 
-          <h2 className="text-3xl font-candy font-bold text-gray-900 mb-2">{skill.name}</h2>
-          <p className="text-gray-600 text-lg mb-8 font-body leading-relaxed">
+          <h2 className="text-3xl font-candy font-bold text-foreground mb-2">{skill.name}</h2>
+          <p className="text-foreground-secondary text-lg mb-8 font-body leading-relaxed">
             {skill.description}
           </p>
 
           {/* Install Command */}
           <div className="mb-8">
-            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
               <Terminal className="w-4 h-4" />
               Quick Install
             </h3>
-            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto flex items-center justify-between group">
-              <code>{skill.installCommand}</code>
+            <div className="bg-zinc-900 text-zinc-100 p-4 rounded-lg font-mono text-sm overflow-x-auto flex items-center justify-between group">
+              <code className="break-all">{skill.installCommand}</code>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(skill.installCommand);
-                }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded"
+                onClick={handleCopyInstall}
+                className="shrink-0 ml-2 p-2 hover:bg-white/10 rounded transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20"
+                aria-label="Copy install command"
               >
-                <Copy className="w-4 h-4" />
+                {installCopied ? (
+                  <Check className="w-4 h-4 text-green-400" />
+                ) : (
+                  <Copy className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+                )}
               </button>
             </div>
           </div>
@@ -81,34 +111,36 @@ export function SkillModal({ skill, onClose, onRun }: SkillModalProps) {
           {/* Config JSON */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-gray-900">Claude Desktop Config</h3>
+              <h3 className="text-sm font-bold text-foreground">Claude Desktop Config</h3>
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2 text-sm text-primary font-medium hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-sm text-primary font-medium hover:text-primary/80 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 rounded px-2 py-1"
+                aria-label={copied ? 'Copied to clipboard' : 'Copy config to clipboard'}
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Copied!' : 'Copy Config'}
               </button>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 font-mono text-sm text-gray-700 overflow-auto max-h-64 shadow-inner">
+            <div className="bg-secondary border border-border rounded-xl p-4 font-mono text-sm text-foreground-secondary overflow-auto max-h-64 shadow-inner">
               <pre>{configString}</pre>
             </div>
           </div>
         </div>
 
         {/* Footer Action */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+        <div className="p-4 border-t border-border bg-secondary/50 flex justify-end gap-3">
           <button
             onClick={() => onRun && skill && onRun(skill)}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
+            className="px-6 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 transition-colors duration-200 shadow-lg flex items-center gap-2 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-green-500/50"
+            aria-label={`Run ${skill.name}`}
           >
             <Play className="w-4 h-4" />
             Run Skill
           </button>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary-hover transition-colors duration-200 shadow-lg shadow-primary/20 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             Done
           </button>
