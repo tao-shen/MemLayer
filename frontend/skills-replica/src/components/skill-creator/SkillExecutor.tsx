@@ -591,9 +591,23 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     const userEntry: UserEntry = { type: 'user', text, time: Date.now() };
     setEntries((prev) => [...prev, userEntry]);
 
-    // Stream callbacks
+    // Stream callbacks — with timestamp logging to diagnose real-time issues
+    const cbT0 = performance.now();
+    const cbTs = () => `+${(performance.now() - cbT0).toFixed(0)}ms`;
+    let partUpdateCount = 0;
+
     const callbacks = {
       onPartUpdated: (part: Part, delta?: string) => {
+        partUpdateCount++;
+        const textSnippet =
+          part.type === 'text'
+            ? `"${(part as TextPart).text?.slice(0, 80)}…"`
+            : part.type;
+        console.log(
+          `[SkillExec] ${cbTs()} onPartUpdated #${partUpdateCount}: type=${part.type}, ` +
+          `delta=${delta ? delta.length + 'ch' : 'none'}, id=${part.id}, preview=${textSnippet}`
+        );
+
         setEntries((prev) => {
           // Find existing assistant entry for this messageID
           const idx = prev.findIndex(
@@ -633,6 +647,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             return newEntries;
           } else {
             // Create new assistant entry
+            console.log(`[SkillExec] ${cbTs()} creating new assistant entry for messageId=${part.messageID}`);
             const newEntry: AssistantEntry = {
               type: 'assistant',
               messageId: part.messageID,
@@ -645,6 +660,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       },
 
       onMessageUpdated: (message: Record<string, unknown>) => {
+        console.log(
+          `[SkillExec] ${cbTs()} onMessageUpdated: role=${message.role}, finish=${message.finish}, id=${message.id}`
+        );
         if (message.role === 'assistant') {
           setEntries((prev) =>
             prev.map((e) => {
@@ -665,10 +683,12 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       },
 
       onSessionStatus: (status: string) => {
+        console.log(`[SkillExec] ${cbTs()} onSessionStatus: "${status}"`);
         setSessionStatus(status);
       },
 
       onComplete: () => {
+        console.log(`[SkillExec] ${cbTs()} onComplete (total part updates: ${partUpdateCount})`);
         setIsRunning(false);
         setSessionStatus('idle');
         // Mark all incomplete assistant entries as complete
@@ -680,6 +700,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       },
 
       onError: (error: string) => {
+        console.error(`[SkillExec] ${cbTs()} onError: ${error}`);
         setIsRunning(false);
         setConnectionError(error);
         // Add error as a text part in the current assistant message

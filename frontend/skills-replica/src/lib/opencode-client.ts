@@ -295,6 +295,96 @@ class OpenCodeClient {
     return { models, defaultModel };
   }
 
+  // ── Manual SSE reader (bypasses SDK for streaming reliability) ──────────
+
+  private async *readSSE(
+    url: string,
+    signal: AbortSignal
+  ): AsyncGenerator<{ event?: string; data: unknown }, void, unknown> {
+    const auth = getBasicAuthHeader();
+    const headers: Record<string, string> = {
+      Accept: 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    };
+    if (auth) headers['Authorization'] = auth;
+
+    console.log(`[OpenCode][SSE] Connecting to ${url} ...`);
+    const t0 = performance.now();
+
+    const response = await fetch(url, { headers, signal });
+    console.log(
+      `[OpenCode][SSE] Connected – status ${response.status} (${(performance.now() - t0).toFixed(0)}ms)`
+    );
+
+    if (!response.ok) {
+      throw new Error(`SSE connection failed: ${response.status} ${response.statusText}`);
+    }
+    if (!response.body) {
+      throw new Error('SSE response has no body');
+    }
+
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = '';
+    let chunkIndex = 0;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('[OpenCode][SSE] Stream ended (done=true)');
+          break;
+        }
+
+        chunkIndex++;
+        const now = performance.now();
+        console.log(
+          `[OpenCode][SSE] chunk #${chunkIndex} received at +${(now - t0).toFixed(0)}ms, length=${value.length}`
+        );
+
+        buffer += value;
+        // SSE events are separated by double newline
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() ?? '';
+
+        for (const raw of parts) {
+          if (!raw.trim()) continue;
+
+          const lines = raw.split('\n');
+          let eventName: string | undefined;
+          const dataLines: string[] = [];
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              eventName = line.slice(6).trim();
+            } else if (line.startsWith('data:')) {
+              dataLines.push(line.slice(5).trimStart());
+            }
+            // ignore id:, retry:, comments
+          }
+
+          if (dataLines.length === 0) continue;
+
+          let data: unknown;
+          const rawData = dataLines.join('\n');
+          try {
+            data = JSON.parse(rawData);
+          } catch {
+            data = rawData;
+          }
+
+          console.log(
+            `[OpenCode][SSE] EVENT at +${(performance.now() - t0).toFixed(0)}ms – event=${eventName ?? '(none)'}, ` +
+            `type=${(data as Record<string, unknown>)?.type ?? '?'}`
+          );
+
+          yield { event: eventName, data };
+        }
+      }
+    } finally {
+      try { reader.cancel(); } catch { /* noop */ }
+    }
+  }
+
   // ── Send message with streaming ─────────────────────────────────────────
 
   async sendMessage(
@@ -313,37 +403,42 @@ class OpenCodeClient {
     this.abortController = new AbortController();
     const ac = this.abortController;
 
+    const t0 = performance.now();
+    const ts = () => `+${(performance.now() - t0).toFixed(0)}ms`;
+
     let isCompleted = false;
     let hasReceivedParts = false;
 
     // Track which message IDs are user vs assistant so we can filter echoes
     const userMessageIds = new Set<string>();
-    const assistantMessageIds = new Set<string>();
 
-    // 1. Subscribe to the event stream BEFORE sending the prompt.
-    // HF Space / some deployments use /event; standard server doc uses /global/event.
-    // Prefer event.subscribe() for compatibility (was working before).
-    const subscription = await this.client.event.subscribe();
-    const eventStream = subscription.stream;
+    // 1. Open manual SSE stream BEFORE sending the prompt.
+    //    Try /event first (was working before), fall back to /global/event.
+    const sseUrl = `${this.baseUrl}/event`;
+    console.log(`[OpenCode] sendMessage() start, session=${sessionId}`);
 
     const processEvents = async () => {
       try {
-        for await (const event of eventStream) {
+        for await (const raw of this.readSSE(sseUrl, ac.signal)) {
           if (ac.signal.aborted) break;
 
-          // Server may send type in payload (event.type) or SDK may expose SSE event line as event.event
-          const eventType: string | undefined =
-            (event as Record<string, unknown>)?.type as string | undefined ??
-            (event as Record<string, unknown>)?.event as string | undefined;
-          const props: Record<string, unknown> =
-            (event as Record<string, unknown>)?.properties as Record<string, unknown> ?? {};
-
-          if (!eventType) {
-            if (import.meta.env.DEV && event && typeof event === 'object') {
-              console.log('[OpenCode] SSE event missing type, keys:', Object.keys(event as object));
-            }
+          const event = raw.data as Record<string, unknown> | undefined;
+          if (!event || typeof event !== 'object') {
+            console.log(`[OpenCode] ${ts()} skip non-object event`);
             continue;
           }
+
+          // Determine event type: could be in SSE event: line, or in data.type
+          const eventType: string | undefined =
+            (event.type as string | undefined) ?? raw.event;
+
+          if (!eventType) {
+            console.log(`[OpenCode] ${ts()} skip event without type, keys:`, Object.keys(event));
+            continue;
+          }
+
+          const props: Record<string, unknown> =
+            (event.properties as Record<string, unknown>) ?? {};
 
           // Filter: only process events for our session
           const evtSid =
@@ -353,31 +448,26 @@ class OpenCodeClient {
 
           if (evtSid && evtSid !== sessionId) continue;
 
-          if (import.meta.env.DEV && eventType.startsWith('message')) {
-            console.log('[OpenCode] SSE', eventType, evtSid ? '(our session)' : '');
-          }
+          console.log(`[OpenCode] ${ts()} process: ${eventType}${evtSid ? ' (our session)' : ''}`);
 
           switch (eventType) {
             // ── Message lifecycle ───────────────────────────────────────
-            // IMPORTANT: process this BEFORE part updates so we know roles
             case 'message.updated': {
               const info = (props.info ?? props) as Record<string, unknown>;
               const msgId = info.id as string | undefined;
               const role = info.role as string | undefined;
 
-              // Track message roles
               if (msgId && role === 'user') {
                 userMessageIds.add(msgId);
-              } else if (msgId && role === 'assistant') {
-                assistantMessageIds.add(msgId);
               }
 
-              // Only forward assistant messages to UI
               if (role === 'assistant') {
+                console.log(`[OpenCode] ${ts()} → onMessageUpdated (finish=${info.finish})`);
                 callbacks.onMessageUpdated(info);
               }
 
               if (role === 'assistant' && info.finish === 'stop') {
+                console.log(`[OpenCode] ${ts()} ✓ assistant finished (stop)`);
                 isCompleted = true;
                 ac.abort();
                 callbacks.onComplete();
@@ -391,16 +481,19 @@ class OpenCodeClient {
               const part = props.part as Part | undefined;
               if (!part) break;
 
-              // SKIP user message parts (the echo of what we sent)
               if (userMessageIds.has(part.messageID)) break;
 
-              // If we haven't seen a message.updated for this messageID yet
-              // but it's also not a user message, assume it's assistant
               hasReceivedParts = true;
-              callbacks.onPartUpdated(
-                part,
-                props.delta as string | undefined
+              const delta = props.delta as string | undefined;
+              const textPreview =
+                part.type === 'text'
+                  ? (part as TextPart).text?.slice(0, 60)
+                  : part.type;
+              console.log(
+                `[OpenCode] ${ts()} → onPartUpdated: type=${part.type}, id=${part.id}, ` +
+                `delta=${delta ? delta.length + ' chars' : 'none'}, preview="${textPreview}"`
               );
+              callbacks.onPartUpdated(part, delta);
               break;
             }
 
@@ -414,8 +507,10 @@ class OpenCodeClient {
                 typeof statusObj === 'string'
                   ? statusObj
                   : ((statusObj?.type as string) ?? '');
+              console.log(`[OpenCode] ${ts()} session.status → "${status}"`);
               callbacks.onSessionStatus(status);
               if (status === 'idle' && hasReceivedParts) {
+                console.log(`[OpenCode] ${ts()} ✓ session idle after parts received`);
                 isCompleted = true;
                 ac.abort();
                 callbacks.onComplete();
@@ -424,8 +519,8 @@ class OpenCodeClient {
               break;
             }
 
-            // ── Session idle ────────────────────────────────────────────
             case 'session.idle': {
+              console.log(`[OpenCode] ${ts()} session.idle`);
               callbacks.onSessionStatus('idle');
               if (hasReceivedParts) {
                 isCompleted = true;
@@ -436,59 +531,62 @@ class OpenCodeClient {
               break;
             }
 
-            // ── Permission requests ─────────────────────────────────────
             case 'permission.updated': {
+              console.log(`[OpenCode] ${ts()} permission.updated`);
               callbacks.onPermission?.(props);
               break;
             }
 
-            // ── Todos ───────────────────────────────────────────────────
             case 'todo.updated': {
               callbacks.onTodos?.(props.todos as TodoItem[]);
               break;
             }
 
-            // ── Session errors ──────────────────────────────────────────
             case 'session.error': {
-              const errInfo = props.error as
-                | Record<string, unknown>
-                | undefined;
-              const errMsg =
-                (errInfo?.message as string) ?? 'Unknown session error';
+              const errInfo = props.error as Record<string, unknown> | undefined;
+              const errMsg = (errInfo?.message as string) ?? 'Unknown session error';
+              console.error(`[OpenCode] ${ts()} session.error: ${errMsg}`);
               callbacks.onError(errMsg);
               isCompleted = true;
               ac.abort();
               return;
             }
+
+            default:
+              console.log(`[OpenCode] ${ts()} unhandled event: ${eventType}`);
           }
         }
 
         // Stream ended naturally
         if (!isCompleted) {
           if (hasReceivedParts) {
+            console.log(`[OpenCode] ${ts()} stream ended → onComplete`);
             callbacks.onComplete();
           } else {
-            callbacks.onError(
-              'Event stream ended without receiving any response'
-            );
+            console.warn(`[OpenCode] ${ts()} stream ended without any parts`);
+            callbacks.onError('Event stream ended without receiving any response');
           }
         }
       } catch (err: unknown) {
         const e = err as Error;
-        if (e.name === 'AbortError' || ac.signal.aborted) return;
-        console.error('[OpenCode] Event processing error:', e);
+        if (e.name === 'AbortError' || ac.signal.aborted) {
+          console.log(`[OpenCode] ${ts()} SSE aborted (expected)`);
+          return;
+        }
+        console.error(`[OpenCode] ${ts()} Event processing error:`, e);
         callbacks.onError(e.message ?? 'Unknown stream error');
       }
     };
 
     // Start processing events in the background
-    processEvents();
+    const eventPromise = processEvents();
 
-    // Small delay to ensure the event listener is active
-    await new Promise((r) => setTimeout(r, 200));
+    // Small delay to ensure the SSE connection is established
+    await new Promise((r) => setTimeout(r, 300));
 
     // 2. Send the prompt via session.promptAsync() — returns immediately,
     //    the response streams back through the SSE events above.
+    console.log(`[OpenCode] ${ts()} sending promptAsync...`);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const body: Record<string, any> = {
@@ -508,17 +606,19 @@ class OpenCodeClient {
         path: { id: sessionId },
         body,
       });
+      console.log(`[OpenCode] ${ts()} promptAsync returned`);
     } catch (err: unknown) {
       const e = err as Error;
       if (e.name !== 'AbortError' && !ac.signal.aborted) {
-        console.error('[OpenCode] Prompt send error:', e);
+        console.error(`[OpenCode] ${ts()} Prompt send error:`, e);
         callbacks.onError(`Failed to send message: ${e.message}`);
       }
     }
 
     // 3. Safety timeout (5 minutes)
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (!ac.signal.aborted && !isCompleted) {
+        console.warn(`[OpenCode] ${ts()} TIMEOUT after 5 minutes`);
         ac.abort();
         if (hasReceivedParts) {
           callbacks.onComplete();
@@ -527,6 +627,9 @@ class OpenCodeClient {
         }
       }
     }, 300_000);
+
+    // Wait for event processing to finish, then clear timeout
+    eventPromise.finally(() => clearTimeout(timeoutId));
   }
 
   // ── Cleanup ─────────────────────────────────────────────────────────────
