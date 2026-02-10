@@ -154,21 +154,33 @@ class OpenCodeClient {
 
   async connect(baseUrl?: string): Promise<{ version: string }> {
     const url = baseUrl || this.baseUrl;
+
+    // Create the SDK client
     this.client = createOpencodeClient({ baseUrl: url });
 
-    // Verify with a health check
-    const health = await this.client.global.health();
-    const version = health?.data?.version ?? health?.version ?? 'unknown';
-    console.log('[OpenCode] Connected to', url, '– version', version);
-    return { version };
+    // Verify connectivity with a health check (SDK v1 has no global.health())
+    try {
+      const resp = await fetch(`${url}/global/health`);
+      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+      const data = await resp.json();
+      const version = data?.version ?? 'unknown';
+      console.log('[OpenCode] Connected to', url, '– version', version);
+      return { version };
+    } catch (err: unknown) {
+      this.client = null;
+      throw new Error(`Cannot reach OpenCode server at ${url}: ${(err as Error).message}`);
+    }
   }
 
   // ── Sessions ────────────────────────────────────────────────────────────
 
   async createSession(title: string): Promise<SessionInfo> {
     this.ensureClient();
-    const resp = await this.client.session.create({ body: { title } });
-    const session = resp?.data ?? resp;
+    const result = await this.client.session.create({ body: { title } });
+    const session = result?.data ?? result;
+    if (!session?.id) {
+      throw new Error('Failed to create session: no ID returned');
+    }
     return {
       id: session.id,
       title: session.title ?? title,
@@ -178,13 +190,18 @@ class OpenCodeClient {
 
   async listSessions(): Promise<SessionInfo[]> {
     this.ensureClient();
-    const resp = await this.client.session.list();
-    const list = resp?.data ?? resp ?? [];
-    return (Array.isArray(list) ? list : []).map((s: Record<string, unknown>) => ({
-      id: s.id as string,
-      title: (s.title as string) ?? '',
-      time: (s.time as { created: number; updated: number }) ?? { created: 0, updated: 0 },
-    }));
+    const result = await this.client.session.list();
+    const list = result?.data ?? result ?? [];
+    return (Array.isArray(list) ? list : []).map(
+      (s: Record<string, unknown>) => ({
+        id: s.id as string,
+        title: (s.title as string) ?? '',
+        time: (s.time as { created: number; updated: number }) ?? {
+          created: 0,
+          updated: 0,
+        },
+      })
+    );
   }
 
   async deleteSession(id: string): Promise<void> {
@@ -201,8 +218,8 @@ class OpenCodeClient {
 
   async getProviders(): Promise<unknown> {
     this.ensureClient();
-    const resp = await this.client.config.providers();
-    return resp?.data ?? resp;
+    const result = await this.client.config.providers();
+    return result?.data ?? result;
   }
 
   // ── Send message with streaming ─────────────────────────────────────────
@@ -227,18 +244,20 @@ class OpenCodeClient {
     let hasReceivedParts = false;
 
     // 1. Subscribe to the global event stream BEFORE sending the prompt
+    //    event.subscribe() returns { stream: AsyncGenerator<Event> }
     const subscription = await this.client.event.subscribe();
-    // The SDK may expose `subscription.stream` (async iterable) or be iterable directly
-    const eventStream = subscription?.stream ?? subscription;
+    const eventStream = subscription.stream;
 
     const processEvents = async () => {
       try {
         for await (const event of eventStream) {
           if (ac.signal.aborted) break;
 
-          const eventType: string = event.type ?? event?.payload?.type;
-          const props: Record<string, unknown> =
-            event.properties ?? event?.payload?.properties ?? event?.payload ?? {};
+          // Each event is a typed Event union: { type, properties }
+          const eventType: string | undefined = event?.type;
+          const props: Record<string, unknown> = event?.properties ?? {};
+
+          if (!eventType) continue;
 
           // Filter: only process events for our session
           const evtSid =
@@ -265,7 +284,6 @@ class OpenCodeClient {
               if (info.role === 'assistant' && info.finish === 'stop') {
                 isCompleted = true;
                 ac.abort();
-                try { subscription?.controller?.abort(); } catch { /* ignore */ }
                 callbacks.onComplete();
                 return;
               }
@@ -274,13 +292,30 @@ class OpenCodeClient {
 
             // ── Session status ──────────────────────────────────────────
             case 'session.status': {
-              const statusObj = props.status as Record<string, unknown> | string | undefined;
-              const status = typeof statusObj === 'string' ? statusObj : (statusObj?.type as string) ?? '';
+              const statusObj = props.status as
+                | Record<string, unknown>
+                | string
+                | undefined;
+              const status =
+                typeof statusObj === 'string'
+                  ? statusObj
+                  : ((statusObj?.type as string) ?? '');
               callbacks.onSessionStatus(status);
               if (status === 'idle' && hasReceivedParts) {
                 isCompleted = true;
                 ac.abort();
-                try { subscription?.controller?.abort(); } catch { /* ignore */ }
+                callbacks.onComplete();
+                return;
+              }
+              break;
+            }
+
+            // ── Session idle ────────────────────────────────────────────
+            case 'session.idle': {
+              callbacks.onSessionStatus('idle');
+              if (hasReceivedParts) {
+                isCompleted = true;
+                ac.abort();
                 callbacks.onComplete();
                 return;
               }
@@ -298,6 +333,17 @@ class OpenCodeClient {
               callbacks.onTodos?.(props.todos as TodoItem[]);
               break;
             }
+
+            // ── Session errors ──────────────────────────────────────────
+            case 'session.error': {
+              const errInfo = props.error as Record<string, unknown> | undefined;
+              const errMsg =
+                (errInfo?.message as string) ?? 'Unknown session error';
+              callbacks.onError(errMsg);
+              isCompleted = true;
+              ac.abort();
+              return;
+            }
           }
         }
 
@@ -306,7 +352,7 @@ class OpenCodeClient {
           if (hasReceivedParts) {
             callbacks.onComplete();
           } else {
-            callbacks.onError('Event stream ended without receiving any parts');
+            callbacks.onError('Event stream ended without receiving any response');
           }
         }
       } catch (err: unknown) {
@@ -323,14 +369,17 @@ class OpenCodeClient {
     // Small delay to ensure the event listener is active
     await new Promise((r) => setTimeout(r, 200));
 
-    // 2. Send the prompt
+    // 2. Send the prompt via session.prompt()
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const body: Record<string, any> = {
         parts: [{ type: 'text', text }],
       };
       if (options?.model) {
-        body.model = { providerID: options.model.providerID, modelID: options.model.modelID };
+        body.model = {
+          providerID: options.model.providerID,
+          modelID: options.model.modelID,
+        };
       }
       if (options?.system) {
         body.system = options.system;
@@ -352,7 +401,6 @@ class OpenCodeClient {
     setTimeout(() => {
       if (!ac.signal.aborted && !isCompleted) {
         ac.abort();
-        try { subscription?.controller?.abort(); } catch { /* ignore */ }
         if (hasReceivedParts) {
           callbacks.onComplete();
         } else {
@@ -375,7 +423,9 @@ class OpenCodeClient {
 
   private ensureClient(): void {
     if (!this.client) {
-      throw new Error('OpenCode client is not connected. Call connect() first.');
+      throw new Error(
+        'OpenCode client is not connected. Call connect() first.'
+      );
     }
   }
 }
