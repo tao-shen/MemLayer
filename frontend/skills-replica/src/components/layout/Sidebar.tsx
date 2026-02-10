@@ -152,11 +152,13 @@ export function Sidebar({
       onClick={() => handleNavAction(item.action)}
       className={cn(
         'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
-        'text-sm font-mono transition-all duration-200',
+        'text-sm font-mono transition-all duration-200 cursor-pointer',
         'hover:bg-secondary hover:text-foreground',
+        'focus:outline-none focus:ring-2 focus:ring-primary/30',
         collapsed ? 'justify-center' : 'justify-start'
       )}
       title={collapsed ? item.label : undefined}
+      aria-label={item.label}
     >
       <item.icon className={cn('w-5 h-5 flex-shrink-0 text-foreground-secondary')} />
       {!collapsed && <span className="truncate">{item.label}</span>}
@@ -169,11 +171,14 @@ export function Sidebar({
         onClick={() => setShowThemeSelector(!showThemeSelector)}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
-          'text-sm font-mono transition-all duration-200',
+          'text-sm font-mono transition-all duration-200 cursor-pointer',
           'hover:bg-secondary',
+          'focus:outline-none focus:ring-2 focus:ring-primary/30',
           collapsed ? 'justify-center' : 'justify-between'
         )}
         title={collapsed ? 'Theme' : undefined}
+        aria-label="Select theme"
+        aria-expanded={showThemeSelector}
       >
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
           <Palette className="w-5 h-5 text-foreground-secondary" />
@@ -429,10 +434,14 @@ export function Sidebar({
       <button
         onClick={() => setMobileOpen(true)}
         className={cn(
-          'lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg',
+          'lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-lg',
           'bg-background border border-border shadow-md',
-          'hover:bg-secondary transition-colors'
+          'hover:bg-secondary transition-colors duration-200 cursor-pointer',
+          'min-w-[44px] min-h-[44px] flex items-center justify-center',
+          'focus:outline-none focus:ring-2 focus:ring-primary/30'
         )}
+        aria-label="Open navigation menu"
+        aria-expanded={mobileOpen}
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -455,7 +464,8 @@ export function Sidebar({
       >
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 p-1 rounded-lg hover:bg-secondary transition-colors"
+          className="absolute top-4 right-4 p-2.5 rounded-lg hover:bg-secondary transition-colors duration-200 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label="Close navigation menu"
         >
           <X className="w-5 h-5" />
         </button>

@@ -607,8 +607,9 @@ function QuestionPanel({
         </div>
         <button
           onClick={onReject}
-          className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors px-2 py-1 rounded-md hover:bg-red-500/10"
+          className="text-xs text-zinc-500 hover:text-red-400 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-red-500/10 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-red-500/30"
           title="Dismiss question"
+          aria-label="Dismiss question"
         >
           Dismiss
         </button>
@@ -630,11 +631,12 @@ function QuestionPanel({
                 <button
                   key={optIdx}
                   onClick={() => handleOptionToggle(qIdx, opt.label, q.multiple)}
-                  className={`group relative text-left px-3 py-2.5 rounded-lg border transition-all duration-150 ${
+                  className={`group relative text-left px-3 py-3 rounded-lg border transition-all duration-150 cursor-pointer min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
                     isSelected
                       ? 'bg-blue-600/20 border-blue-500/60 ring-1 ring-blue-500/30'
                       : 'bg-zinc-800/60 border-zinc-700/50 hover:border-blue-500/40 hover:bg-zinc-800'
                   }`}
+                  aria-pressed={isSelected}
                 >
                   <div className="flex items-start gap-2">
                     {q.multiple && (
@@ -669,7 +671,7 @@ function QuestionPanel({
           {q.custom !== false && (
             <button
               onClick={() => setShowCustom((prev) => ({ ...prev, [qIdx]: !prev[qIdx] }))}
-              className={`mt-2 px-3 py-1.5 text-[11px] rounded-lg border transition-all ${
+              className={`mt-2 px-3 py-2 text-xs rounded-lg border transition-all duration-200 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
                 showCustom[qIdx]
                   ? 'bg-zinc-700 border-zinc-500 text-zinc-200'
                   : 'bg-zinc-800/40 border-zinc-700/40 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
@@ -705,16 +707,19 @@ function QuestionPanel({
         <div className="flex gap-2">
           <button
             onClick={onReject}
-            className="px-3 py-1.5 text-xs rounded-lg bg-zinc-800 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+            className="px-4 py-2 text-xs rounded-lg bg-zinc-800 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors duration-200 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-zinc-500/30"
+            aria-label="Skip question"
           >
             Skip
           </button>
           <button
             onClick={handleSubmit}
             disabled={!hasSelection}
-            className="px-5 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500
-              disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150
-              shadow-md shadow-blue-500/20 hover:shadow-blue-500/30"
+            className="px-5 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500
+              disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer
+              shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 min-h-[36px]
+              focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:focus:ring-0"
+            aria-label="Submit answer"
           >
             Submit Answer →
           </button>
@@ -749,10 +754,11 @@ function SessionSidebar({
         <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Sessions</span>
         <button
           onClick={onNew}
-          className="p-1 rounded hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="p-2 rounded hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 transition-colors duration-200 cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500/30"
           title="New session"
+          aria-label="Create new session"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-4 h-4" />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -1437,10 +1443,13 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   if (connectionError && !connected) {
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-        <div className="bg-zinc-900 rounded-2xl p-8 max-w-md w-full mx-4 text-center border border-zinc-700/50">
-          <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-4" />
+        <div className="bg-zinc-900 rounded-2xl p-8 max-w-md w-full mx-4 text-center border border-zinc-700/50 shadow-2xl">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-zinc-100 mb-2">Connection Failed</h3>
-          <p className="text-sm text-red-300 mb-4">{connectionError}</p>
+          <p className="text-sm text-red-300 mb-1">{connectionError}</p>
+          <p className="text-xs text-zinc-500 mb-6 mt-2">
+            Check your network connection and ensure the OpenCode server is running.
+          </p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => {
@@ -1454,13 +1463,16 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   .catch((err) => setConnectionError((err as Error).message))
                   .finally(() => setConnecting(false));
               }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-500 transition-colors"
+              disabled={connecting}
+              className="px-5 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-500 transition-colors duration-200 cursor-pointer min-h-[40px] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              aria-label="Retry connection"
             >
-              Retry
+              {connecting ? 'Connecting...' : 'Retry'}
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-zinc-700 text-zinc-200 text-sm rounded-lg hover:bg-zinc-600 transition-colors"
+              className="px-5 py-2.5 bg-zinc-700 text-zinc-200 text-sm rounded-lg hover:bg-zinc-600 transition-colors duration-200 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-zinc-500/50"
+              aria-label="Close"
             >
               Close
             </button>
@@ -1513,7 +1525,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             <div className="relative model-picker">
               <button
                 onClick={() => setShowModelPicker(!showModelPicker)}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs border border-zinc-600 rounded-lg hover:bg-zinc-700/50 text-zinc-300 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-xs border border-zinc-600 rounded-lg hover:bg-zinc-700/50 text-zinc-300 transition-colors duration-200 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                aria-label="Select model"
+                aria-expanded={showModelPicker}
               >
                 <Settings className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">
@@ -1525,6 +1539,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       )?.name ?? selectedModel.modelID
                     : 'Select model'}
                 </span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showModelPicker ? 'rotate-180' : ''}`} />
               </button>
               {showModelPicker && (
                 <div className="absolute right-0 mt-2 w-72 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-50 overflow-hidden">
@@ -1617,16 +1632,25 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             <TodosView todos={todos} />
 
             {/* Session status bar — shows when AI is working */}
-            {isRunning && sessionStatus === 'busy' && (
-              <div className="shrink-0 px-4 py-2 bg-gradient-to-r from-blue-950/40 via-blue-950/20 to-transparent border-b border-blue-500/10">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex items-center justify-center w-4 h-4">
-                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+            {isRunning && (
+              <div className="shrink-0 px-4 py-2.5 bg-gradient-to-r from-blue-950/40 via-blue-950/20 to-transparent border-b border-blue-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex items-center justify-center w-5 h-5">
+                    <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
                   </div>
-                  <span className="text-xs text-blue-300/80 font-medium">Agent is working...</span>
-                  <div className="flex-1 h-0.5 bg-zinc-800 rounded-full overflow-hidden ml-2">
+                  <span className="text-sm text-blue-300 font-medium">
+                    {sessionStatus === 'busy' ? 'Agent is working...' : sessionStatus || 'Processing...'}
+                  </span>
+                  <div className="flex-1 h-0.5 bg-zinc-800 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-blue-500 to-violet-500 rounded-full animate-pulse" style={{ width: '60%' }} />
                   </div>
+                  <button
+                    onClick={handleAbort}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-red-200 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                    aria-label="Stop agent"
+                  >
+                    Stop
+                  </button>
                 </div>
               </div>
             )}
@@ -1667,7 +1691,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   {skillLoadStatus !== 'loading' && (
                     <button
                       onClick={() => setShowSkillBanner(false)}
-                      className="p-0.5 rounded hover:bg-white/10 shrink-0"
+                      className="p-2 rounded hover:bg-white/10 shrink-0 cursor-pointer transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/20"
+                      aria-label="Dismiss skill banner"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1683,18 +1708,33 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
               )}
 
               {entries.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center opacity-60">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500/20 to-blue-500/20 flex items-center justify-center mb-4">
-                    <Sparkles className="w-8 h-8 text-violet-400" />
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500/20 to-blue-500/20 flex items-center justify-center mb-6 animate-pulse">
+                    <Sparkles className="w-10 h-10 text-violet-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-zinc-200 mb-1">
+                  <h3 className="text-xl font-semibold text-zinc-200 mb-2">
                     Ready to run {skill.name}
                   </h3>
-                  <p className="text-sm text-zinc-400 max-w-md">
+                  <p className="text-sm text-zinc-400 max-w-md mb-6">
                     {skillLoadStatus === 'loaded'
-                      ? 'Skill instructions loaded. Type a message to start working with this skill.'
-                      : 'Type a message to start the agent. It will use OpenCode on the server to execute tasks with full tool access.'}
+                      ? 'Skill instructions loaded successfully. Type a message below to start working with this skill.'
+                      : skillLoadStatus === 'loading'
+                        ? 'Loading skill instructions...'
+                        : 'Type a message to start the agent. It will use OpenCode on the server to execute tasks with full tool access.'}
                   </p>
+                  {skillLoadStatus === 'loaded' && (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Skill loaded
+                    </div>
+                  )}
+                  <button
+                    onClick={() => inputRef.current?.focus()}
+                    className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors duration-200 cursor-pointer text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    aria-label="Start a conversation"
+                  >
+                    Start a conversation
+                  </button>
                 </div>
               )}
 
@@ -1895,20 +1935,23 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="What should the agent do?"
+                  placeholder={activeQuestion ? "Type your answer here..." : "What should the agent do?"}
                   rows={2}
                   disabled={isRunning || !connected}
-                  className="w-full pl-4 pr-24 py-3 bg-zinc-800 border border-zinc-600 rounded-xl
+                  className="w-full pl-4 pr-28 py-3 bg-zinc-800 border border-zinc-600 rounded-xl
                     text-sm text-zinc-100 placeholder-zinc-500
                     focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50
-                    resize-none disabled:opacity-50 transition-colors"
+                    resize-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200
+                    hover:border-zinc-500"
+                  aria-label="Message input"
                 />
                 <div className="absolute right-2 bottom-2 flex items-center gap-1">
                   {isRunning ? (
                     <button
                       onClick={handleAbort}
-                      className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors"
+                      className="p-2.5 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors duration-200 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-500/50"
                       title="Stop agent"
+                      aria-label="Stop agent"
                     >
                       <Square className="w-4 h-4" />
                     </button>
@@ -1916,22 +1959,23 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     <button
                       onClick={handleSend}
                       disabled={!input.trim() || !connected}
-                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500
-                        disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors"
+                      className="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500
+                        disabled:opacity-40 disabled:hover:bg-blue-600 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:focus:ring-0"
                       title="Send (Enter)"
+                      aria-label="Send message"
                     >
                       <Send className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               </div>
-              <div className="flex justify-between items-center mt-1.5 px-1 max-w-4xl mx-auto">
-                <span className="text-[10px] text-zinc-500">
+              <div className="flex justify-between items-center mt-2 px-1 max-w-4xl mx-auto">
+                <span className="text-xs text-zinc-500">
                   Enter to send · Shift+Enter for new line
                 </span>
                 {isRunning && (
-                  <span className="text-[10px] text-blue-400 flex items-center gap-1">
-                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  <span className="text-xs text-blue-400 flex items-center gap-1.5">
+                    <Loader2 className="w-3 h-3 animate-spin" />
                     Agent is working...
                   </span>
                 )}

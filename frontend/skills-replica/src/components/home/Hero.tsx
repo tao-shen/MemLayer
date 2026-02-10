@@ -1,4 +1,4 @@
-import { Search, FileText, Code2, TrendingUp } from 'lucide-react';
+import { Search, FileText, Code2, TrendingUp, Sparkles, Candy } from 'lucide-react';
 
 interface HeroProps {
   onOpenDocs: () => void;
@@ -36,14 +36,14 @@ export function Hero({ onOpenDocs }: HeroProps) {
               onClick={() =>
                 document.getElementById('skills-grid')?.scrollIntoView({ behavior: 'smooth' })
               }
-              className="h-12 px-6 bg-primary text-primary-foreground rounded-md font-mono font-medium hover:bg-primary-hover transition-colors flex items-center gap-2 shadow-lg"
+              className="h-12 px-6 bg-primary text-primary-foreground rounded-md font-mono font-medium hover:bg-primary-hover transition-all duration-200 flex items-center gap-2 shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 hover:shadow-xl hover:shadow-primary/10"
             >
               <Search className="w-4 h-4" />
               Browse Skills
             </button>
             <button
               onClick={onOpenDocs}
-              className="h-12 px-6 bg-background border border-border text-foreground rounded-md font-mono font-medium hover:bg-secondary transition-colors flex items-center gap-2"
+              className="h-12 px-6 bg-background border border-border text-foreground rounded-md font-mono font-medium hover:bg-secondary transition-all duration-200 flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-border"
             >
               <FileText className="w-4 h-4 text-foreground-secondary" />
               Documentation
@@ -55,9 +55,10 @@ export function Hero({ onOpenDocs }: HeroProps) {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-xs"
+                  className="w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center"
+                  aria-hidden="true"
                 >
-                  ✨
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                 </div>
               ))}
             </div>
@@ -111,7 +112,7 @@ export function Hero({ onOpenDocs }: HeroProps) {
           </div>
 
           {/* Floating Code Card */}
-          <div className="absolute -bottom-6 -left-6 bg-[#1e1e2e] text-[#cdd6f4] p-4 rounded-lg shadow-xl border border-white/10 font-mono text-sm max-w-[240px] hidden sm:block transform hover:-translate-y-1 transition-transform">
+          <div className="absolute -bottom-6 -left-6 bg-[#1e1e2e] text-[#cdd6f4] p-4 rounded-lg shadow-xl border border-white/10 font-mono text-sm max-w-[240px] hidden sm:block transform hover:-translate-y-1 transition-transform duration-300">
             <div className="flex items-center gap-2 text-xs text-white/40 mb-2">
               <Code2 className="w-3 h-3" />
               <span>skill.ts</span>
@@ -122,7 +123,9 @@ export function Hero({ onOpenDocs }: HeroProps) {
               <span className="text-[#89b4fa]">await</span>{' '}
               <span className="text-[#f9e2af]">useSkill</span>();
             </div>
-            <div className="text-[#6c7086] text-xs mt-1">// simple as candy 🍬</div>
+            <div className="text-[#6c7086] text-xs mt-1 flex items-center gap-1">
+              // simple as candy <Candy className="w-3 h-3 inline text-[#f38ba8]" />
+            </div>
           </div>
         </div>
       </div>

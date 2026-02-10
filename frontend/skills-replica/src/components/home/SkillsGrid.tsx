@@ -192,8 +192,9 @@ export function SkillsGrid({
                         e.stopPropagation();
                         onRunSkill(skill);
                       }}
-                      className="hover:text-green-600 transition-colors"
+                      className="p-2 rounded-md hover:text-green-600 hover:bg-green-500/10 transition-all duration-200 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-500/30"
                       title="Run skill"
+                      aria-label={`Run ${skill.name}`}
                     >
                       <Play className="w-3.5 h-3.5" />
                     </button>
@@ -205,7 +206,7 @@ export function SkillsGrid({
                         console.log('[Like] Button clicked for skill:', skill.id);
                         handleLike(skill.id);
                       }}
-                      className="hover:text-destructive transition-colors p-1 rounded"
+                      className="p-2 rounded-md hover:text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-destructive/30"
                       type="button"
                       aria-label={likedSkills.has(skill.id) ? 'Unlike skill' : 'Like skill'}
                     >
@@ -224,11 +225,12 @@ export function SkillsGrid({
                         onToggleCart(skill.id);
                       }}
                       className={cn(
-                        'flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wide transition-all border',
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase font-bold tracking-wide transition-all duration-200 border cursor-pointer min-h-[28px] focus:outline-none focus:ring-2 focus:ring-primary/30',
                         cart.has(skill.id)
                           ? 'bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20'
                           : 'bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
                       )}
+                      aria-label={cart.has(skill.id) ? `Remove ${skill.name} from bag` : `Add ${skill.name} to bag`}
                     >
                       {cart.has(skill.id) ? (
                         <>

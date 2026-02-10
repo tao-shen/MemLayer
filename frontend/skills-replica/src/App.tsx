@@ -159,6 +159,8 @@ function AppContent() {
 
   const handleRunSkill = (storeSkill: any) => {
     // Convert store skill to Skill format for executor
+    // CRITICAL: skillMdUrl must be passed through so SkillExecutor can
+    // fetch the real SKILL.md instructions from GitHub
     const skill: Skill = {
       id: `store-${storeSkill.id}`,
       userId: user?.id || 'anonymous',
@@ -167,11 +169,12 @@ function AppContent() {
       category: storeSkill.category as SkillCategory,
       icon: storeSkill.icon,
       color: storeSkill.color,
+      skillMdUrl: storeSkill.skillMdUrl, // ← Critical: enables SKILL.md fetch
       config: {
-        capabilities: [],
-        systemPrompt: '',
+        capabilities: storeSkill.capabilities ?? [],
+        systemPrompt: storeSkill.systemPrompt ?? '',
         parameters: storeSkill.config,
-        tools: [],
+        tools: storeSkill.tools ?? [],
       },
       sourceFiles: [],
       analysisContext: {
@@ -185,10 +188,10 @@ function AppContent() {
         suggestedCapabilities: [],
         filesSummary: [],
         confidence: 0,
-        systemPrompt: '',
+        systemPrompt: storeSkill.systemPrompt ?? '',
       },
       installCommand: storeSkill.installCommand,
-      popularity: 0,
+      popularity: storeSkill.popularity ?? 0,
       createdAt: new Date(),
       updatedAt: new Date(),
       status: 'active',

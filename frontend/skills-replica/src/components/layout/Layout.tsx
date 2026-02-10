@@ -167,10 +167,11 @@ export function Layout({
 
       <footer className="w-full border-t border-border py-6 mt-12 bg-card/50 relative">
         <div className="container max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-foreground-secondary font-mono">
-          <p>AI is simple like candy 🍬</p>
+          <p>AI is simple like candy</p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="hover:text-primary transition-colors"
+            className="hover:text-primary transition-colors duration-200 cursor-pointer px-3 py-2 rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            aria-label="Scroll to top"
           >
             Back to top
           </button>
