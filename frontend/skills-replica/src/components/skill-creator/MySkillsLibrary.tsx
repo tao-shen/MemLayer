@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Play, Calendar, Filter, ArrowLeft } from 'lucide-react';
+import { Search, Plus, Trash2, Play, Calendar, Filter, ArrowLeft, Package } from 'lucide-react';
 import { storageUtils } from '../../utils/storage';
 import type { Skill, SkillCategory } from '../../types/skill-creator';
 import { SKILLS_DATA } from '../../data/skillsData';
@@ -161,14 +161,15 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           {onBack && (
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors duration-200 cursor-pointer p-2 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Skills Library</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-3xl font-bold text-foreground">My Skills Library</h1>
+            <p className="text-sm text-foreground-secondary mt-1">
               Manage all your created AI skills
             </p>
           </div>
@@ -195,23 +196,23 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-tertiary" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search skills..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
         {/* Category Filter */}
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-gray-400" />
+          <Filter className="w-5 h-5 text-foreground-tertiary" />
           <select
             value={categoryFilter || ''}
             onChange={(e) => setCategoryFilter(e.target.value || null)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
           >
             <option value="">All Categories</option>
             {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -224,40 +225,48 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
       </div>
 
       {/* Tabs */}
-      < div className="flex items-center gap-1 border-b border-gray-200" >
+      < div className="flex items-center gap-1 border-b border-border" >
         <button
           onClick={() => { setActiveTab('all'); loadSkills(); }}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'all'
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 ${activeTab === 'all'
               ? 'border-primary text-primary'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              : 'border-transparent text-foreground-secondary hover:text-foreground'
             }`}
+          aria-label="All Skills"
+          aria-pressed={activeTab === 'all'}
         >
           All Skills
         </button>
         <button
           onClick={() => { setActiveTab('created'); loadSkills(); }}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'created'
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 ${activeTab === 'created'
               ? 'border-primary text-primary'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              : 'border-transparent text-foreground-secondary hover:text-foreground'
             }`}
+          aria-label="Created skills"
+          aria-pressed={activeTab === 'created'}
         >
           Created
         </button>
         <button
           onClick={() => { setActiveTab('store'); loadSkills(); }}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'store'
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 ${activeTab === 'store'
               ? 'border-primary text-primary'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              : 'border-transparent text-foreground-secondary hover:text-foreground'
             }`}
+          aria-label="Purchased skills"
+          aria-pressed={activeTab === 'store'}
         >
           Purchased
         </button>
         <button
           onClick={() => { setActiveTab('liked'); loadSkills(); }}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'liked'
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 ${activeTab === 'liked'
               ? 'border-primary text-primary'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              : 'border-transparent text-foreground-secondary hover:text-foreground'
             }`}
+          aria-label="Liked skills"
+          aria-pressed={activeTab === 'liked'}
         >
           Liked
         </button>
@@ -270,15 +279,15 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
         </div>
       ) : filteredSkills.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-6xl mb-4">📦</div>
-          <h3 className="text-xl font-medium text-gray-700 mb-2">
+          <Package className="w-16 h-16 text-foreground-secondary mx-auto mb-4 opacity-50" />
+          <h3 className="text-xl font-medium text-foreground mb-2">
             {searchQuery || categoryFilter 
               ? 'No matching skills found' 
               : activeTab === 'liked' 
                 ? 'No liked skills yet' 
                 : 'No skills created yet'}
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-foreground-secondary mb-6">
             {searchQuery || categoryFilter
               ? 'Try adjusting your search criteria'
               : activeTab === 'liked'
@@ -288,7 +297,7 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           {!searchQuery && !categoryFilter && (
             <button
               onClick={onCreateNew}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-white font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-active text-primary-foreground font-medium rounded-lg hover:from-primary-hover hover:to-primary-active transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <Plus className="w-5 h-5" />
               Create Your First Skill
@@ -300,16 +309,16 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
           {filteredSkills.map((skill) => (
             <div
               key={skill.id}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden group"
+              className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
             >
               {/* Top Bar */}
-              <div className="h-10 px-4 border-b border-gray-100 flex items-center bg-white relative">
+              <div className="h-10 px-4 border-b border-border flex items-center bg-card relative">
                 <div className="flex items-center gap-1.5 absolute left-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div>
                   <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]"></div>
                   <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div>
                 </div>
-                <div className="mx-auto text-xs font-mono text-gray-400 font-medium">
+                <div className="mx-auto text-xs font-mono text-foreground-tertiary font-medium">
                   {skill.id.slice(0, 8)}.ts
                 </div>
               </div>
@@ -319,20 +328,20 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
                 <div className="flex items-start gap-3 mb-3">
                   <div className="text-3xl">{skill.icon}</div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 truncate">
+                    <h3 className="text-lg font-bold text-foreground truncate">
                       {skill.name}
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-foreground-tertiary">
                       {CATEGORY_LABELS[skill.category as SkillCategory]}
                     </p>
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 line-clamp-3 mb-4">
+                <p className="text-sm text-foreground-secondary line-clamp-3 mb-4">
                   {skill.description}
                 </p>
 
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
+                <div className="flex items-center gap-2 text-xs text-foreground-tertiary mb-4">
                   <Calendar className="w-3 h-3" />
                   <span>
                     {skill.createdAt 
@@ -362,7 +371,8 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(skill.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2.5 text-foreground-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors duration-200 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-error/30"
+                        aria-label={`Delete ${skill.name}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -377,24 +387,24 @@ export function MySkillsLibrary({ onCreateNew, onUseSkill, onBack }: MySkillsLib
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full border border-border shadow-2xl" role="dialog" aria-modal="true" aria-label="Confirm delete">
+            <h3 className="text-lg font-bold text-foreground mb-2">
               Confirm Delete
             </h3>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-foreground-secondary mb-6">
               Are you sure you want to delete this skill? This action cannot be undone.
             </p>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-border text-foreground rounded-lg hover:bg-secondary transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-error text-error-foreground rounded-lg hover:bg-error/90 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-error/50"
               >
                 Delete
               </button>

@@ -74,7 +74,7 @@ export function SkillCreationPage({ onComplete, onCancel }: SkillCreationPagePro
         <div>
           <button
             onClick={onCancel}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6"
+            className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors mb-6"
           >
             ← Back
           </button>
@@ -112,11 +112,11 @@ export function SkillCreationPage({ onComplete, onCancel }: SkillCreationPagePro
         <div className="space-y-6">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors"
           >
             ← Back
           </button>
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-card rounded-2xl shadow-xl border border-border p-8">
             <SkillPreviewEditor
               skill={skillToPreview}
               analysisContext={skillToPreview.analysisContext || {
@@ -141,15 +141,15 @@ export function SkillCreationPage({ onComplete, onCancel }: SkillCreationPagePro
 
       {/* Complete */}
       {method === 'complete' && (
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-card rounded-2xl shadow-xl border border-border p-8">
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">✨</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Skill Created Successfully!
             </h2>
-            <p className="text-gray-600">
+            <p className="text-foreground-secondary">
               Redirecting to skills library...
             </p>
           </div>
