@@ -20,10 +20,15 @@ const CATEGORIES: SkillCategory[] = [
 
 const CATEGORY_LABELS: Record<SkillCategory, string> = {
   Knowledge: 'Knowledge',
-  Tools: 'Tools',
-  Productivity: 'Productivity',
-  Development: 'Development',
   Analysis: 'Analysis',
+  Development: 'Development',
+  Design: 'Design',
+  Marketing: 'Marketing',
+  Productivity: 'Productivity',
+  Tools: 'Tools',
+  Research: 'Research',
+  Mobile: 'Mobile',
+  Writing: 'Writing',
   Custom: 'Custom',
 };
 
