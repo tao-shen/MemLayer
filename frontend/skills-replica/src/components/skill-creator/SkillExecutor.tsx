@@ -67,6 +67,64 @@ interface SkillExecutorProps {
   onClose: () => void;
 }
 
+function mapRawPartToPart(
+  raw: Record<string, unknown>,
+  sessionId: string,
+  messageId: string
+): Part {
+  return {
+    id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
+    sessionID: sessionId,
+    messageID: messageId,
+    type: (raw.type as string) ?? 'text',
+    ...(raw.type === 'text' ? { text: (raw.text as string) ?? '' } : {}),
+    ...(raw.type === 'reasoning' ? { reasoning: (raw.reasoning as string) ?? '' } : {}),
+    ...(raw.type === 'tool-invocation'
+      ? {
+          toolName: (raw.toolName as string) ?? '',
+          args: raw.args,
+          result: raw.result,
+          state: (raw.state as string) ?? 'completed',
+        }
+      : {}),
+  } as Part;
+}
+
+function mapSessionMessagesToEntries(messages: Record<string, unknown>[], sessionId: string): ChatEntry[] {
+  const loaded: ChatEntry[] = [];
+  for (const msg of messages) {
+    const role = msg.role as string;
+    if (role === 'user') {
+      const parts = msg.parts as Record<string, unknown>[] | undefined;
+      const text =
+        parts
+          ?.filter((p) => p.type === 'text')
+          .map((p) => (p as { text?: string }).text ?? '')
+          .join('\n') || '';
+      if (text) {
+        loaded.push({
+          type: 'user',
+          text,
+          time: (msg.time as { created?: number })?.created ?? Date.now(),
+        });
+      }
+    } else if (role === 'assistant') {
+      const messageId = (msg.id as string) ?? `msg-${Date.now()}`;
+      const rawParts = msg.parts as Record<string, unknown>[] | undefined;
+      const chatParts: Part[] = (rawParts ?? []).map((p) => mapRawPartToPart(p, sessionId, messageId));
+      loaded.push({
+        type: 'assistant',
+        messageId,
+        parts: chatParts,
+        isComplete: true,
+        cost: msg.cost as number | undefined,
+        tokens: msg.tokens as AssistantEntry['tokens'] | undefined,
+      });
+    }
+  }
+  return loaded;
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components for rendering parts
 // ---------------------------------------------------------------------------
@@ -554,52 +612,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       const session = await opencode.getSession(id);
       const messages = session.messages as Record<string, unknown>[] | undefined;
       if (!messages || !Array.isArray(messages) || messages.length === 0) return;
-
-      const loaded: ChatEntry[] = [];
-      for (const msg of messages) {
-        const role = msg.role as string;
-        if (role === 'user') {
-          // Extract user text from parts
-          const parts = msg.parts as Record<string, unknown>[] | undefined;
-          const text = parts
-            ?.filter((p) => p.type === 'text')
-            .map((p) => (p as { text?: string }).text ?? '')
-            .join('\n') || '';
-          if (text) {
-            loaded.push({
-              type: 'user',
-              text,
-              time: (msg.time as { created?: number })?.created ?? Date.now(),
-            });
-          }
-        } else if (role === 'assistant') {
-          const rawParts = msg.parts as Record<string, unknown>[] | undefined;
-          const chatParts: Part[] = (rawParts ?? []).map((p) => ({
-            id: (p.id as string) ?? `part-${Date.now()}-${Math.random()}`,
-            sessionID: id,
-            messageID: (msg.id as string) ?? '',
-            type: (p.type as string) ?? 'text',
-            ...(p.type === 'text' ? { text: (p.text as string) ?? '' } : {}),
-            ...(p.type === 'reasoning' ? { reasoning: (p.reasoning as string) ?? '' } : {}),
-            ...(p.type === 'tool-invocation' ? {
-              toolName: (p.toolName as string) ?? '',
-              args: p.args,
-              result: p.result,
-              state: (p.state as string) ?? 'completed',
-            } : {}),
-          })) as Part[];
-
-          loaded.push({
-            type: 'assistant',
-            messageId: (msg.id as string) ?? `msg-${Date.now()}`,
-            parts: chatParts,
-            isComplete: true,
-            cost: msg.cost as number | undefined,
-            tokens: msg.tokens as AssistantEntry['tokens'] | undefined,
-          });
-        }
-      }
-
+      const loaded = mapSessionMessagesToEntries(messages, id);
       if (loaded.length > 0) {
         setEntries(loaded);
       }
@@ -800,10 +813,79 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       },
     };
 
-    await opencode.sendMessage(sid, text, callbacks, {
-      model: selectedModel ?? undefined,
-      system: skillInstructions || skill.config.systemPrompt || undefined,
-    });
+    // Poll fallback: when SSE is proxy-buffered, pull snapshots periodically so
+    // the UI still progresses between bursty chunks.
+    let polling = true;
+    let pollingInFlight = false;
+    const pollFromSessionSnapshot = async () => {
+      if (!polling || pollingInFlight) return;
+      pollingInFlight = true;
+      try {
+        const snapshot = await opencode.getSession(sid!);
+        const messages = snapshot.messages as Record<string, unknown>[] | undefined;
+        if (!messages || !Array.isArray(messages) || messages.length === 0) return;
+
+        const assistantMsgs = messages.filter((m) => m.role === 'assistant');
+        const latest = assistantMsgs[assistantMsgs.length - 1];
+        if (!latest) return;
+
+        const messageId = (latest.id as string) ?? '';
+        if (!messageId) return;
+        const rawParts = latest.parts as Record<string, unknown>[] | undefined;
+        const snapshotParts = (rawParts ?? []).map((p) => mapRawPartToPart(p, sid!, messageId));
+
+        setEntries((prev) => {
+          const idx = prev.findIndex((e) => e.type === 'assistant' && e.messageId === messageId);
+          if (idx >= 0) {
+            const current = prev[idx] as AssistantEntry;
+            const currentTextSize = current.parts
+              .filter((p) => p.type === 'text')
+              .map((p) => (p as TextPart).text || '')
+              .join('').length;
+            const snapshotTextSize = snapshotParts
+              .filter((p) => p.type === 'text')
+              .map((p) => (p as TextPart).text || '')
+              .join('').length;
+
+            if (snapshotParts.length <= current.parts.length && snapshotTextSize <= currentTextSize) {
+              return prev;
+            }
+
+            const next = [...prev];
+            next[idx] = { ...current, parts: snapshotParts };
+            return next;
+          }
+
+          const nextAssistant: AssistantEntry = {
+            type: 'assistant',
+            messageId,
+            parts: snapshotParts,
+            isComplete: false,
+            cost: latest.cost as number | undefined,
+            tokens: latest.tokens as AssistantEntry['tokens'] | undefined,
+          };
+          return [...prev, nextAssistant];
+        });
+      } catch {
+        // snapshot polling is best-effort
+      } finally {
+        pollingInFlight = false;
+      }
+    };
+
+    const pollTimer = window.setInterval(() => {
+      void pollFromSessionSnapshot();
+    }, 1200);
+
+    try {
+      await opencode.sendMessage(sid, text, callbacks, {
+        model: selectedModel ?? undefined,
+        system: skillInstructions || skill.config.systemPrompt || undefined,
+      });
+    } finally {
+      polling = false;
+      window.clearInterval(pollTimer);
+    }
   }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skillInstructions, skill.config.systemPrompt]);
 
   // ── Abort ───────────────────────────────────────────────────────────────
