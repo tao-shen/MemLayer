@@ -1,0 +1,156 @@
+{
+  "timestamp": "2026-02-10T14:08:18.730Z",
+  "testUrl": "https://tacits-candy-shop.vercel.app",
+  "tests": [
+    {
+      "name": "Test 1: Homepage and Skills Grid",
+      "steps": [
+        {
+          "step": "Navigate",
+          "status": "pass"
+        },
+        {
+          "step": "Count skills",
+          "status": "pass",
+          "count": 202
+        },
+        {
+          "step": "Scroll",
+          "status": "pass"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "Test 2: Skill Selection and Executor",
+      "steps": [
+        {
+          "step": "Click skill",
+          "status": "pass",
+          "button": "🍬~/Skills"
+        },
+        {
+          "step": "Find textarea",
+          "status": "fail"
+        },
+        {
+          "step": "Find alternative input",
+          "status": "pass"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "Test 3: Immediate Feedback",
+      "steps": [
+        {
+          "step": "Type message",
+          "status": "pass"
+        },
+        {
+          "step": "Send and check feedback",
+          "status": "partial",
+          "feedbackTime": 1396
+        },
+        {
+          "step": "Wait for streaming",
+          "status": "pass"
+        }
+      ],
+      "passed": false,
+      "feedbackTime": 1396
+    },
+    {
+      "name": "Test 4: Response Completion",
+      "steps": [
+        {
+          "step": "Wait for completion",
+          "status": "pass"
+        },
+        {
+          "step": "Detect question",
+          "status": "pass"
+        }
+      ],
+      "passed": true,
+      "askedQuestion": true,
+      "inputEnabled": true
+    },
+    {
+      "name": "Test 5: Multi-turn Conversation",
+      "steps": [
+        {
+          "step": "Send message",
+          "status": "pass"
+        },
+        {
+          "step": "Wait for response",
+          "status": "pass"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "Test 6: Tool Call Test",
+      "steps": [
+        {
+          "step": "Send tool message",
+          "status": "pass"
+        },
+        {
+          "step": "Monitor tool calls",
+          "status": "pass",
+          "toolCallsDetected": false,
+          "reactErrors": 0
+        }
+      ],
+      "passed": true,
+      "toolCallsDetected": false,
+      "reactErrorsDuring": 0
+    },
+    {
+      "name": "Test 7: Session Switching",
+      "steps": [
+        {
+          "step": "Find sessions",
+          "status": "none"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "name": "Test 8: Console Error Check",
+      "steps": [
+        {
+          "step": "Review errors",
+          "status": "complete",
+          "reactErrors": 0,
+          "consoleErrors": 0
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "test1-01-homepage.png",
+    "test1-02-scrolled.png",
+    "test2-01-after-click.png",
+    "test3-01-typed.png",
+    "test3-02-after-send.png",
+    "test3-03-response-streaming.png",
+    "test4-01-completed.png",
+    "test5-01-second-sent.png",
+    "test5-02-second-response.png",
+    "test6-01-tool-message-sent.png",
+    "test6-04-final.png"
+  ],
+  "consoleErrors": [],
+  "reactErrors": [],
+  "finalVerdict": {
+    "passedTests": 7,
+    "totalTests": 8,
+    "passRate": "87.5%",
+    "reactErrorsFree": true,
+    "overallPass": true
+  }
+}
