@@ -40,7 +40,6 @@ import {
   type TodoItem,
   type SessionInfo,
   type QuestionEvent,
-  type QuestionInfo,
 } from '../../lib/opencode-client';
 
 // ---------------------------------------------------------------------------
@@ -577,7 +576,7 @@ function QuestionPanel({
   };
 
   const handleSubmit = () => {
-    const answers = question.questions.map((q, idx) => {
+    const answers = question.questions.map((_q, idx) => {
       const selected = selections[idx] ?? [];
       const custom = customInputs[idx]?.trim();
       if (custom) return [...selected, custom];
