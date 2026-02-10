@@ -67,6 +67,61 @@ interface SkillExecutorProps {
   onClose: () => void;
 }
 
+/**
+ * Safely extract a renderable string from a tool part's `state` field.
+ * OpenCode SSE may send state as an object like `{status, input, time}`
+ * instead of a plain string.  Rendering an object as a React child causes
+ * Error #31, so we always normalise to a string here.
+ */
+function safeToolState(raw: unknown): ToolPart['state'] {
+  if (typeof raw === 'string') return raw as ToolPart['state'];
+  if (raw && typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>;
+    if (typeof obj.status === 'string') return obj.status as ToolPart['state'];
+    if (typeof obj.type === 'string') return obj.type as ToolPart['state'];
+  }
+  return 'pending';
+}
+
+/** Ensure any value is safe to render inside JSX (never an object). */
+function safeString(v: unknown): string {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+}
+
+/**
+ * Normalise a Part coming from SSE / the server so that every field that will
+ * be rendered by React is a primitive (string / number / boolean), never a
+ * raw object.  This prevents React Error #31.
+ */
+function normalizePart(part: Part): Part {
+  if (part.type === 'tool') {
+    const tp = part as ToolPart;
+    const rawState = tp.state as unknown;
+    // If state is an object, pull metadata out of it
+    const stateObj =
+      rawState && typeof rawState === 'object'
+        ? (rawState as Record<string, unknown>)
+        : null;
+
+    return {
+      ...tp,
+      state: safeToolState(rawState),
+      metadata: {
+        ...tp.metadata,
+        ...(stateObj
+          ? {
+              input: tp.metadata?.input ?? stateObj.input,
+              output: tp.metadata?.output ?? stateObj.output,
+            }
+          : {}),
+      },
+    };
+  }
+  return part;
+}
+
 function mapRawPartToPart(
   raw: Record<string, unknown>,
   sessionId: string,
@@ -74,19 +129,19 @@ function mapRawPartToPart(
 ): Part {
   const rawType = (raw.type as string) ?? 'text';
   if (rawType === 'tool-invocation' || rawType === 'tool') {
-    return {
+    return normalizePart({
       id: (raw.id as string) ?? `part-${Date.now()}-${Math.random()}`,
       sessionID: sessionId,
       messageID: messageId,
       type: 'tool',
       tool: (raw.tool as string) ?? (raw.toolName as string) ?? 'tool',
-      callID: (raw.callID as string) ?? (raw.id as string) ?? '',
-      state: ((raw.state as ToolPart['state']) ?? 'completed'),
+      callID: (raw.callID as string) ?? (raw.toolInvocationId as string) ?? (raw.id as string) ?? '',
+      state: safeToolState(raw.state),
       metadata: {
-        input: raw.args,
-        output: raw.result,
+        input: raw.args ?? raw.input,
+        output: raw.result ?? raw.output,
       },
-    };
+    });
   }
 
   if (rawType === 'reasoning') {
@@ -120,33 +175,53 @@ function mapRawPartToPart(
 
 function mapSessionMessagesToEntries(messages: Record<string, unknown>[], sessionId: string): ChatEntry[] {
   const loaded: ChatEntry[] = [];
-  for (const msg of messages) {
-    const role = ((msg.role as string) ?? '').toLowerCase();
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    // Debug: log the top-level keys of each message so we can diagnose parsing mismatches
+    console.log(`[SkillExec] mapSessionMessages msg[${i}] keys:`, Object.keys(msg), 'role:', msg.role);
+
+    // The message might be wrapped in an `info` envelope depending on the
+    // OpenCode server version.  Try both top-level and nested paths.
+    const info = (msg.info as Record<string, unknown>) ?? msg;
+    const role = (
+      (info.role as string) ??
+      (msg.role as string) ??
+      ''
+    ).toLowerCase();
+
     if (role === 'user') {
-      const parts = msg.parts as Record<string, unknown>[] | undefined;
+      const rawParts =
+        (info.parts as Record<string, unknown>[]) ??
+        (msg.parts as Record<string, unknown>[]);
       const textFromParts =
-        parts
-          ?.filter((p) => p.type === 'text')
-          .map((p) => (p as { text?: string }).text ?? '')
+        rawParts
+          ?.filter((p) => (p as Record<string, unknown>).type === 'text')
+          .map((p) => {
+            const t = (p as Record<string, unknown>).text;
+            return typeof t === 'string' ? t : safeString(t);
+          })
           .join('\n') || '';
       const textFromFallback =
-        (msg.text as string) ??
-        (msg.content as string) ??
-        '';
+        safeString(info.text ?? msg.text ?? info.content ?? msg.content);
       const text = textFromParts || textFromFallback;
       if (text) {
+        const timeObj = (info.time ?? msg.time) as { created?: number } | undefined;
         loaded.push({
           type: 'user',
           text,
-          time: (msg.time as { created?: number })?.created ?? Date.now(),
+          time: timeObj?.created ?? Date.now(),
         });
       }
     } else if (role === 'assistant') {
-      const messageId = (msg.id as string) ?? `msg-${Date.now()}`;
-      const rawParts = msg.parts as Record<string, unknown>[] | undefined;
-      let chatParts: Part[] = (rawParts ?? []).map((p) => mapRawPartToPart(p, sessionId, messageId));
+      const messageId = (info.id as string) ?? (msg.id as string) ?? `msg-${Date.now()}`;
+      const rawParts =
+        (info.parts as Record<string, unknown>[]) ??
+        (msg.parts as Record<string, unknown>[]);
+      let chatParts: Part[] = (rawParts ?? []).map((p) =>
+        normalizePart(mapRawPartToPart(p as Record<string, unknown>, sessionId, messageId))
+      );
       if (chatParts.length === 0) {
-        const fallbackText = (msg.text as string) ?? (msg.content as string) ?? '';
+        const fallbackText = safeString(info.text ?? msg.text ?? info.content ?? msg.content);
         if (fallbackText) {
           chatParts = [{
             id: `part-fallback-${Date.now()}`,
@@ -162,9 +237,12 @@ function mapSessionMessagesToEntries(messages: Record<string, unknown>[], sessio
         messageId,
         parts: chatParts,
         isComplete: true,
-        cost: msg.cost as number | undefined,
-        tokens: msg.tokens as AssistantEntry['tokens'] | undefined,
+        cost: (info.cost ?? msg.cost) as number | undefined,
+        tokens: (info.tokens ?? msg.tokens) as AssistantEntry['tokens'] | undefined,
       });
+    } else {
+      // Unknown role — log for debugging but don't crash
+      console.warn('[SkillExec] mapSessionMessagesToEntries: unknown role', role, 'keys:', Object.keys(msg));
     }
   }
   return loaded;
@@ -189,11 +267,13 @@ function ToolStateIcon({ state }: { state: string }) {
 
 function ToolPartView({ part }: { part: ToolPart }) {
   const [expanded, setExpanded] = useState(false);
+  // Always normalise to primitives before rendering — prevents React Error #31
+  const stateStr = safeToolState(part.state);
   const meta = part.metadata ?? {};
-  const title = (meta.title as string) ?? '';
-  const input = meta.input ? JSON.stringify(meta.input, null, 2) : '';
-  const output = (meta.output as string) ?? '';
-  const error = (meta.error as string) ?? '';
+  const title = safeString(meta.title);
+  const input = meta.input != null ? safeString(meta.input) : '';
+  const output = meta.output != null ? safeString(meta.output) : '';
+  const error = meta.error != null ? safeString(meta.error) : '';
 
   return (
     <div className="my-2 rounded-lg border border-zinc-700/60 bg-zinc-800/40 overflow-hidden">
@@ -201,15 +281,15 @@ function ToolPartView({ part }: { part: ToolPart }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-zinc-700/30 transition-colors"
       >
-        <ToolStateIcon state={part.state} />
+        <ToolStateIcon state={stateStr} />
         <Wrench className="w-3.5 h-3.5 text-zinc-400" />
         <span className="text-sm font-medium text-zinc-200 truncate">
-          {part.tool}
+          {safeString(part.tool)}
         </span>
         {title && (
           <span className="text-xs text-zinc-400 truncate ml-1">{title}</span>
         )}
-        <span className="ml-auto text-xs text-zinc-500 capitalize">{part.state}</span>
+        <span className="ml-auto text-xs text-zinc-500 capitalize">{stateStr}</span>
         {expanded ? (
           <ChevronDown className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
         ) : (
@@ -737,7 +817,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     let partUpdateCount = 0;
 
     const callbacks = {
-      onPartUpdated: (part: Part, delta?: string) => {
+      onPartUpdated: (rawPart: Part, delta?: string) => {
+        // Normalise every incoming part so that object-typed fields (especially
+        // tool state) never reach React's reconciler as raw objects.
+        const part = normalizePart(rawPart);
+
         partUpdateCount++;
         const textSnippet =
           part.type === 'text'
@@ -775,7 +859,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   newParts[partIdx] = { ...part };
                 }
               } else {
-                newParts[partIdx] = { ...newParts[partIdx], ...part };
+                newParts[partIdx] = normalizePart({ ...newParts[partIdx], ...part });
               }
             } else {
               // Add new part
