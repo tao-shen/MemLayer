@@ -186,8 +186,29 @@ class OpenCodeClient {
   private abortController: AbortController | null = null;
   private baseUrl: string;
 
+  /**
+   * Signal callback: when set, calling signalQuestionAnswered() resets
+   * hasReceivedQuestion in the active sendMessage SSE stream so the
+   * stream can complete normally after the server continues processing.
+   */
+  private _onQuestionAnsweredCb: (() => void) | null = null;
+
   constructor(baseUrl: string = OPENCODE_SERVER_URL) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Call this after replyQuestion() succeeds.  It tells the active SSE
+   * stream (from sendMessage) to reset its hasReceivedQuestion flag so
+   * that subsequent idle / finish events can trigger onComplete.
+   */
+  signalQuestionAnswered(): void {
+    if (this._onQuestionAnsweredCb) {
+      console.log('[OpenCode] signalQuestionAnswered() → resetting hasReceivedQuestion');
+      this._onQuestionAnsweredCb();
+    } else {
+      console.warn('[OpenCode] signalQuestionAnswered() called but no active stream');
+    }
   }
 
   get connected(): boolean {
@@ -577,6 +598,13 @@ class OpenCodeClient {
     let isCompleted = false;
     let hasReceivedParts = false;
     let hasReceivedQuestion = false;
+
+    // Allow external code (SkillExecutor.onAnswer) to reset hasReceivedQuestion
+    // after replying to a question, so the stream can complete normally.
+    this._onQuestionAnsweredCb = () => {
+      console.log(`[OpenCode] ${ts()} ★ hasReceivedQuestion reset (question answered)`);
+      hasReceivedQuestion = false;
+    };
 
     // Track which message IDs are user vs assistant so we can filter echoes
     const userMessageIds = new Set<string>();
