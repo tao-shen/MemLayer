@@ -1,15 +1,22 @@
 import { Folder, ArrowRight } from 'lucide-react';
-
-const CATEGORIES = [
-  { name: 'Knowledge', count: 12, exports: ['search', 'maps', 'academic'] },
-  { name: 'Tools', count: 8, exports: ['filesystem', 'browser', 'screenshot'] },
-  { name: 'Development', count: 24, exports: ['github', 'postgres', 'sentry'] },
-  { name: 'Productivity', count: 15, exports: ['notion', 'slack', 'calendar'] },
-  { name: 'Analysis', count: 6, exports: ['csv', 'sql', 'graph'] },
-  { name: 'Creative', count: 4, exports: ['image-gen', 'music', 'text-to-speech'] },
-];
+import { useMemo } from 'react';
+import { SKILLS_DATA, SKILL_CATEGORIES } from '../../data/skillsData';
 
 export function Categories({ onSelectCategory }: { onSelectCategory: (cat: string) => void }) {
+  // Dynamically calculate category counts from actual skill data
+  const categories = useMemo(() => {
+    return SKILL_CATEGORIES.map(cat => {
+      const skills = SKILLS_DATA.filter(s => s.category === cat.name);
+      const topExports = skills.slice(0, 3).map(s => s.id.split('-').pop() || s.id);
+      return {
+        name: cat.name,
+        count: skills.length,
+        exports: topExports,
+        icon: cat.icon,
+      };
+    }).filter(cat => cat.count > 0); // Only show categories with skills
+  }, []);
+
   return (
     <section className="py-20 bg-primary/10 border-t border-primary/20" id="categories-section">
       <div className="container max-w-7xl mx-auto px-4">
@@ -19,15 +26,15 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CATEGORIES.map((cat, i) => (
+          {categories.map((cat) => (
             <button
-              key={i}
+              key={cat.name}
               onClick={() => onSelectCategory(cat.name)}
               className="group bg-card p-6 rounded-xl border border-primary/20 shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/30"
-              aria-label={`Browse ${cat.name} category — ${cat.count} modules`}
+              aria-label={`Browse ${cat.name} category — ${cat.count} skills`}
             >
               <div className="font-mono text-sm">
-                <div className="text-primary/70 mb-2">// {cat.count} modules</div>
+                <div className="text-primary/70 mb-2">// {cat.count} skills</div>
                 <div className="text-primary mb-1">
                   "{cat.name.toLowerCase()}": <span className="text-foreground">{'{'}</span>
                 </div>

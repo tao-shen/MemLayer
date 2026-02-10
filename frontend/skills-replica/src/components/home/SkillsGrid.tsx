@@ -1,9 +1,10 @@
 import { Search, ShoppingBag, Check, X, Calendar, Heart, Play } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { SKILLS_DATA, type Skill } from '../../data/skillsData';
 import { SkillModal } from '../common/SkillModal';
 import { storageUtils } from '../../utils/storage';
 import { cn } from '../../utils/cn';
+import { toast } from 'sonner';
 
 interface SkillsGridProps {
   searchQuery: string;
@@ -26,6 +27,19 @@ export function SkillsGrid({
 }: SkillsGridProps) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [likedSkills, setLikedSkills] = useState<Set<string>>(new Set());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Cmd+K / Ctrl+K keyboard shortcut to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     // Load liked skills from storage
@@ -38,12 +52,12 @@ export function SkillsGrid({
     console.log('[Like] Clicked on skill:', skillId);
     console.log('[Like] Currently liked:', isLiked);
 
+    const skillName = SKILLS_DATA.find(s => s.id === skillId)?.name || skillId;
     if (isLiked) {
       storageUtils.removeLike(skillId);
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.delete(skillId);
-        console.log('[Like] Removed like, new state:', Array.from(next));
         return next;
       });
     } else {
@@ -51,20 +65,22 @@ export function SkillsGrid({
       setLikedSkills((prev) => {
         const next = new Set(prev);
         next.add(skillId);
-        console.log('[Like] Added like, new state:', Array.from(next));
         return next;
       });
+      toast.success(`Liked ${skillName}`);
     }
   };
 
   const filteredSkills = useMemo(() => {
-    return SKILLS_DATA.filter((skill) => {
-      const matchesSearch =
-        skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        skill.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = categoryFilter ? skill.category === categoryFilter : true;
-      return matchesSearch && matchesCategory;
-    });
+    return SKILLS_DATA
+      .filter((skill) => {
+        const matchesSearch =
+          skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          skill.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = categoryFilter ? skill.category === categoryFilter : true;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0)); // Sort by popularity
   }, [searchQuery, categoryFilter]);
 
   return (
@@ -94,11 +110,12 @@ export function SkillsGrid({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
+                  ref={searchInputRef}
                   id="search-input"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search skills..."
+                  placeholder="Search skills... (⌘K)"
                   className={cn(
                     'w-full h-10 pl-10 pr-4 bg-background border border-input rounded-lg text-sm font-mono',
                     'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',

@@ -1,6 +1,7 @@
 import { X, Copy, Check, Terminal, Play } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import type { Skill } from '../../data/skillsData';
+import { toast } from 'sonner';
 
 interface SkillModalProps {
   skill: Skill | null;
@@ -32,12 +33,14 @@ export function SkillModal({ skill, onClose, onRun }: SkillModalProps) {
   const handleCopy = () => {
     navigator.clipboard.writeText(configString);
     setCopied(true);
+    toast.success('Config copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyInstall = () => {
     navigator.clipboard.writeText(skill.installCommand);
     setInstallCopied(true);
+    toast.success('Install command copied');
     setTimeout(() => setInstallCopied(false), 2000);
   };
 

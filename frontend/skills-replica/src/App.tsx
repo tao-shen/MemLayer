@@ -1,5 +1,6 @@
 import { useState, useEffect, Component, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { supabase } from './lib/supabaseClient';
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
@@ -17,6 +18,7 @@ import { SkillExecutor } from './components/skill-creator/SkillExecutor';
 import type { Skill, SkillCategory } from './types/skill-creator';
 import { storageUtils } from './utils/storage';
 import { SKILLS_DATA } from './data/skillsData';
+import { toast } from 'sonner';
 
 // ---------------------------------------------------------------------------
 // Error Boundary — prevents blank screen on unhandled errors
@@ -192,10 +194,17 @@ function AppContent() {
   }, []);
 
   const handleAddToCart = (id: string) => {
+    const skill = SKILLS_DATA.find(s => s.id === id);
+    const name = skill?.name || id;
     setCart((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+        toast.info(`Removed ${name} from bag`);
+      } else {
+        next.add(id);
+        toast.success(`Added ${name} to bag`);
+      }
       return next;
     });
   };
@@ -410,6 +419,17 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AppContent />
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          toastOptions={{
+            style: {
+              background: 'var(--color-card)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-foreground)',
+            },
+          }}
+        />
       </BrowserRouter>
     </ErrorBoundary>
   );

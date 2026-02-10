@@ -1,6 +1,7 @@
 import { X, Trash2, Download, Copy, Check, Terminal, ShoppingBag, PackageX } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { SKILLS_DATA } from '../../data/skillsData';
+import { toast } from 'sonner';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export function CartDrawer({ isOpen, onClose, cartIds, onRemove, onClear, onPurc
   const handleCopy = () => {
     navigator.clipboard.writeText(configString);
     setCopied(true);
+    toast.success('Configuration copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
   };
 
