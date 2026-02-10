@@ -858,6 +858,182 @@ class OpenCodeClient {
     eventPromise.finally(() => clearTimeout(timeoutId));
   }
 
+  // ── Resume listening after replying to a question ──────────────────────
+
+  /**
+   * After replying to a question, the server continues processing.
+   * This method opens a new SSE stream to capture the continued response.
+   * It's like sendMessage() but WITHOUT sending a new prompt.
+   */
+  async resumeAfterQuestion(
+    sessionId: string,
+    callbacks: StreamCallbacks
+  ): Promise<void> {
+    this.ensureClient();
+
+    // Clean up any prior stream
+    this.cleanup();
+    this.abortController = new AbortController();
+    const ac = this.abortController;
+
+    const t0 = performance.now();
+    const ts = () => `+${(performance.now() - t0).toFixed(0)}ms`;
+
+    let isCompleted = false;
+    let hasReceivedParts = false;
+    let hasReceivedQuestion = false;
+
+    const userMessageIds = new Set<string>();
+    const sseUrl = `${this.baseUrl}/event`;
+
+    console.log(`[OpenCode] resumeAfterQuestion() start, session=${sessionId}`);
+
+    const processEvents = async () => {
+      try {
+        for await (const raw of this.readSSE(sseUrl, ac.signal)) {
+          if (ac.signal.aborted) break;
+
+          const event = raw.data as Record<string, unknown> | undefined;
+          if (!event || typeof event !== 'object') continue;
+
+          const eventType: string | undefined =
+            (event.type as string | undefined) ?? raw.event;
+          if (!eventType) continue;
+
+          const props: Record<string, unknown> =
+            (event.properties as Record<string, unknown>) ?? {};
+
+          const evtSid =
+            (props.sessionID as string) ??
+            ((props.info as Record<string, unknown>)?.sessionID as string) ??
+            ((props.part as Record<string, unknown>)?.sessionID as string);
+
+          if (evtSid && evtSid !== sessionId) continue;
+
+          console.log(`[OpenCode] ${ts()} resume: ${eventType}`);
+
+          switch (eventType) {
+            case 'message.updated': {
+              const info = (props.info ?? props) as Record<string, unknown>;
+              const role = info.role as string | undefined;
+              const msgId = info.id as string | undefined;
+              if (msgId && role === 'user') userMessageIds.add(msgId);
+              if (role === 'assistant') callbacks.onMessageUpdated(info);
+              if (role === 'assistant' && info.finish === 'stop' && !hasReceivedQuestion) {
+                console.log(`[OpenCode] ${ts()} resume: assistant finished`);
+                isCompleted = true;
+                ac.abort();
+                callbacks.onComplete();
+                return;
+              }
+              break;
+            }
+            case 'message.part.updated': {
+              const part = props.part as Part | undefined;
+              if (!part) break;
+              if (userMessageIds.has(part.messageID)) break;
+              hasReceivedParts = true;
+              const delta = props.delta as string | undefined;
+              callbacks.onPartUpdated(part, delta);
+              break;
+            }
+            case 'session.status': {
+              const statusObj = props.status as Record<string, unknown> | string | undefined;
+              const status = typeof statusObj === 'string' ? statusObj : ((statusObj?.type as string) ?? '');
+              console.log(`[OpenCode] ${ts()} resume session.status: "${status}"`);
+              callbacks.onSessionStatus(status);
+              if (status === 'idle' && hasReceivedParts && !hasReceivedQuestion) {
+                setTimeout(async () => {
+                  if (ac.signal.aborted || isCompleted || hasReceivedQuestion) return;
+                  try {
+                    const pending = await this.listPendingQuestions(sessionId);
+                    if (pending.length > 0) {
+                      callbacks.onQuestion?.(pending[0]);
+                      hasReceivedQuestion = true;
+                      return;
+                    }
+                  } catch { /* ignore */ }
+                  console.log(`[OpenCode] ${ts()} resume: idle confirmed → onComplete`);
+                  isCompleted = true;
+                  ac.abort();
+                  callbacks.onComplete();
+                }, 600);
+              }
+              break;
+            }
+            case 'session.idle': {
+              callbacks.onSessionStatus('idle');
+              if (hasReceivedParts && !hasReceivedQuestion) {
+                setTimeout(async () => {
+                  if (ac.signal.aborted || isCompleted || hasReceivedQuestion) return;
+                  try {
+                    const pending = await this.listPendingQuestions(sessionId);
+                    if (pending.length > 0) {
+                      callbacks.onQuestion?.(pending[0]);
+                      hasReceivedQuestion = true;
+                      return;
+                    }
+                  } catch { /* ignore */ }
+                  isCompleted = true;
+                  ac.abort();
+                  callbacks.onComplete();
+                }, 600);
+              }
+              break;
+            }
+            case 'question.asked': {
+              console.log(`[OpenCode] ${ts()} resume: question.asked`);
+              const questionId = (props.id as string) ?? `q-${Date.now()}`;
+              const rawQuestions = (props.questions as QuestionInfo[]) ?? [];
+              const question: QuestionEvent = {
+                id: questionId,
+                sessionID: evtSid ?? sessionId,
+                questions: rawQuestions,
+                tool: (props.tool as Record<string, unknown>) ?? undefined,
+              };
+              hasReceivedQuestion = true;
+              callbacks.onQuestion?.(question);
+              break;
+            }
+            case 'todo.updated': {
+              callbacks.onTodos?.(props.todos as TodoItem[]);
+              break;
+            }
+            case 'session.error': {
+              const errMsg = ((props.error as Record<string, unknown>)?.message as string) ?? 'Session error';
+              callbacks.onError(errMsg);
+              isCompleted = true;
+              ac.abort();
+              return;
+            }
+            default:
+              break;
+          }
+        }
+        if (!isCompleted && hasReceivedParts) {
+          callbacks.onComplete();
+        }
+      } catch (err: unknown) {
+        const e = err as Error;
+        if (e.name === 'AbortError' || ac.signal.aborted) return;
+        callbacks.onError(e.message ?? 'Unknown stream error');
+      }
+    };
+
+    const eventPromise = processEvents();
+
+    // Safety timeout (5 minutes)
+    const timeoutId = setTimeout(() => {
+      if (!ac.signal.aborted && !isCompleted) {
+        ac.abort();
+        if (hasReceivedParts) callbacks.onComplete();
+        else callbacks.onError('Timeout waiting for response after question reply');
+      }
+    }, 300_000);
+
+    eventPromise.finally(() => clearTimeout(timeoutId));
+  }
+
   // ── Cleanup ─────────────────────────────────────────────────────────────
 
   cleanup(): void {

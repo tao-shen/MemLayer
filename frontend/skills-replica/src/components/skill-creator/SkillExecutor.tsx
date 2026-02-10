@@ -1641,11 +1641,14 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
               <QuestionPanel
                 question={activeQuestion}
                 onAnswer={async (answers) => {
+                  const qSessionId = activeQuestion.sessionID || currentSessionId;
                   try {
                     await opencode.replyQuestion(activeQuestion.id, answers);
                     console.log('[SkillExec] Question answered:', activeQuestion.id, answers);
                   } catch (err) {
                     console.warn('[SkillExec] Failed to reply to question:', err);
+                    setActiveQuestion(null);
+                    return;
                   }
                   setActiveQuestion(null);
                   // Remove this session from pending question indicators
@@ -1654,6 +1657,98 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       const next = new Set(prev);
                       next.delete(activeQuestion.sessionID);
                       return next;
+                    });
+                  }
+                  // ★ After answering, the server continues processing.
+                  // Start SSE stream to capture the AI's continued response.
+                  if (qSessionId) {
+                    console.log('[SkillExec] ★ Starting SSE resume after question reply for session:', qSessionId);
+                    setIsRunning(true);
+                    setSessionStatus('busy');
+
+                    // Add a placeholder assistant entry for the continued response
+                    const resumeId = `resume-${Date.now()}`;
+                    setEntries(prev => [...prev, {
+                      type: 'assistant' as const,
+                      messageId: resumeId,
+                      parts: [],
+                      isComplete: false,
+                    }]);
+
+                    opencode.resumeAfterQuestion(qSessionId, {
+                      onPartUpdated: (rawPart: Part, delta?: string) => {
+                        const part = normalizePart(rawPart);
+                        setEntries((prev) => {
+                          const idx = prev.findIndex(
+                            (e) => e.type === 'assistant' && e.messageId === part.messageID
+                          );
+                          if (idx >= 0) {
+                            const entry = prev[idx] as AssistantEntry;
+                            const partIdx = entry.parts.findIndex((p) => p.id === part.id);
+                            let newParts: Part[];
+                            if (partIdx >= 0) {
+                              newParts = [...entry.parts];
+                              if (part.type === 'text' && delta) {
+                                newParts[partIdx] = {
+                                  ...newParts[partIdx],
+                                  text: ((newParts[partIdx] as TextPart).text || '') + delta,
+                                } as TextPart;
+                              } else {
+                                newParts[partIdx] = normalizePart({ ...newParts[partIdx], ...part });
+                              }
+                            } else {
+                              newParts = [...entry.parts, { ...part }];
+                            }
+                            const newEntries = [...prev];
+                            newEntries[idx] = { ...entry, parts: newParts };
+                            return newEntries;
+                          }
+                          // Bind to pending resume placeholder
+                          const pendingIdx = prev.findIndex(
+                            (e) => e.type === 'assistant' && !e.isComplete && e.messageId.startsWith('resume-')
+                          );
+                          if (pendingIdx >= 0) {
+                            const next = [...prev];
+                            next[pendingIdx] = { ...(next[pendingIdx] as AssistantEntry), messageId: part.messageID, parts: [{ ...part }] };
+                            return next;
+                          }
+                          return [...prev, { type: 'assistant' as const, messageId: part.messageID, parts: [{ ...part }], isComplete: false }];
+                        });
+                      },
+                      onMessageUpdated: (message: Record<string, unknown>) => {
+                        if (message.role === 'assistant') {
+                          setEntries(prev => {
+                            const msgId = message.id as string | undefined;
+                            const idx = msgId ? prev.findIndex(e => e.type === 'assistant' && e.messageId === msgId) : -1;
+                            const pendIdx = prev.findIndex(e => e.type === 'assistant' && !e.isComplete && e.messageId.startsWith('resume-'));
+                            const target = idx >= 0 ? idx : pendIdx;
+                            if (target < 0) return prev;
+                            const next = [...prev];
+                            next[target] = { ...(next[target] as AssistantEntry), messageId: msgId ?? (next[target] as AssistantEntry).messageId, isComplete: message.finish === 'stop' };
+                            return next;
+                          });
+                        }
+                      },
+                      onSessionStatus: (status: string) => setSessionStatus(status),
+                      onComplete: () => {
+                        console.log('[SkillExec] ★ Resume stream completed');
+                        setIsRunning(false);
+                        setSessionStatus('idle');
+                        setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e));
+                      },
+                      onError: (error: string) => {
+                        console.warn('[SkillExec] Resume stream error:', error);
+                        setIsRunning(false);
+                        setConnectionError(error);
+                      },
+                      onTodos: (newTodos: TodoItem[]) => setTodos(newTodos),
+                      onQuestion: (question: QuestionEvent) => {
+                        console.log('[SkillExec] ★ New question during resume:', question.id);
+                        setActiveQuestion(question);
+                        setIsRunning(false);
+                        setSessionStatus('idle');
+                        setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e));
+                      },
                     });
                   }
                 }}
