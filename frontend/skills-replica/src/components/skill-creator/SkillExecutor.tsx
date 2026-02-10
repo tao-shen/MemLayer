@@ -857,6 +857,17 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   // ── Create a new session ────────────────────────────────────────────────
 
   const createNewSession = useCallback(async () => {
+    // If a stream is running, abort it first
+    if (isRunning) {
+      opencode.cleanup();
+      if (currentSessionId) {
+        try { await opencode.abortSession(currentSessionId); } catch { /* ignore */ }
+      }
+      setIsRunning(false);
+      setSessionStatus('idle');
+    }
+    setActiveQuestion(null);
+
     try {
       const session = await opencode.createSession(skill.name);
       setSessions((prev) => [session, ...prev]);
@@ -868,7 +879,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       setConnectionError(`Failed to create session: ${(err as Error).message}`);
       return null;
     }
-  }, [skill.name]);
+  }, [skill.name, isRunning, currentSessionId]);
 
   // ── Switch session ──────────────────────────────────────────────────────
 
