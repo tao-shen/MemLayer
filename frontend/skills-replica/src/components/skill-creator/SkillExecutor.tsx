@@ -35,21 +35,10 @@ import {
   type FilePart,
   type PatchPart,
   type ModelConfig,
+  type ProviderModel,
   type TodoItem,
   type SessionInfo,
 } from '../../lib/opencode-client';
-
-// ---------------------------------------------------------------------------
-// Available models
-// ---------------------------------------------------------------------------
-
-const MODELS: Array<{ label: string; config: ModelConfig }> = [
-  { label: 'Claude Sonnet 4', config: { providerID: 'anthropic', modelID: 'claude-sonnet-4-20250514' } },
-  { label: 'Claude 3.5 Sonnet', config: { providerID: 'anthropic', modelID: 'claude-3-5-sonnet-20241022' } },
-  { label: 'Claude 3.7 Sonnet', config: { providerID: 'anthropic', modelID: 'claude-3-7-sonnet-20250219' } },
-  { label: 'Claude 3 Opus', config: { providerID: 'anthropic', modelID: 'claude-3-opus-20240229' } },
-  { label: 'Claude 3 Haiku', config: { providerID: 'anthropic', modelID: 'claude-3-haiku-20240307' } },
-];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -429,8 +418,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [sessionStatus, setSessionStatus] = useState('');
   const [todos, setTodos] = useState<TodoItem[]>([]);
 
-  // Model state
-  const [selectedModelIdx, setSelectedModelIdx] = useState(0);
+  // Model state – fetched from the server
+  const [models, setModels] = useState<ProviderModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -453,6 +443,21 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           if (!cancelled) setSessions(list);
         } catch {
           // Not critical if listing fails
+        }
+
+        // Fetch available models from the server
+        try {
+          const { models: serverModels, defaultModel } =
+            await opencode.getModels();
+          if (!cancelled && serverModels.length > 0) {
+            setModels(serverModels);
+            setSelectedModel(defaultModel ?? {
+              providerID: serverModels[0].providerID,
+              modelID: serverModels[0].modelID,
+            });
+          }
+        } catch {
+          // Not critical – user just can't pick models
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -678,10 +683,10 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     };
 
     await opencode.sendMessage(sid, text, callbacks, {
-      model: MODELS[selectedModelIdx].config,
+      model: selectedModel ?? undefined,
       system: skill.config.systemPrompt || undefined,
     });
-  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModelIdx, skill.config.systemPrompt]);
+  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skill.config.systemPrompt]);
 
   // ── Abort ───────────────────────────────────────────────────────────────
 
@@ -808,26 +813,73 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                 className="flex items-center gap-2 px-3 py-1.5 text-xs border border-zinc-600 rounded-lg hover:bg-zinc-700/50 text-zinc-300 transition-colors"
               >
                 <Settings className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{MODELS[selectedModelIdx].label}</span>
+                <span className="hidden sm:inline">
+                  {selectedModel
+                    ? models.find(
+                        (m) =>
+                          m.providerID === selectedModel.providerID &&
+                          m.modelID === selectedModel.modelID
+                      )?.name ?? selectedModel.modelID
+                    : 'Select model'}
+                </span>
               </button>
               {showModelPicker && (
-                <div className="absolute right-0 mt-2 w-60 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-72 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-50 overflow-hidden">
                   <div className="p-2 border-b border-zinc-700 bg-zinc-700/30">
                     <p className="text-xs font-medium text-zinc-400">Select Model</p>
                   </div>
-                  {MODELS.map((model, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => { setSelectedModelIdx(idx); setShowModelPicker(false); }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-zinc-700/50 transition-colors ${
-                        selectedModelIdx === idx
-                          ? 'bg-blue-600/20 text-blue-300 font-medium'
-                          : 'text-zinc-300'
-                      }`}
-                    >
-                      {model.label}
-                    </button>
-                  ))}
+                  <div className="max-h-80 overflow-y-auto">
+                    {models.length === 0 && (
+                      <p className="px-3 py-2 text-xs text-zinc-500">
+                        No models available
+                      </p>
+                    )}
+                    {/* Group by provider */}
+                    {Array.from(new Set(models.map((m) => m.providerID))).map(
+                      (pid) => (
+                        <div key={pid}>
+                          <div className="px-3 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/40">
+                            {models.find((m) => m.providerID === pid)
+                              ?.providerName ?? pid}
+                          </div>
+                          {models
+                            .filter((m) => m.providerID === pid)
+                            .map((model) => {
+                              const isSelected =
+                                selectedModel?.providerID ===
+                                  model.providerID &&
+                                selectedModel?.modelID === model.modelID;
+                              return (
+                                <button
+                                  key={`${model.providerID}/${model.modelID}`}
+                                  onClick={() => {
+                                    setSelectedModel({
+                                      providerID: model.providerID,
+                                      modelID: model.modelID,
+                                    });
+                                    setShowModelPicker(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs hover:bg-zinc-700/50 transition-colors flex items-center gap-2 ${
+                                    isSelected
+                                      ? 'bg-blue-600/20 text-blue-300 font-medium'
+                                      : 'text-zinc-300'
+                                  }`}
+                                >
+                                  <span className="truncate flex-1">
+                                    {model.name}
+                                  </span>
+                                  {model.reasoning && (
+                                    <span className="text-[9px] px-1 py-0.5 rounded bg-purple-800/40 text-purple-300">
+                                      reasoning
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
               )}
             </div>

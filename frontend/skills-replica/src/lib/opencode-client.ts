@@ -105,6 +105,15 @@ export interface ModelConfig {
   modelID: string;
 }
 
+export interface ProviderModel {
+  providerID: string;
+  modelID: string;
+  name: string;
+  providerName: string;
+  reasoning: boolean;
+  toolcall: boolean;
+}
+
 export interface SessionInfo {
   id: string;
   title: string;
@@ -168,7 +177,9 @@ class OpenCodeClient {
       return { version };
     } catch (err: unknown) {
       this.client = null;
-      throw new Error(`Cannot reach OpenCode server at ${url}: ${(err as Error).message}`);
+      throw new Error(
+        `Cannot reach OpenCode server at ${url}: ${(err as Error).message}`
+      );
     }
   }
 
@@ -216,10 +227,49 @@ class OpenCodeClient {
 
   // ── Providers / Models ──────────────────────────────────────────────────
 
-  async getProviders(): Promise<unknown> {
+  async getModels(): Promise<{
+    models: ProviderModel[];
+    defaultModel: ModelConfig | null;
+  }> {
     this.ensureClient();
     const result = await this.client.config.providers();
-    return result?.data ?? result;
+    const data = result?.data ?? result;
+
+    const providers: Array<{
+      id: string;
+      name: string;
+      models: Record<
+        string,
+        { id?: string; name?: string; capabilities?: Record<string, unknown> }
+      >;
+    }> = data?.providers ?? [];
+
+    const defaultCfg = data?.default as Record<string, string> | undefined;
+
+    const models: ProviderModel[] = [];
+    for (const provider of providers) {
+      if (!provider.models) continue;
+      for (const [modelKey, model] of Object.entries(provider.models)) {
+        models.push({
+          providerID: provider.id,
+          modelID: model.id ?? modelKey,
+          name: model.name ?? modelKey,
+          providerName: provider.name ?? provider.id,
+          reasoning: !!(model.capabilities as Record<string, unknown>)
+            ?.reasoning,
+          toolcall: !!(model.capabilities as Record<string, unknown>)?.toolcall,
+        });
+      }
+    }
+
+    const defaultModel: ModelConfig | null =
+      defaultCfg?.providerID && defaultCfg?.modelID
+        ? { providerID: defaultCfg.providerID, modelID: defaultCfg.modelID }
+        : models.length > 0
+          ? { providerID: models[0].providerID, modelID: models[0].modelID }
+          : null;
+
+    return { models, defaultModel };
   }
 
   // ── Send message with streaming ─────────────────────────────────────────
@@ -243,8 +293,11 @@ class OpenCodeClient {
     let isCompleted = false;
     let hasReceivedParts = false;
 
+    // Track which message IDs are user vs assistant so we can filter echoes
+    const userMessageIds = new Set<string>();
+    const assistantMessageIds = new Set<string>();
+
     // 1. Subscribe to the global event stream BEFORE sending the prompt
-    //    event.subscribe() returns { stream: AsyncGenerator<Event> }
     const subscription = await this.client.event.subscribe();
     const eventStream = subscription.stream;
 
@@ -253,7 +306,6 @@ class OpenCodeClient {
         for await (const event of eventStream) {
           if (ac.signal.aborted) break;
 
-          // Each event is a typed Event union: { type, properties }
           const eventType: string | undefined = event?.type;
           const props: Record<string, unknown> = event?.properties ?? {};
 
@@ -268,25 +320,49 @@ class OpenCodeClient {
           if (evtSid && evtSid !== sessionId) continue;
 
           switch (eventType) {
-            // ── Part updates ────────────────────────────────────────────
-            case 'message.part.updated': {
-              const part = props.part as Part | undefined;
-              if (!part) break;
-              hasReceivedParts = true;
-              callbacks.onPartUpdated(part, props.delta as string | undefined);
-              break;
-            }
-
             // ── Message lifecycle ───────────────────────────────────────
+            // IMPORTANT: process this BEFORE part updates so we know roles
             case 'message.updated': {
               const info = (props.info ?? props) as Record<string, unknown>;
-              callbacks.onMessageUpdated(info);
-              if (info.role === 'assistant' && info.finish === 'stop') {
+              const msgId = info.id as string | undefined;
+              const role = info.role as string | undefined;
+
+              // Track message roles
+              if (msgId && role === 'user') {
+                userMessageIds.add(msgId);
+              } else if (msgId && role === 'assistant') {
+                assistantMessageIds.add(msgId);
+              }
+
+              // Only forward assistant messages to UI
+              if (role === 'assistant') {
+                callbacks.onMessageUpdated(info);
+              }
+
+              if (role === 'assistant' && info.finish === 'stop') {
                 isCompleted = true;
                 ac.abort();
                 callbacks.onComplete();
                 return;
               }
+              break;
+            }
+
+            // ── Part updates ────────────────────────────────────────────
+            case 'message.part.updated': {
+              const part = props.part as Part | undefined;
+              if (!part) break;
+
+              // SKIP user message parts (the echo of what we sent)
+              if (userMessageIds.has(part.messageID)) break;
+
+              // If we haven't seen a message.updated for this messageID yet
+              // but it's also not a user message, assume it's assistant
+              hasReceivedParts = true;
+              callbacks.onPartUpdated(
+                part,
+                props.delta as string | undefined
+              );
               break;
             }
 
@@ -336,7 +412,9 @@ class OpenCodeClient {
 
             // ── Session errors ──────────────────────────────────────────
             case 'session.error': {
-              const errInfo = props.error as Record<string, unknown> | undefined;
+              const errInfo = props.error as
+                | Record<string, unknown>
+                | undefined;
               const errMsg =
                 (errInfo?.message as string) ?? 'Unknown session error';
               callbacks.onError(errMsg);
@@ -352,7 +430,9 @@ class OpenCodeClient {
           if (hasReceivedParts) {
             callbacks.onComplete();
           } else {
-            callbacks.onError('Event stream ended without receiving any response');
+            callbacks.onError(
+              'Event stream ended without receiving any response'
+            );
           }
         }
       } catch (err: unknown) {
@@ -369,7 +449,8 @@ class OpenCodeClient {
     // Small delay to ensure the event listener is active
     await new Promise((r) => setTimeout(r, 200));
 
-    // 2. Send the prompt via session.prompt()
+    // 2. Send the prompt via session.promptAsync() — returns immediately,
+    //    the response streams back through the SSE events above.
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const body: Record<string, any> = {
@@ -385,7 +466,7 @@ class OpenCodeClient {
         body.system = options.system;
       }
 
-      await this.client.session.prompt({
+      await this.client.session.promptAsync({
         path: { id: sessionId },
         body,
       });
