@@ -1680,6 +1680,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     opencode.resumeAfterQuestion(qSessionId, activeQuestion.id, answers, {
                       onPartUpdated: (rawPart: Part, delta?: string) => {
                         const part = normalizePart(rawPart);
+                        console.log(`[SkillExec-Resume] onPartUpdated: type=${part.type}, msgId=${part.messageID}, delta=${delta ? delta.length + 'ch' : 'none'}`);
                         setEntries((prev) => {
                           const idx = prev.findIndex(
                             (e) => e.type === 'assistant' && e.messageId === part.messageID
@@ -1718,8 +1719,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                         }
                       },
                       onSessionStatus: (status: string) => setSessionStatus(status),
-                      onComplete: () => { setIsRunning(false); setSessionStatus('idle'); setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e)); },
-                      onError: (err: string) => { setIsRunning(false); setConnectionError(err); },
+                      onComplete: () => { console.log('[SkillExec-Resume] ★ onComplete'); setIsRunning(false); setSessionStatus('idle'); setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e)); },
+                      onError: (err: string) => { console.log('[SkillExec-Resume] ★ onError:', err); setIsRunning(false); setConnectionError(err); },
                       onTodos: (newTodos: TodoItem[]) => setTodos(newTodos),
                       onQuestion: (q: QuestionEvent) => { setActiveQuestion(q); setIsRunning(false); setSessionStatus('idle'); setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e)); },
                     });
