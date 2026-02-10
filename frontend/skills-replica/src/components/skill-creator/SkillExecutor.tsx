@@ -543,12 +543,69 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
   // ── Switch session ──────────────────────────────────────────────────────
 
-  const switchSession = useCallback((id: string) => {
+  const switchSession = useCallback(async (id: string) => {
     if (isRunning) return;
     setCurrentSessionId(id);
     setEntries([]);
     setTodos([]);
-    // We could load message history here in the future
+
+    // Load message history from the server
+    try {
+      const session = await opencode.getSession(id);
+      const messages = session.messages as Record<string, unknown>[] | undefined;
+      if (!messages || !Array.isArray(messages) || messages.length === 0) return;
+
+      const loaded: ChatEntry[] = [];
+      for (const msg of messages) {
+        const role = msg.role as string;
+        if (role === 'user') {
+          // Extract user text from parts
+          const parts = msg.parts as Record<string, unknown>[] | undefined;
+          const text = parts
+            ?.filter((p) => p.type === 'text')
+            .map((p) => (p as { text?: string }).text ?? '')
+            .join('\n') || '';
+          if (text) {
+            loaded.push({
+              type: 'user',
+              text,
+              time: (msg.time as { created?: number })?.created ?? Date.now(),
+            });
+          }
+        } else if (role === 'assistant') {
+          const rawParts = msg.parts as Record<string, unknown>[] | undefined;
+          const chatParts: Part[] = (rawParts ?? []).map((p) => ({
+            id: (p.id as string) ?? `part-${Date.now()}-${Math.random()}`,
+            sessionID: id,
+            messageID: (msg.id as string) ?? '',
+            type: (p.type as string) ?? 'text',
+            ...(p.type === 'text' ? { text: (p.text as string) ?? '' } : {}),
+            ...(p.type === 'reasoning' ? { reasoning: (p.reasoning as string) ?? '' } : {}),
+            ...(p.type === 'tool-invocation' ? {
+              toolName: (p.toolName as string) ?? '',
+              args: p.args,
+              result: p.result,
+              state: (p.state as string) ?? 'completed',
+            } : {}),
+          })) as Part[];
+
+          loaded.push({
+            type: 'assistant',
+            messageId: (msg.id as string) ?? `msg-${Date.now()}`,
+            parts: chatParts,
+            isComplete: true,
+            cost: msg.cost as number | undefined,
+            tokens: msg.tokens as AssistantEntry['tokens'] | undefined,
+          });
+        }
+      }
+
+      if (loaded.length > 0) {
+        setEntries(loaded);
+      }
+    } catch (err) {
+      console.warn('[SkillExecutor] Failed to load session messages:', err);
+    }
   }, [isRunning]);
 
   // ── Delete session ──────────────────────────────────────────────────────

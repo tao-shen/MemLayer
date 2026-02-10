@@ -248,6 +248,16 @@ class OpenCodeClient {
     await this.client.session.abort({ path: { id } });
   }
 
+  /**
+   * Fetch full session details (including messages) from the server.
+   * Returns the raw session object from `/session/{id}`.
+   */
+  async getSession(id: string): Promise<Record<string, unknown>> {
+    this.ensureClient();
+    const result = await this.client.session.get({ path: { id } });
+    return (result?.data ?? result) as Record<string, unknown>;
+  }
+
   // ── Providers / Models ──────────────────────────────────────────────────
 
   async getModels(): Promise<{
@@ -352,7 +362,7 @@ class OpenCodeClient {
         const parts = buffer.split('\n\n');
         buffer = parts.pop() ?? '';
 
-        let lastYield = performance.now();
+        let eventsSinceYield = 0;
 
         for (const raw of parts) {
           if (!raw.trim()) continue;
@@ -386,14 +396,16 @@ class OpenCodeClient {
           );
 
           yield { event: eventName, data };
+          eventsSinceYield++;
 
-          // Every ~16ms (one animation frame), yield to the browser so React
-          // can flush pending state updates and repaint.  This turns a single
-          // 80-event burst into several smaller render-friendly batches.
-          const elapsed = performance.now() - lastYield;
-          if (elapsed > 16) {
+          // Every 8 events, yield to the browser so React can flush pending
+          // state updates and repaint.  Time-based thresholds don't work here
+          // because 40+ events can be processed in < 5ms — too fast for the
+          // 16ms frame budget to ever trigger.  Count-based yields ensure the
+          // UI updates progressively even within a single large chunk.
+          if (eventsSinceYield >= 8) {
             await yieldToUI();
-            lastYield = performance.now();
+            eventsSinceYield = 0;
           }
         }
       }
