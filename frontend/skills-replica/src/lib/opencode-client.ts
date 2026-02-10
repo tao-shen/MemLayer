@@ -304,6 +304,48 @@ class OpenCodeClient {
   }
 
   /**
+   * List all pending questions from the server.
+   * This is the PRIMARY method for getting pending questions – much more
+   * reliable than relying on SSE events alone.
+   */
+  async listPendingQuestions(sessionID?: string): Promise<QuestionEvent[]> {
+    const auth = getBasicAuthHeader();
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (auth) headers['Authorization'] = auth;
+
+    try {
+      const resp = await fetch(`${this.baseUrl}/question`, { headers });
+      if (!resp.ok) {
+        console.warn(`[OpenCode] listPendingQuestions: HTTP ${resp.status}`);
+        return [];
+      }
+      const data = await resp.json();
+      const rawList: Array<Record<string, unknown>> = Array.isArray(data) ? data : [];
+
+      console.log(`[OpenCode] listPendingQuestions: got ${rawList.length} pending questions`);
+      rawList.forEach((q, i) => {
+        console.log(`[OpenCode]   question[${i}]: id=${q.id}, sessionID=${q.sessionID}, questions=${JSON.stringify(q.questions)?.slice(0, 200)}`);
+      });
+
+      // Map to QuestionEvent and optionally filter by session
+      const mapped: QuestionEvent[] = rawList.map((q) => ({
+        id: (q.id as string) ?? `q-${Date.now()}`,
+        sessionID: (q.sessionID as string) ?? '',
+        questions: (q.questions as QuestionInfo[]) ?? [],
+        tool: (q.tool as Record<string, unknown>) ?? undefined,
+      }));
+
+      if (sessionID) {
+        return mapped.filter((q) => q.sessionID === sessionID);
+      }
+      return mapped;
+    } catch (err) {
+      console.warn('[OpenCode] listPendingQuestions error:', err);
+      return [];
+    }
+  }
+
+  /**
    * Fetch full session details (including messages) from the server.
    * Returns the raw session object from `/session/{id}`.
    */
@@ -534,6 +576,7 @@ class OpenCodeClient {
 
     let isCompleted = false;
     let hasReceivedParts = false;
+    let hasReceivedQuestion = false;
 
     // Track which message IDs are user vs assistant so we can filter echoes
     const userMessageIds = new Set<string>();
@@ -593,11 +636,15 @@ class OpenCodeClient {
               }
 
               if (role === 'assistant' && info.finish === 'stop') {
-                console.log(`[OpenCode] ${ts()} ✓ assistant finished (stop)`);
-                isCompleted = true;
-                ac.abort();
-                callbacks.onComplete();
-                return;
+                if (hasReceivedQuestion) {
+                  console.log(`[OpenCode] ${ts()} assistant finished (stop) but question pending – skipping onComplete`);
+                } else {
+                  console.log(`[OpenCode] ${ts()} ✓ assistant finished (stop)`);
+                  isCompleted = true;
+                  ac.abort();
+                  callbacks.onComplete();
+                  return;
+                }
               }
               break;
             }
@@ -633,26 +680,57 @@ class OpenCodeClient {
                 typeof statusObj === 'string'
                   ? statusObj
                   : ((statusObj?.type as string) ?? '');
-              console.log(`[OpenCode] ${ts()} session.status → "${status}"`);
+              console.log(`[OpenCode] ${ts()} session.status → "${status}" (hasReceivedParts=${hasReceivedParts}, hasReceivedQuestion=${hasReceivedQuestion})`);
               callbacks.onSessionStatus(status);
-              if (status === 'idle' && hasReceivedParts) {
-                console.log(`[OpenCode] ${ts()} ✓ session idle after parts received`);
-                isCompleted = true;
-                ac.abort();
-                callbacks.onComplete();
-                return;
+
+              // Don't auto-complete if the AI asked a question (the session
+              // goes idle while waiting for the user's answer)
+              if (status === 'idle' && hasReceivedParts && !hasReceivedQuestion) {
+                // Delay completion slightly so a question.asked event in the
+                // same or next chunk can still be processed
+                console.log(`[OpenCode] ${ts()} session idle – scheduling completion check in 600ms`);
+                setTimeout(async () => {
+                  if (ac.signal.aborted || isCompleted || hasReceivedQuestion) return;
+                  // Double-check: poll the /question endpoint for any pending questions
+                  try {
+                    const pending = await this.listPendingQuestions(sessionId);
+                    if (pending.length > 0) {
+                      console.log(`[OpenCode] ${ts()} Found ${pending.length} pending questions on idle – NOT completing`);
+                      callbacks.onQuestion?.(pending[0]);
+                      hasReceivedQuestion = true;
+                      return;
+                    }
+                  } catch { /* ignore */ }
+                  console.log(`[OpenCode] ${ts()} ✓ session idle confirmed → onComplete`);
+                  isCompleted = true;
+                  ac.abort();
+                  callbacks.onComplete();
+                }, 600);
               }
               break;
             }
 
             case 'session.idle': {
-              console.log(`[OpenCode] ${ts()} session.idle`);
+              console.log(`[OpenCode] ${ts()} session.idle (hasReceivedParts=${hasReceivedParts}, hasReceivedQuestion=${hasReceivedQuestion})`);
               callbacks.onSessionStatus('idle');
-              if (hasReceivedParts) {
-                isCompleted = true;
-                ac.abort();
-                callbacks.onComplete();
-                return;
+              if (hasReceivedParts && !hasReceivedQuestion) {
+                // Same delayed check as session.status idle
+                setTimeout(async () => {
+                  if (ac.signal.aborted || isCompleted || hasReceivedQuestion) return;
+                  try {
+                    const pending = await this.listPendingQuestions(sessionId);
+                    if (pending.length > 0) {
+                      console.log(`[OpenCode] ${ts()} Found ${pending.length} pending questions on session.idle – NOT completing`);
+                      callbacks.onQuestion?.(pending[0]);
+                      hasReceivedQuestion = true;
+                      return;
+                    }
+                  } catch { /* ignore */ }
+                  console.log(`[OpenCode] ${ts()} ✓ session.idle confirmed → onComplete`);
+                  isCompleted = true;
+                  ac.abort();
+                  callbacks.onComplete();
+                }, 600);
               }
               break;
             }
@@ -669,16 +747,23 @@ class OpenCodeClient {
             }
 
             case 'question.asked': {
-              console.log(`[OpenCode] ${ts()} question.asked – keys:`, Object.keys(props));
+              console.log(`[OpenCode] ${ts()} ★ question.asked – full event:`, JSON.stringify(event).slice(0, 500));
+              console.log(`[OpenCode] ${ts()} ★ question.asked – props keys:`, Object.keys(props));
+              console.log(`[OpenCode] ${ts()} ★ question.asked – props.id=${props.id}, props.sessionID=${props.sessionID}`);
+              console.log(`[OpenCode] ${ts()} ★ question.asked – props.questions:`, JSON.stringify(props.questions)?.slice(0, 500));
+
               const questionId = (props.id as string) ?? (event.id as string) ?? `q-${Date.now()}`;
               const rawQuestions = (props.questions as QuestionInfo[]) ?? [];
               const question: QuestionEvent = {
                 id: questionId,
-                sessionID: evtSid,
+                sessionID: evtSid ?? sessionId,
                 questions: rawQuestions,
                 tool: (props.tool as Record<string, unknown>) ?? undefined,
               };
-              console.log(`[OpenCode] ${ts()} → onQuestion:`, JSON.stringify(question));
+
+              hasReceivedQuestion = true;
+
+              console.log(`[OpenCode] ${ts()} ★ → onQuestion (${rawQuestions.length} questions):`, JSON.stringify(question).slice(0, 500));
               callbacks.onQuestion?.(question);
               break;
             }

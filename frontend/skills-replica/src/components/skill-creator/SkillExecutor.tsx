@@ -532,11 +532,14 @@ function QuestionPanel({
   onAnswer: (answers: string[][]) => void;
   onReject: () => void;
 }) {
+  console.log('[QuestionPanel] RENDERING with question:', question.id, 'questions:', question.questions?.length);
+
   const [selections, setSelections] = useState<Record<number, string[]>>({});
   const [customInputs, setCustomInputs] = useState<Record<number, string>>({});
   const [showCustom, setShowCustom] = useState<Record<number, boolean>>({});
 
   const handleOptionToggle = (qIdx: number, label: string, multiple?: boolean) => {
+    console.log(`[QuestionPanel] Option toggled: qIdx=${qIdx}, label="${label}", multiple=${multiple}`);
     setSelections((prev) => {
       const current = prev[qIdx] ?? [];
       if (multiple) {
@@ -560,6 +563,7 @@ function QuestionPanel({
       if (custom) return [...selected, custom];
       return selected;
     });
+    console.log(`[QuestionPanel] SUBMIT answers:`, JSON.stringify(answers));
     onAnswer(answers);
   };
 
@@ -841,6 +845,18 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [entries]);
 
+  // ── Debug: log activeQuestion state changes ─────────────────────────────
+
+  useEffect(() => {
+    if (activeQuestion) {
+      console.log(`[SkillExec] ★ activeQuestion SET:`, JSON.stringify(activeQuestion).slice(0, 400));
+      console.log(`[SkillExec] ★ activeQuestion.questions.length = ${activeQuestion.questions?.length ?? 0}`);
+      console.log(`[SkillExec] ★ QuestionPanel SHOULD RENDER: ${activeQuestion.questions?.length > 0 ? 'YES' : 'NO (empty questions array)'}`);
+    } else {
+      console.log('[SkillExec] activeQuestion CLEARED (null)');
+    }
+  }, [activeQuestion]);
+
   // ── Close model picker on outside click ─────────────────────────────────
 
   useEffect(() => {
@@ -913,20 +929,32 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       if (!Array.isArray(messages) || messages.length === 0) {
         console.warn(`[SkillExecutor] switchSession(${id}) has no messages`);
         setEntries([]);
-        return;
+      } else {
+        const loaded = mapSessionMessagesToEntries(messages, id);
+        console.log(`[SkillExecutor] switchSession(${id}) parsed entries=${loaded.length}`);
+        if (loaded.length === 0) {
+          console.warn(`[SkillExecutor] switchSession(${id}) parse result empty`, messages);
+          setEntries([]);
+        } else {
+          setEntries(loaded);
+        }
       }
-      const loaded = mapSessionMessagesToEntries(messages, id);
-      console.log(`[SkillExecutor] switchSession(${id}) parsed entries=${loaded.length}`);
-      if (loaded.length === 0) {
-        console.warn(`[SkillExecutor] switchSession(${id}) parse result empty`, messages);
-        setEntries([]);
-        return;
-      }
-      setEntries(loaded);
     } catch (err) {
       console.warn('[SkillExecutor] Failed to load session messages:', err);
       // Keep previous content if fetch failed, avoid "click -> blank".
       setEntries(prevEntries);
+    }
+
+    // After loading history, check for pending questions for this session
+    try {
+      const pending = await opencode.listPendingQuestions(id);
+      console.log(`[SkillExecutor] switchSession(${id}) pending questions: ${pending.length}`);
+      if (pending.length > 0) {
+        console.log(`[SkillExecutor] switchSession(${id}) ★ restoring pending question:`, JSON.stringify(pending[0]).slice(0, 300));
+        setActiveQuestion(pending[0]);
+      }
+    } catch (err) {
+      console.warn('[SkillExecutor] Failed to check pending questions:', err);
     }
   }, [isRunning, currentSessionId, entries]);
 
@@ -1172,7 +1200,14 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       },
 
       onQuestion: (question: QuestionEvent) => {
-        console.log(`[SkillExec] ${cbTs()} onQuestion:`, question);
+        console.log(`[SkillExec] ${cbTs()} ★★★ onQuestion FIRED ★★★`);
+        console.log(`[SkillExec] ${cbTs()} onQuestion id=${question.id}, sessionID=${question.sessionID}, questions.length=${question.questions?.length ?? 0}`);
+        console.log(`[SkillExec] ${cbTs()} onQuestion full:`, JSON.stringify(question).slice(0, 500));
+        if (question.questions) {
+          question.questions.forEach((q, i) => {
+            console.log(`[SkillExec] ${cbTs()} onQuestion q[${i}]: header="${q.header}", question="${q.question}", options=${q.options?.length ?? 0}, multiple=${q.multiple}, custom=${q.custom}`);
+          });
+        }
         // When the AI asks a question, it's waiting for user input.
         // Store the question so we can show interactive UI
         setActiveQuestion(question);
