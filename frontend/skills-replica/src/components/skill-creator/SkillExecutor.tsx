@@ -1743,6 +1743,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       opencode.signalQuestionAnswered();
                     } catch (err) {
                       console.warn('[SkillExec] Failed to reply:', err);
+                      setIsRunning(false);
+                      setSessionStatus('idle');
                     }
                   } else if (qSessionId) {
                     // No active stream — open a new one
@@ -1824,6 +1826,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       opencode.signalQuestionAnswered();
                     } catch (err) {
                       console.warn('[SkillExec] Failed to reject:', err);
+                      setIsRunning(false);
+                      setSessionStatus('idle');
                     }
                   } else if (qSessionId) {
                     // No active stream — open a new one with reject action
