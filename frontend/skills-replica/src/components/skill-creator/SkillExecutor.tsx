@@ -40,6 +40,7 @@ import {
   type TodoItem,
   type SessionInfo,
   type QuestionEvent,
+  type QuestionInfo,
 } from '../../lib/opencode-client';
 
 // ---------------------------------------------------------------------------
@@ -519,6 +520,149 @@ function TodosView({ todos }: { todos: TodoItem[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Question interactive panel
+// ---------------------------------------------------------------------------
+
+function QuestionPanel({
+  question,
+  onAnswer,
+  onReject,
+}: {
+  question: QuestionEvent;
+  onAnswer: (answers: string[][]) => void;
+  onReject: () => void;
+}) {
+  const [selections, setSelections] = useState<Record<number, string[]>>({});
+  const [customInputs, setCustomInputs] = useState<Record<number, string>>({});
+  const [showCustom, setShowCustom] = useState<Record<number, boolean>>({});
+
+  const handleOptionToggle = (qIdx: number, label: string, multiple?: boolean) => {
+    setSelections((prev) => {
+      const current = prev[qIdx] ?? [];
+      if (multiple) {
+        // Multi-select: toggle
+        return {
+          ...prev,
+          [qIdx]: current.includes(label)
+            ? current.filter((l) => l !== label)
+            : [...current, label],
+        };
+      }
+      // Single-select: replace
+      return { ...prev, [qIdx]: [label] };
+    });
+  };
+
+  const handleSubmit = () => {
+    const answers = question.questions.map((q, idx) => {
+      const selected = selections[idx] ?? [];
+      const custom = customInputs[idx]?.trim();
+      if (custom) return [...selected, custom];
+      return selected;
+    });
+    onAnswer(answers);
+  };
+
+  const hasSelection = question.questions.some((_, idx) => {
+    const sel = selections[idx] ?? [];
+    const cust = customInputs[idx]?.trim();
+    return sel.length > 0 || (cust && cust.length > 0);
+  });
+
+  return (
+    <div className="mx-4 mb-2 rounded-xl border border-blue-500/30 bg-blue-950/20 overflow-hidden">
+      <div className="px-4 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
+        <span className="text-xs font-medium text-blue-300 flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5" />
+          AI is asking a question — please select or type a response
+        </span>
+        <button
+          onClick={onReject}
+          className="text-[10px] text-zinc-400 hover:text-red-400 transition-colors px-2 py-0.5 rounded"
+          title="Dismiss question"
+        >
+          Dismiss
+        </button>
+      </div>
+      {question.questions.map((q, qIdx) => (
+        <div key={qIdx} className="px-4 py-3 border-b border-zinc-700/30 last:border-b-0">
+          {q.header && (
+            <div className="text-xs font-semibold text-zinc-300 mb-1">{q.header}</div>
+          )}
+          <div className="text-sm text-zinc-200 mb-2">{q.question}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {q.options.map((opt, optIdx) => {
+              const isSelected = (selections[qIdx] ?? []).includes(opt.label);
+              return (
+                <button
+                  key={optIdx}
+                  onClick={() => handleOptionToggle(qIdx, opt.label, q.multiple)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                    isSelected
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-blue-500/50 hover:bg-zinc-700'
+                  }`}
+                  title={opt.description ?? opt.label}
+                >
+                  {q.multiple && (
+                    <span className="mr-1">{isSelected ? '☑' : '☐'}</span>
+                  )}
+                  {opt.label}
+                </button>
+              );
+            })}
+            {q.custom !== false && (
+              <button
+                onClick={() => setShowCustom((prev) => ({ ...prev, [qIdx]: !prev[qIdx] }))}
+                className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                  showCustom[qIdx]
+                    ? 'bg-zinc-700 border-zinc-500 text-zinc-200'
+                    : 'bg-zinc-800 border-zinc-600 text-zinc-400 hover:border-zinc-500'
+                }`}
+              >
+                Other…
+              </button>
+            )}
+          </div>
+          {showCustom[qIdx] && (
+            <input
+              type="text"
+              value={customInputs[qIdx] ?? ''}
+              onChange={(e) =>
+                setCustomInputs((prev) => ({ ...prev, [qIdx]: e.target.value }))
+              }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && hasSelection) handleSubmit();
+              }}
+              placeholder="Type your custom answer…"
+              className="mt-2 w-full px-3 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded-lg
+                text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+              autoFocus
+            />
+          )}
+        </div>
+      ))}
+      <div className="px-4 py-2 bg-zinc-800/30 flex justify-end gap-2">
+        <button
+          onClick={onReject}
+          className="px-3 py-1.5 text-xs rounded-lg bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition-colors"
+        >
+          Skip
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={!hasSelection}
+          className="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-500
+            disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors"
+        >
+          Submit Answer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Session sidebar
 // ---------------------------------------------------------------------------
 
@@ -602,6 +746,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionStatus, setSessionStatus] = useState('');
   const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [activeQuestion, setActiveQuestion] = useState<QuestionEvent | null>(null);
 
   // Model state – fetched from the server
   const [models, setModels] = useState<ProviderModel[]>([]);
@@ -728,12 +873,22 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   // ── Switch session ──────────────────────────────────────────────────────
 
   const switchSession = useCallback(async (id: string) => {
-    if (isRunning) return;
     if (id === currentSessionId) return;
+
+    // If a stream is running, abort it first before switching
+    if (isRunning) {
+      opencode.cleanup();
+      if (currentSessionId) {
+        try { await opencode.abortSession(currentSessionId); } catch { /* ignore */ }
+      }
+      setIsRunning(false);
+      setSessionStatus('idle');
+    }
 
     const prevEntries = entries;
     setCurrentSessionId(id);
     setTodos([]);
+    setActiveQuestion(null);
 
     // Load message history from the server
     try {
@@ -789,6 +944,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     setInput('');
     setIsRunning(true);
     setConnectionError(null);
+    setActiveQuestion(null);
 
     // Ensure we have a session
     let sid = currentSessionId;
@@ -1007,6 +1163,8 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       onQuestion: (question: QuestionEvent) => {
         console.log(`[SkillExec] ${cbTs()} onQuestion:`, question);
         // When the AI asks a question, it's waiting for user input.
+        // Store the question so we can show interactive UI
+        setActiveQuestion(question);
         // Mark the current response as complete and stop "running" state
         // so the user can type their answer in the input box.
         setIsRunning(false);
@@ -1407,6 +1565,31 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
               <div ref={messagesEndRef} />
             </div>
+
+            {/* ── Question panel ──────────────────────────────────────── */}
+            {activeQuestion && activeQuestion.questions.length > 0 && (
+              <QuestionPanel
+                question={activeQuestion}
+                onAnswer={async (answers) => {
+                  try {
+                    await opencode.replyQuestion(activeQuestion.id, answers);
+                    console.log('[SkillExec] Question answered:', activeQuestion.id, answers);
+                  } catch (err) {
+                    console.warn('[SkillExec] Failed to reply to question:', err);
+                  }
+                  setActiveQuestion(null);
+                }}
+                onReject={async () => {
+                  try {
+                    await opencode.rejectQuestion(activeQuestion.id);
+                    console.log('[SkillExec] Question rejected:', activeQuestion.id);
+                  } catch (err) {
+                    console.warn('[SkillExec] Failed to reject question:', err);
+                  }
+                  setActiveQuestion(null);
+                }}
+              />
+            )}
 
             {/* ── Input area ─────────────────────────────────────────── */}
             <div className="px-4 py-3 border-t border-zinc-700/50 bg-zinc-800/30 shrink-0">

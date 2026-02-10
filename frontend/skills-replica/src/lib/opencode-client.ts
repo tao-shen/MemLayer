@@ -148,13 +148,21 @@ export interface TodoItem {
 // Stream callbacks
 // ---------------------------------------------------------------------------
 
+/** A single question within a question.asked request */
+export interface QuestionInfo {
+  question: string;
+  header: string;
+  options: { label: string; description?: string }[];
+  multiple?: boolean;
+  custom?: boolean;
+}
+
+/** The full question.asked event payload from OpenCode */
 export interface QuestionEvent {
   id: string;
-  title?: string;
-  message?: string;
-  options?: { label: string; value: string }[];
-  type?: string;
-  sessionID?: string;
+  sessionID: string;
+  questions: QuestionInfo[];
+  tool?: Record<string, unknown>;
 }
 
 export interface StreamCallbacks {
@@ -256,6 +264,35 @@ class OpenCodeClient {
   async abortSession(id: string): Promise<void> {
     this.ensureClient();
     await this.client.session.abort({ path: { id } });
+  }
+
+  /**
+   * Reply to a question.asked event with selected answers.
+   * Each element of `answers` is an array of selected option labels for
+   * the corresponding question in the request.
+   */
+  async replyQuestion(requestID: string, answers: string[][]): Promise<boolean> {
+    const resp = await fetch(`${this.baseUrl}/question/${requestID}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to reply to question ${requestID}: ${resp.status}`);
+    }
+    return true;
+  }
+
+  /** Reject / dismiss a question.asked request. */
+  async rejectQuestion(requestID: string): Promise<boolean> {
+    const resp = await fetch(`${this.baseUrl}/question/${requestID}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to reject question ${requestID}: ${resp.status}`);
+    }
+    return true;
   }
 
   /**
@@ -626,13 +663,12 @@ class OpenCodeClient {
             case 'question.asked': {
               console.log(`[OpenCode] ${ts()} question.asked – keys:`, Object.keys(props));
               const questionId = (props.id as string) ?? (event.id as string) ?? `q-${Date.now()}`;
+              const rawQuestions = (props.questions as QuestionInfo[]) ?? [];
               const question: QuestionEvent = {
                 id: questionId,
-                title: (props.title as string) ?? undefined,
-                message: (props.message as string) ?? (props.text as string) ?? undefined,
-                options: (props.options as QuestionEvent['options']) ?? undefined,
-                type: (props.type as string) ?? 'question',
                 sessionID: evtSid,
+                questions: rawQuestions,
+                tool: (props.tool as Record<string, unknown>) ?? undefined,
               };
               console.log(`[OpenCode] ${ts()} → onQuestion:`, JSON.stringify(question));
               callbacks.onQuestion?.(question);
