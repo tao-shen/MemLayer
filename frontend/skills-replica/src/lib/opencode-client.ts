@@ -327,6 +327,12 @@ class OpenCodeClient {
     let buffer = '';
     let chunkIndex = 0;
 
+    // Helper: yield control to the browser so React can render between events.
+    // Without this, a large chunk (e.g. 14 KB / 80 events) would be processed
+    // synchronously, React would batch all setState calls, and the UI would
+    // only update AFTER the entire chunk is consumed.
+    const yieldToUI = () => new Promise<void>((r) => setTimeout(r, 0));
+
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -345,6 +351,8 @@ class OpenCodeClient {
         // SSE events are separated by double newline
         const parts = buffer.split('\n\n');
         buffer = parts.pop() ?? '';
+
+        let lastYield = performance.now();
 
         for (const raw of parts) {
           if (!raw.trim()) continue;
@@ -378,6 +386,15 @@ class OpenCodeClient {
           );
 
           yield { event: eventName, data };
+
+          // Every ~16ms (one animation frame), yield to the browser so React
+          // can flush pending state updates and repaint.  This turns a single
+          // 80-event burst into several smaller render-friendly batches.
+          const elapsed = performance.now() - lastYield;
+          if (elapsed > 16) {
+            await yieldToUI();
+            lastYield = performance.now();
+          }
         }
       }
     } finally {
