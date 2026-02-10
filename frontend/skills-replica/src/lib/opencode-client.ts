@@ -7,7 +7,7 @@ import { createOpencodeClient } from '@opencode-ai/sdk/client';
 const OPENCODE_SERVER_URL =
   import.meta.env.VITE_OPENCODE_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
+  'https://tao-shen-opencode.hf.space';
 
 // ---------------------------------------------------------------------------
 // Types – mirrors the OpenCode SDK part types
@@ -298,7 +298,8 @@ class OpenCodeClient {
     const assistantMessageIds = new Set<string>();
 
     // 1. Subscribe to the global event stream BEFORE sending the prompt
-    const subscription = await this.client.event.subscribe();
+    // Use global.event() — server exposes SSE at GET /global/event (not /event)
+    const subscription = await this.client.global.event();
     const eventStream = subscription.stream;
 
     const processEvents = async () => {
@@ -509,6 +510,39 @@ class OpenCodeClient {
       );
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Skill SKILL.md fetcher
+// ---------------------------------------------------------------------------
+
+export interface ParsedSkillMd {
+  name: string;
+  description: string;
+  instructions: string;
+}
+
+export async function fetchSkillMd(url: string): Promise<ParsedSkillMd> {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch SKILL.md: ${resp.status}`);
+  const raw = await resp.text();
+
+  // Parse YAML front-matter (--- ... ---)
+  let name = '';
+  let description = '';
+  let body = raw;
+
+  const fmMatch = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    body = fmMatch[2].trim();
+    const nameMatch = fm.match(/^name:\s*(.+)$/m);
+    const descMatch = fm.match(/^description:\s*(.+)$/m);
+    if (nameMatch) name = nameMatch[1].trim().replace(/^["']|["']$/g, '');
+    if (descMatch) description = descMatch[1].trim().replace(/^["']|["']$/g, '');
+  }
+
+  return { name, description, instructions: body };
 }
 
 // ---------------------------------------------------------------------------

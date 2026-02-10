@@ -8,26 +8,28 @@ export interface Skill {
   category: SkillCategory;
   icon: string;
   color: string;
-  
+
   // Configuration
   config: {
     capabilities: string[];
     systemPrompt: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
     tools?: string[];
   };
-  
+
   // Metadata
   sourceFiles: string[];
   analysisContext: AnalysisResult;
   installCommand: string;
   popularity: number;
-  
+  repo?: string;
+  skillMdUrl?: string;
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
   lastUsedAt?: Date;
-  
+
   // Status
   status: 'draft' | 'active' | 'archived';
   isPublic: boolean;
@@ -36,12 +38,15 @@ export interface Skill {
   origin?: 'created' | 'store';
 }
 
-export type SkillCategory = 
-  | 'Knowledge' 
-  | 'Tools' 
-  | 'Productivity' 
-  | 'Development' 
-  | 'Analysis'
+export type SkillCategory =
+  | 'Development'
+  | 'Design'
+  | 'Marketing'
+  | 'Productivity'
+  | 'Tools'
+  | 'Research'
+  | 'Mobile'
+  | 'Writing'
   | 'Custom';
 
 export interface AnalysisResult {

@@ -27,6 +27,7 @@ import {
 import type { Skill } from '../../types/skill-creator';
 import {
   opencode,
+  fetchSkillMd,
   type Part,
   type TextPart,
   type ToolPart,
@@ -423,6 +424,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
 
+  // Skill loading state
+  const [skillInstructions, setSkillInstructions] = useState<string | null>(null);
+  const [skillLoadStatus, setSkillLoadStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>('idle');
+  const [showSkillBanner, setShowSkillBanner] = useState(true);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -459,6 +465,34 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         } catch {
           // Not critical – user just can't pick models
         }
+
+        // Fetch SKILL.md for this skill
+        const mdUrl = (skill as Record<string, unknown>).skillMdUrl as string | undefined;
+        if (mdUrl) {
+          if (!cancelled) setSkillLoadStatus('loading');
+          try {
+            const parsed = await fetchSkillMd(mdUrl);
+            if (!cancelled) {
+              setSkillInstructions(parsed.instructions);
+              setSkillLoadStatus('loaded');
+            }
+          } catch (err) {
+            console.warn('[SkillExecutor] Failed to fetch SKILL.md:', err);
+            if (!cancelled) {
+              // Fall back to config.systemPrompt or description
+              const fallback = skill.config.systemPrompt || skill.description;
+              setSkillInstructions(fallback || null);
+              setSkillLoadStatus(fallback ? 'loaded' : 'error');
+            }
+          }
+        } else {
+          // No SKILL.md URL — use config.systemPrompt or description
+          const fallback = skill.config.systemPrompt || skill.description;
+          if (!cancelled) {
+            setSkillInstructions(fallback || null);
+            setSkillLoadStatus(fallback ? 'loaded' : 'idle');
+          }
+        }
       } catch (err: unknown) {
         if (cancelled) return;
         setConnectionError((err as Error).message);
@@ -470,7 +504,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       cancelled = true;
       opencode.cleanup();
     };
-  }, []);
+  }, [skill]);
 
   // ── Auto-scroll ─────────────────────────────────────────────────────────
 
@@ -684,9 +718,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
     await opencode.sendMessage(sid, text, callbacks, {
       model: selectedModel ?? undefined,
-      system: skill.config.systemPrompt || undefined,
+      system: skillInstructions || skill.config.systemPrompt || undefined,
     });
-  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skill.config.systemPrompt]);
+  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skillInstructions, skill.config.systemPrompt]);
 
   // ── Abort ───────────────────────────────────────────────────────────────
 
@@ -914,6 +948,48 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Skill loaded banner */}
+              {showSkillBanner && skillLoadStatus !== 'idle' && (
+                <div className={`flex items-start gap-3 px-4 py-3 rounded-lg border text-sm ${
+                  skillLoadStatus === 'loaded'
+                    ? 'bg-emerald-900/20 border-emerald-800/40 text-emerald-300'
+                    : skillLoadStatus === 'loading'
+                      ? 'bg-blue-900/20 border-blue-800/40 text-blue-300'
+                      : 'bg-amber-900/20 border-amber-800/40 text-amber-300'
+                }`}>
+                  {skillLoadStatus === 'loading' ? (
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
+                  ) : skillLoadStatus === 'loaded' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium">
+                      {skillLoadStatus === 'loading'
+                        ? `Loading ${skill.name} skill...`
+                        : skillLoadStatus === 'loaded'
+                          ? `${skill.name} skill loaded`
+                          : `Could not load ${skill.name} SKILL.md`}
+                    </span>
+                    {skillLoadStatus === 'loaded' && skillInstructions && (
+                      <p className="text-xs opacity-70 mt-1 line-clamp-2">
+                        {skillInstructions.slice(0, 200)}
+                        {skillInstructions.length > 200 && '...'}
+                      </p>
+                    )}
+                  </div>
+                  {skillLoadStatus !== 'loading' && (
+                    <button
+                      onClick={() => setShowSkillBanner(false)}
+                      className="p-0.5 rounded hover:bg-white/10 shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               {connectionError && connected && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-red-900/20 border border-red-800/40 rounded-lg text-sm text-red-300">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -930,8 +1006,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     Ready to run {skill.name}
                   </h3>
                   <p className="text-sm text-zinc-400 max-w-md">
-                    Type a message to start the agent. It will use OpenCode on the server
-                    to execute tasks with full tool access.
+                    {skillLoadStatus === 'loaded'
+                      ? 'Skill instructions loaded. Type a message to start working with this skill.'
+                      : 'Type a message to start the agent. It will use OpenCode on the server to execute tasks with full tool access.'}
                   </p>
                 </div>
               )}
