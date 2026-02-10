@@ -861,12 +861,14 @@ class OpenCodeClient {
   // ── Resume listening after replying to a question ──────────────────────
 
   /**
-   * After replying to a question, the server continues processing.
-   * This method opens a new SSE stream to capture the continued response.
-   * It's like sendMessage() but WITHOUT sending a new prompt.
+   * Opens SSE stream FIRST, then replies to the question.
+   * This ensures we capture all events from the server's continued processing.
+   * (Mirrors the sendMessage pattern: connect SSE → wait → send action)
    */
   async resumeAfterQuestion(
     sessionId: string,
+    requestID: string,
+    answers: string[][],
     callbacks: StreamCallbacks
   ): Promise<void> {
     this.ensureClient();
@@ -886,7 +888,7 @@ class OpenCodeClient {
     const userMessageIds = new Set<string>();
     const sseUrl = `${this.baseUrl}/event`;
 
-    console.log(`[OpenCode] resumeAfterQuestion() start, session=${sessionId}`);
+    console.log(`[OpenCode] resumeAfterQuestion() start, session=${sessionId}, requestID=${requestID}`);
 
     const processEvents = async () => {
       try {
@@ -1020,7 +1022,22 @@ class OpenCodeClient {
       }
     };
 
+    // Start processing events in the background
     const eventPromise = processEvents();
+
+    // Wait for SSE connection to be established (same pattern as sendMessage)
+    await new Promise((r) => setTimeout(r, 400));
+
+    // NOW reply to the question — the SSE stream is ready to catch events
+    console.log(`[OpenCode] ${ts()} sending question reply after SSE established...`);
+    try {
+      await this.replyQuestion(requestID, answers);
+      console.log(`[OpenCode] ${ts()} question reply sent successfully`);
+    } catch (err: unknown) {
+      const e = err as Error;
+      console.error(`[OpenCode] ${ts()} question reply error:`, e);
+      callbacks.onError(`Failed to send question reply: ${e.message}`);
+    }
 
     // Safety timeout (5 minutes)
     const timeoutId = setTimeout(() => {

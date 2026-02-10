@@ -1642,16 +1642,10 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                 question={activeQuestion}
                 onAnswer={async (answers) => {
                   const qSessionId = activeQuestion.sessionID || currentSessionId;
-                  try {
-                    await opencode.replyQuestion(activeQuestion.id, answers);
-                    console.log('[SkillExec] Question answered:', activeQuestion.id, answers);
-                  } catch (err) {
-                    console.warn('[SkillExec] Failed to reply to question:', err);
-                    setActiveQuestion(null);
-                    return;
-                  }
+                  const qRequestId = activeQuestion.id;
+
+                  // Clear question panel immediately for responsive UX
                   setActiveQuestion(null);
-                  // Remove this session from pending question indicators
                   if (activeQuestion.sessionID) {
                     setPendingQuestionSessionIds(prev => {
                       const next = new Set(prev);
@@ -1659,23 +1653,25 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       return next;
                     });
                   }
-                  // ★ After answering, the server continues processing.
-                  // Start SSE stream to capture the AI's continued response.
-                  if (qSessionId) {
-                    console.log('[SkillExec] ★ Starting SSE resume after question reply for session:', qSessionId);
-                    setIsRunning(true);
-                    setSessionStatus('busy');
 
-                    // Add a placeholder assistant entry for the continued response
-                    const resumeId = `resume-${Date.now()}`;
-                    setEntries(prev => [...prev, {
-                      type: 'assistant' as const,
-                      messageId: resumeId,
-                      parts: [],
-                      isComplete: false,
-                    }]);
+                  if (!qSessionId) return;
 
-                    opencode.resumeAfterQuestion(qSessionId, {
+                  // ★ Start SSE stream FIRST, then reply to question inside it.
+                  // This ensures we don't miss any events from the server's response.
+                  console.log('[SkillExec] ★ Starting SSE resume + question reply for session:', qSessionId);
+                  setIsRunning(true);
+                  setSessionStatus('busy');
+
+                  // Add a placeholder assistant entry for the continued response
+                  const resumeId = `resume-${Date.now()}`;
+                  setEntries(prev => [...prev, {
+                    type: 'assistant' as const,
+                    messageId: resumeId,
+                    parts: [],
+                    isComplete: false,
+                  }]);
+
+                  opencode.resumeAfterQuestion(qSessionId, qRequestId, answers, {
                       onPartUpdated: (rawPart: Part, delta?: string) => {
                         const part = normalizePart(rawPart);
                         setEntries((prev) => {
