@@ -23,6 +23,7 @@ import {
   Trash2,
   Plus,
   MessageSquare,
+  ExternalLink,
 } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import {
@@ -837,6 +838,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [skillInstructions, setSkillInstructions] = useState<string | null>(null);
   const [skillLoadStatus, setSkillLoadStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>('idle');
   const [showSkillBanner, setShowSkillBanner] = useState(true);
+  const [showViewInstructions, setShowViewInstructions] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -1387,16 +1389,27 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       void pollFromSessionSnapshot();
     }, 1200);
 
+    const systemParts: string[] = [];
+    systemParts.push(
+      `You are the skill "${skill.name}". ${skill.description} When the user asks what skill you are, what skill is active, or "你是什么 skill", answer clearly that you are the "${skill.name}" skill.`
+    );
+    const instructions = skillInstructions || skill.config.systemPrompt;
+    if (instructions) {
+      systemParts.push('\n\n--- Skill instructions ---\n\n');
+      systemParts.push(instructions);
+    }
+    const systemPrompt = systemParts.length ? systemParts.join('') : undefined;
+
     try {
       await opencode.sendMessage(sid, text, callbacks, {
         model: selectedModel ?? undefined,
-        system: skillInstructions || skill.config.systemPrompt || undefined,
+        system: systemPrompt,
       });
     } finally {
       polling = false;
       window.clearInterval(pollTimer);
     }
-  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skillInstructions, skill.config.systemPrompt]);
+  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skill.name, skill.description, skillInstructions, skill.config.systemPrompt]);
 
   // ── Abort ───────────────────────────────────────────────────────────────
 
@@ -1660,45 +1673,83 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Skill loaded banner */}
+              {/* Skill intro: self-intro + view instructions + edit */}
               {showSkillBanner && skillLoadStatus !== 'idle' && (
-                <div className={`flex items-start gap-3 px-4 py-3 rounded-lg border text-sm ${
+                <div className={`rounded-lg border text-sm overflow-hidden ${
                   skillLoadStatus === 'loaded'
                     ? 'bg-emerald-900/20 border-emerald-800/40 text-emerald-300'
                     : skillLoadStatus === 'loading'
                       ? 'bg-blue-900/20 border-blue-800/40 text-blue-300'
                       : 'bg-amber-900/20 border-amber-800/40 text-amber-300'
                 }`}>
-                  {skillLoadStatus === 'loading' ? (
-                    <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
-                  ) : skillLoadStatus === 'loaded' ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium">
-                      {skillLoadStatus === 'loading'
-                        ? `Loading ${skill.name} skill...`
-                        : skillLoadStatus === 'loaded'
-                          ? `${skill.name} skill loaded`
-                          : `Could not load ${skill.name} SKILL.md`}
-                    </span>
-                    {skillLoadStatus === 'loaded' && skillInstructions && (
-                      <p className="text-xs opacity-70 mt-1 line-clamp-2">
-                        {skillInstructions.slice(0, 200)}
-                        {skillInstructions.length > 200 && '...'}
-                      </p>
+                  <div className="flex items-start gap-3 px-4 py-3">
+                    {skillLoadStatus === 'loading' ? (
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
+                    ) : skillLoadStatus === 'loaded' ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium">
+                        {skillLoadStatus === 'loading'
+                          ? `Loading ${skill.name} skill...`
+                          : skillLoadStatus === 'loaded'
+                            ? `You're using: ${skill.name}`
+                            : `Could not load ${skill.name} SKILL.md`}
+                      </span>
+                      {skillLoadStatus === 'loaded' && (
+                        <p className="text-xs opacity-80 mt-1">{skill.description}</p>
+                      )}
+                      {skillLoadStatus === 'loaded' && (skillInstructions || skill.skillMdUrl) && (
+                        <div className="flex flex-wrap items-center gap-3 mt-2">
+                          {skillInstructions && (
+                            <button
+                              type="button"
+                              onClick={() => setShowViewInstructions(v => !v)}
+                              className="inline-flex items-center gap-1.5 text-xs font-medium opacity-90 hover:opacity-100 underline underline-offset-2 cursor-pointer"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              {showViewInstructions ? 'Hide instructions' : 'View full instructions'}
+                            </button>
+                          )}
+                          {skill.skillMdUrl && (() => {
+                            const blobUrl = skill.skillMdUrl!.replace(
+                              /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/,
+                              'https://github.com/$1/$2/blob/$3/$4'
+                            );
+                            if (blobUrl === skill.skillMdUrl) return null;
+                            return (
+                              <a
+                                href={blobUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium opacity-90 hover:opacity-100 underline underline-offset-2"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Edit on GitHub
+                              </a>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    {skillLoadStatus !== 'loading' && (
+                      <button
+                        onClick={() => setShowSkillBanner(false)}
+                        className="p-2 rounded hover:bg-white/10 shrink-0 cursor-pointer transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/20"
+                        aria-label="Dismiss skill intro"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     )}
                   </div>
-                  {skillLoadStatus !== 'loading' && (
-                    <button
-                      onClick={() => setShowSkillBanner(false)}
-                      className="p-2 rounded hover:bg-white/10 shrink-0 cursor-pointer transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/20"
-                      aria-label="Dismiss skill banner"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                  {showViewInstructions && skillInstructions && (
+                    <div className="border-t border-white/10 max-h-64 overflow-y-auto">
+                      <pre className="p-4 text-xs whitespace-pre-wrap font-sans opacity-90">
+                        {skillInstructions}
+                      </pre>
+                    </div>
                   )}
                 </div>
               )}

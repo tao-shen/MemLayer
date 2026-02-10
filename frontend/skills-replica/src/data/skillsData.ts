@@ -1962,7 +1962,7 @@ export const SKILLS_DATA: Skill[] = [
     installCommand: 'npx skills add vercel-labs/skills/find-skills',
     popularity: 168652,
     repo: 'vercel-labs/skills',
-    skillMdUrl: mdUrl('vercel-labs', 'skills', 'find-skills'),
+    skillMdUrl: mdUrl('vercel-labs', 'skills', 'skills/find-skills'),
     config: {},
   },
   {
