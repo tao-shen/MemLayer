@@ -297,9 +297,10 @@ class OpenCodeClient {
     const userMessageIds = new Set<string>();
     const assistantMessageIds = new Set<string>();
 
-    // 1. Subscribe to the global event stream BEFORE sending the prompt
-    // Use global.event() — server exposes SSE at GET /global/event (not /event)
-    const subscription = await this.client.global.event();
+    // 1. Subscribe to the event stream BEFORE sending the prompt.
+    // HF Space / some deployments use /event; standard server doc uses /global/event.
+    // Prefer event.subscribe() for compatibility (was working before).
+    const subscription = await this.client.event.subscribe();
     const eventStream = subscription.stream;
 
     const processEvents = async () => {
@@ -307,10 +308,19 @@ class OpenCodeClient {
         for await (const event of eventStream) {
           if (ac.signal.aborted) break;
 
-          const eventType: string | undefined = event?.type;
-          const props: Record<string, unknown> = event?.properties ?? {};
+          // Server may send type in payload (event.type) or SDK may expose SSE event line as event.event
+          const eventType: string | undefined =
+            (event as Record<string, unknown>)?.type as string | undefined ??
+            (event as Record<string, unknown>)?.event as string | undefined;
+          const props: Record<string, unknown> =
+            (event as Record<string, unknown>)?.properties as Record<string, unknown> ?? {};
 
-          if (!eventType) continue;
+          if (!eventType) {
+            if (import.meta.env.DEV && event && typeof event === 'object') {
+              console.log('[OpenCode] SSE event missing type, keys:', Object.keys(event as object));
+            }
+            continue;
+          }
 
           // Filter: only process events for our session
           const evtSid =
@@ -319,6 +329,10 @@ class OpenCodeClient {
             ((props.part as Record<string, unknown>)?.sessionID as string);
 
           if (evtSid && evtSid !== sessionId) continue;
+
+          if (import.meta.env.DEV && eventType.startsWith('message')) {
+            console.log('[OpenCode] SSE', eventType, evtSid ? '(our session)' : '');
+          }
 
           switch (eventType) {
             // ── Message lifecycle ───────────────────────────────────────
