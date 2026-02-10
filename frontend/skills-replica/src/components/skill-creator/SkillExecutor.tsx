@@ -673,12 +673,14 @@ function QuestionPanel({
 function SessionSidebar({
   sessions,
   currentSessionId,
+  pendingQuestionSessionIds,
   onSelect,
   onNew,
   onDelete,
 }: {
   sessions: SessionInfo[];
   currentSessionId: string | null;
+  pendingQuestionSessionIds: Set<string>;
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
@@ -699,30 +701,38 @@ function SessionSidebar({
         {sessions.length === 0 && (
           <p className="p-3 text-xs text-zinc-500">No sessions yet</p>
         )}
-        {sessions.map((s) => (
-          <div
-            key={s.id}
-            className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
-              s.id === currentSessionId
-                ? 'bg-zinc-700/40 text-zinc-100'
-                : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
-            }`}
-            onClick={() => onSelect(s.id)}
-          >
-            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-            <span className="text-xs truncate flex-1">{s.title || 'Untitled'}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(s.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-zinc-600/50 transition-all"
-              title="Delete session"
+        {sessions.map((s) => {
+          const hasPendingQ = pendingQuestionSessionIds.has(s.id);
+          return (
+            <div
+              key={s.id}
+              className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
+                s.id === currentSessionId
+                  ? 'bg-zinc-700/40 text-zinc-100'
+                  : hasPendingQ
+                    ? 'text-blue-300 hover:bg-blue-900/20 hover:text-blue-200'
+                    : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+              }`}
+              onClick={() => onSelect(s.id)}
             >
-              <Trash2 className="w-3 h-3 text-zinc-500 hover:text-red-400" />
-            </button>
-          </div>
-        ))}
+              <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${hasPendingQ ? 'text-blue-400' : ''}`} />
+              <span className="text-xs truncate flex-1">{s.title || 'Untitled'}</span>
+              {hasPendingQ && (
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" title="Awaiting your response" />
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(s.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-zinc-600/50 transition-all"
+                title="Delete session"
+              >
+                <Trash2 className="w-3 h-3 text-zinc-500 hover:text-red-400" />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -751,6 +761,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [sessionStatus, setSessionStatus] = useState('');
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [activeQuestion, setActiveQuestion] = useState<QuestionEvent | null>(null);
+  const [pendingQuestionSessionIds, setPendingQuestionSessionIds] = useState<Set<string>>(new Set());
 
   // Model state – fetched from the server
   const [models, setModels] = useState<ProviderModel[]>([]);
@@ -782,6 +793,18 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           if (!cancelled) setSessions(list);
         } catch {
           // Not critical if listing fails
+        }
+
+        // Fetch pending questions to mark sessions that need attention
+        try {
+          const pending = await opencode.listPendingQuestions();
+          if (!cancelled && pending.length > 0) {
+            const sessionIds = new Set(pending.map(q => q.sessionID));
+            setPendingQuestionSessionIds(sessionIds);
+            console.log(`[SkillExecutor] Found ${pending.length} pending questions in ${sessionIds.size} sessions`);
+          }
+        } catch {
+          // Not critical
         }
 
         // Fetch available models from the server
@@ -1523,6 +1546,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             <SessionSidebar
               sessions={sessions}
               currentSessionId={currentSessionId}
+              pendingQuestionSessionIds={pendingQuestionSessionIds}
               onSelect={switchSession}
               onNew={async () => { await createNewSession(); }}
               onDelete={deleteSession}
@@ -1624,6 +1648,14 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     console.warn('[SkillExec] Failed to reply to question:', err);
                   }
                   setActiveQuestion(null);
+                  // Remove this session from pending question indicators
+                  if (activeQuestion.sessionID) {
+                    setPendingQuestionSessionIds(prev => {
+                      const next = new Set(prev);
+                      next.delete(activeQuestion.sessionID);
+                      return next;
+                    });
+                  }
                 }}
                 onReject={async () => {
                   try {
@@ -1633,6 +1665,13 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                     console.warn('[SkillExec] Failed to reject question:', err);
                   }
                   setActiveQuestion(null);
+                  if (activeQuestion.sessionID) {
+                    setPendingQuestionSessionIds(prev => {
+                      const next = new Set(prev);
+                      next.delete(activeQuestion.sessionID);
+                      return next;
+                    });
+                  }
                 }}
               />
             )}
