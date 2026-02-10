@@ -1,0 +1,12 @@
+{
+  "name": "tacits-e2e-stress-test",
+  "version": "1.0.0",
+  "description": "End-to-end stress test for Tacits Candy Shop immediate feedback verification",
+  "scripts": {
+    "test": "node e2e-stress-test.js",
+    "test:headed": "HEADLESS=false node e2e-stress-test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

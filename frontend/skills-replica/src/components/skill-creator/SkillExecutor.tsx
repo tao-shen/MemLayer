@@ -1016,14 +1016,22 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         const messages = snapshot.messages as Record<string, unknown>[] | undefined;
         if (!messages || !Array.isArray(messages) || messages.length === 0) return;
 
-        const assistantMsgs = messages.filter((m) => m.role === 'assistant');
+        // Check both top-level and info-envelope role (same approach as mapSessionMessagesToEntries)
+        const assistantMsgs = messages.filter((m) => {
+          const info = (m.info as Record<string, unknown>) ?? m;
+          const role = ((info.role as string) ?? (m.role as string) ?? '').toLowerCase();
+          return role === 'assistant';
+        });
         const latest = assistantMsgs[assistantMsgs.length - 1];
         if (!latest) return;
 
-        const messageId = (latest.id as string) ?? '';
+        const latestInfo = (latest.info as Record<string, unknown>) ?? latest;
+        const messageId = (latestInfo.id as string) ?? (latest.id as string) ?? '';
         if (!messageId) return;
-        const rawParts = latest.parts as Record<string, unknown>[] | undefined;
-        const snapshotParts = (rawParts ?? []).map((p) => mapRawPartToPart(p, sid!, messageId));
+        const rawParts = (latestInfo.parts as Record<string, unknown>[]) ?? (latest.parts as Record<string, unknown>[] | undefined);
+        const snapshotParts = (rawParts ?? []).map((p) =>
+          normalizePart(mapRawPartToPart(p, sid!, messageId))
+        );
 
         setEntries((prev) => {
           const idx = prev.findIndex((e) => e.type === 'assistant' && e.messageId === messageId);
