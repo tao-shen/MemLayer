@@ -20,10 +20,11 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat, i) => (
-            <div
+            <button
               key={i}
               onClick={() => onSelectCategory(cat.name)}
-              className="group bg-white p-6 rounded-xl border border-primary/20 shadow-sm hover:shadow-lg transition-all cursor-pointer"
+              className="group bg-card p-6 rounded-xl border border-primary/20 shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary/30"
+              aria-label={`Browse ${cat.name} category — ${cat.count} modules`}
             >
               <div className="font-mono text-sm">
                 <div className="text-primary/70 mb-2">// {cat.count} modules</div>
@@ -43,11 +44,11 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
                 <div className="text-foreground">{'}'}</div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-mono text-foreground-secondary group-hover:text-primary transition-colors">
+              <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-between text-xs font-mono text-foreground-secondary group-hover:text-primary transition-colors duration-200">
                 <span>$ cd ./{cat.name.toLowerCase()} && ls</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

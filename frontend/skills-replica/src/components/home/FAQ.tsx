@@ -26,7 +26,7 @@ export function FAQ() {
   return (
     <section className="py-20 bg-background">
       <div className="container max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-xl border border-primary/20 shadow-lg overflow-hidden">
+        <div className="bg-card rounded-xl border border-primary/20 shadow-lg overflow-hidden">
           <div className="h-10 bg-primary/10 border-b border-primary/20 flex items-center px-4 gap-2">
             <FileIcon className="w-4 h-4 text-primary" />
             <span className="text-sm font-mono text-foreground">FAQ.md</span>
@@ -37,17 +37,19 @@ export function FAQ() {
               # Frequently Asked Questions
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-4" role="list">
               {FAQS.map((faq, i) => (
-                <div key={i} className="border border-primary/10 rounded-lg overflow-hidden">
+                <div key={i} className="border border-primary/10 rounded-lg overflow-hidden" role="listitem">
                   <button
                     onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                    className="w-full flex items-center gap-3 p-4 text-left hover:bg-primary/10 transition-colors font-mono text-sm"
+                    className="w-full flex items-center gap-3 p-4 text-left hover:bg-primary/10 transition-colors duration-200 font-mono text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-inset"
+                    aria-expanded={openIndex === i}
+                    aria-label={`${faq.q} — ${openIndex === i ? 'collapse' : 'expand'}`}
                   >
                     {openIndex === i ? (
-                      <ChevronDown className="w-4 h-4 text-primary" />
+                      <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform duration-200" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-foreground-secondary" />
+                      <ChevronRight className="w-4 h-4 text-foreground-secondary shrink-0 transition-transform duration-200" />
                     )}
                     <span className="text-foreground font-bold">
                       ## {i + 1}. {faq.q}
@@ -55,7 +57,7 @@ export function FAQ() {
                   </button>
 
                   {openIndex === i && (
-                    <div className="px-4 pb-4 pl-11 text-foreground-secondary text-sm leading-relaxed border-t border-primary/10 bg-primary/10/30 pt-4 font-body">
+                    <div className="px-4 pb-4 pl-11 text-foreground-secondary text-sm leading-relaxed border-t border-primary/10 bg-primary/5 pt-4 font-body animate-fade-in">
                       {faq.a}
                     </div>
                   )}
