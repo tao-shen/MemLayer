@@ -1114,8 +1114,23 @@ export interface ParsedSkillMd {
   instructions: string;
 }
 
+/**
+ * Convert raw GitHub URL to jsDelivr CDN URL so browser fetch works (CORS).
+ * raw: https://raw.githubusercontent.com/owner/repo/branch/path
+ * →    https://cdn.jsdelivr.net/gh/owner/repo@branch/path
+ */
+function toJsDelivrIfRawGitHub(url: string): string {
+  const m = url.match(
+    /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/
+  );
+  if (!m) return url;
+  const [, owner, repo, branch, path] = m;
+  return `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${path}`;
+}
+
 export async function fetchSkillMd(url: string): Promise<ParsedSkillMd> {
-  const resp = await fetch(url);
+  const fetchUrl = toJsDelivrIfRawGitHub(url);
+  const resp = await fetch(fetchUrl);
   if (!resp.ok) throw new Error(`Failed to fetch SKILL.md: ${resp.status}`);
   const raw = await resp.text();
 
