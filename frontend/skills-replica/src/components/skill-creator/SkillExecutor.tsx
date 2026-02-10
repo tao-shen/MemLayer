@@ -609,17 +609,23 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             if (partIdx >= 0) {
               // Update existing part
               newParts = [...entry.parts];
-              if (part.type === 'text' && delta) {
-                newParts[partIdx] = {
-                  ...newParts[partIdx],
-                  text: ((newParts[partIdx] as TextPart).text || '') + delta,
-                } as TextPart;
+              if (part.type === 'text') {
+                if (delta) {
+                  // Server sent an incremental delta – append it
+                  newParts[partIdx] = {
+                    ...newParts[partIdx],
+                    text: ((newParts[partIdx] as TextPart).text || '') + delta,
+                  } as TextPart;
+                } else {
+                  // Server sent the full accumulated text – use it directly
+                  newParts[partIdx] = { ...part };
+                }
               } else {
                 newParts[partIdx] = { ...newParts[partIdx], ...part };
               }
             } else {
               // Add new part
-              newParts = [...entry.parts, part];
+              newParts = [...entry.parts, { ...part }];
             }
 
             const newEntries = [...prev];
@@ -630,7 +636,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             const newEntry: AssistantEntry = {
               type: 'assistant',
               messageId: part.messageID,
-              parts: [part],
+              parts: [{ ...part }],
               isComplete: false,
             };
             return [...prev, newEntry];
