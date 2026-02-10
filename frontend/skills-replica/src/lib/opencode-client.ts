@@ -897,7 +897,8 @@ class OpenCodeClient {
     sessionId: string,
     requestID: string,
     answers: string[][],
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    action: 'reply' | 'reject' = 'reply'
   ): Promise<void> {
     this.ensureClient();
 
@@ -1056,15 +1057,19 @@ class OpenCodeClient {
     // Wait for SSE connection to be established (same pattern as sendMessage)
     await new Promise((r) => setTimeout(r, 400));
 
-    // NOW reply to the question — the SSE stream is ready to catch events
-    console.log(`[OpenCode] ${ts()} sending question reply after SSE established...`);
+    // NOW perform the question action — the SSE stream is ready to catch events
+    console.log(`[OpenCode] ${ts()} sending question ${action} after SSE established...`);
     try {
-      await this.replyQuestion(requestID, answers);
-      console.log(`[OpenCode] ${ts()} question reply sent successfully`);
+      if (action === 'reject') {
+        await this.rejectQuestion(requestID);
+      } else {
+        await this.replyQuestion(requestID, answers);
+      }
+      console.log(`[OpenCode] ${ts()} question ${action} sent successfully`);
     } catch (err: unknown) {
       const e = err as Error;
-      console.error(`[OpenCode] ${ts()} question reply error:`, e);
-      callbacks.onError(`Failed to send question reply: ${e.message}`);
+      console.error(`[OpenCode] ${ts()} question ${action} error:`, e);
+      callbacks.onError(`Failed to ${action} question: ${e.message}`);
     }
 
     // Safety timeout (5 minutes)

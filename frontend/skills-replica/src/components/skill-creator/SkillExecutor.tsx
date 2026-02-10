@@ -676,7 +676,7 @@ function QuestionPanel({
                   : 'bg-zinc-800/40 border-zinc-700/40 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
               }`}
             >
-              ✏️ Custom answer...
+              <span className="mr-1">✎</span> Custom answer...
             </button>
           )}
           {showCustom[qIdx] && (
@@ -1801,12 +1801,9 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                   }
                 }}
                 onReject={async () => {
-                  try {
-                    await opencode.rejectQuestion(activeQuestion.id);
-                    console.log('[SkillExec] Question rejected:', activeQuestion.id);
-                  } catch (err) {
-                    console.warn('[SkillExec] Failed to reject question:', err);
-                  }
+                  const qSessionId = activeQuestion.sessionID || currentSessionId;
+
+                  // 1. Clear question panel immediately for responsive UX
                   setActiveQuestion(null);
                   if (activeQuestion.sessionID) {
                     setPendingQuestionSessionIds(prev => {
@@ -1814,6 +1811,74 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       next.delete(activeQuestion.sessionID);
                       return next;
                     });
+                  }
+
+                  // 2. Reject + resume SSE stream (same architecture as onAnswer)
+                  const hasActiveStream = isRunning;
+
+                  if (hasActiveStream) {
+                    // Active SSE stream exists — reject via it
+                    console.log('[SkillExec] ★ Rejecting via active SSE stream');
+                    try {
+                      await opencode.rejectQuestion(activeQuestion.id);
+                      console.log('[SkillExec] ★ Reject sent, signaling stream');
+                      opencode.signalQuestionAnswered();
+                    } catch (err) {
+                      console.warn('[SkillExec] Failed to reject:', err);
+                    }
+                  } else if (qSessionId) {
+                    // No active stream — open a new one with reject action
+                    console.log('[SkillExec] ★ No active stream, using resumeAfterQuestion (reject)');
+                    setIsRunning(true);
+                    setSessionStatus('busy');
+
+                    opencode.resumeAfterQuestion(qSessionId, activeQuestion.id, [], {
+                      onPartUpdated: (rawPart: Part, delta?: string) => {
+                        const part = normalizePart(rawPart);
+                        console.log(`[SkillExec-Reject] onPartUpdated: type=${part.type}, msgId=${part.messageID}, delta=${delta ? delta.length + 'ch' : 'none'}`);
+                        setEntries((prev) => {
+                          const idx = prev.findIndex(
+                            (e) => e.type === 'assistant' && e.messageId === part.messageID
+                          );
+                          if (idx >= 0) {
+                            const entry = prev[idx] as AssistantEntry;
+                            const pIdx = entry.parts.findIndex((p) => p.id === part.id);
+                            let newParts: Part[];
+                            if (pIdx >= 0) {
+                              newParts = [...entry.parts];
+                              if (part.type === 'text' && delta) {
+                                newParts[pIdx] = { ...newParts[pIdx], text: ((newParts[pIdx] as TextPart).text || '') + delta } as TextPart;
+                              } else {
+                                newParts[pIdx] = normalizePart({ ...newParts[pIdx], ...part });
+                              }
+                            } else {
+                              newParts = [...entry.parts, { ...part }];
+                            }
+                            const newEntries = [...prev];
+                            newEntries[idx] = { ...entry, parts: newParts };
+                            return newEntries;
+                          }
+                          return [...prev, { type: 'assistant' as const, messageId: part.messageID, parts: [{ ...part }], isComplete: false }];
+                        });
+                      },
+                      onMessageUpdated: (msg: Record<string, unknown>) => {
+                        if (msg.role === 'assistant') {
+                          setEntries(prev => {
+                            const mId = msg.id as string | undefined;
+                            const target = mId ? prev.findIndex(e => e.type === 'assistant' && e.messageId === mId) : -1;
+                            if (target < 0) return prev;
+                            const next = [...prev];
+                            next[target] = { ...(next[target] as AssistantEntry), isComplete: msg.finish === 'stop' };
+                            return next;
+                          });
+                        }
+                      },
+                      onSessionStatus: (status: string) => setSessionStatus(status),
+                      onComplete: () => { console.log('[SkillExec-Reject] ★ onComplete'); setIsRunning(false); setSessionStatus('idle'); setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e)); },
+                      onError: (err: string) => { console.log('[SkillExec-Reject] ★ onError:', err); setIsRunning(false); setConnectionError(err); },
+                      onTodos: (newTodos: TodoItem[]) => setTodos(newTodos),
+                      onQuestion: (q: QuestionEvent) => { setActiveQuestion(q); setIsRunning(false); setSessionStatus('idle'); setEntries(prev => prev.map(e => e.type === 'assistant' && !e.isComplete ? { ...e, isComplete: true } : e)); },
+                    }, 'reject');
                   }
                 }}
               />
