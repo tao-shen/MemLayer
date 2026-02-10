@@ -26,6 +26,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
+import { SKILLS_DATA } from '../../data/skillsData';
 import {
   opencode,
   fetchSkillMd,
@@ -1398,6 +1399,12 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       systemParts.push('\n\n--- Skill instructions ---\n\n');
       systemParts.push(instructions);
     }
+    const isFindSkills = skill.id === 'find-skills' || String(skill.id).endsWith('find-skills');
+    if (isFindSkills) {
+      systemParts.push('\n\n--- Candy Shop catalog (id - name). In this browser environment npx skills find cannot run; use the list below to suggest skills when the user asks e.g. "有没有写论文的 skill". ---\n');
+      systemParts.push(SKILLS_DATA.map((s) => `${s.id} - ${s.name}`).join('\n'));
+      systemParts.push('\n\nWhen the user asks for skills (thesis, paper, writing, etc.), suggest matching skills from the list above by id and name, and mention they can run them here or browse https://skills.sh for more.');
+    }
     const systemPrompt = systemParts.length ? systemParts.join('') : undefined;
 
     try {
@@ -1409,7 +1416,7 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       polling = false;
       window.clearInterval(pollTimer);
     }
-  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skill.name, skill.description, skillInstructions, skill.config.systemPrompt]);
+  }, [input, isRunning, connected, currentSessionId, createNewSession, selectedModel, skill.id, skill.name, skill.description, skillInstructions, skill.config.systemPrompt]);
 
   // ── Abort ───────────────────────────────────────────────────────────────
 
