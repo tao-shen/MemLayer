@@ -451,26 +451,46 @@ function PartRenderer({ part }: { part: Part }) {
 
 // Render the assistant's response as an ordered list of parts
 function AssistantMessageView({ entry }: { entry: AssistantEntry }) {
+  // Determine what the AI is currently doing for status display
+  const lastPart = entry.parts[entry.parts.length - 1];
+  const isThinking = !entry.isComplete && lastPart?.type === 'reasoning';
+  const isTooling = !entry.isComplete && lastPart?.type === 'tool';
+  const toolName = isTooling ? (lastPart as ToolPart).tool : '';
+
   return (
     <div className="flex justify-start">
       <div className="max-w-[95%] w-full">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-            <Sparkles className="w-3 h-3 text-white" />
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="text-xs font-medium text-zinc-400">Agent</span>
+          <span className="text-xs font-semibold text-zinc-300">Agent</span>
           {!entry.isComplete && (
-            <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
+            <div className="flex items-center gap-1.5 ml-1">
+              <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
+              <span className="text-[10px] text-blue-400/80 font-medium">
+                {isThinking ? 'Thinking...' : isTooling ? `Running ${toolName}` : 'Working...'}
+              </span>
+            </div>
+          )}
+          {entry.isComplete && entry.tokens && (
+            <span className="text-[10px] text-zinc-500 ml-auto">
+              {entry.tokens.input + entry.tokens.output} tokens
+              {typeof entry.cost === 'number' && entry.cost > 0 && ` · $${entry.cost.toFixed(4)}`}
+            </span>
           )}
         </div>
-        <div className="pl-7">
+        <div className="pl-8">
           {entry.parts.map((part, i) => (
             <PartRenderer key={part.id || `part-${i}`} part={part} />
           ))}
           {!entry.isComplete && entry.parts.length === 0 && (
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Thinking...
+            <div className="flex items-center gap-2.5 py-3 px-4 rounded-lg bg-zinc-800/30 border border-zinc-700/30">
+              <div className="relative">
+                <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                <div className="absolute inset-0 rounded-full bg-blue-400/10 animate-pulse" />
+              </div>
+              <span className="text-sm text-zinc-400">Thinking...</span>
             </div>
           )}
         </div>
@@ -574,60 +594,91 @@ function QuestionPanel({
   });
 
   return (
-    <div className="mx-4 mb-2 rounded-xl border border-blue-500/30 bg-blue-950/20 overflow-hidden">
-      <div className="px-4 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
-        <span className="text-xs font-medium text-blue-300 flex items-center gap-1.5">
-          <MessageSquare className="w-3.5 h-3.5" />
-          AI is asking a question — please select or type a response
-        </span>
+    <div className="mx-4 mb-3 rounded-xl border border-blue-500/30 bg-gradient-to-b from-blue-950/30 to-zinc-900/50 overflow-hidden shadow-lg shadow-blue-500/5">
+      {/* Header */}
+      <div className="px-4 py-3 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-blue-200">Agent needs your input</div>
+            <div className="text-[10px] text-blue-400/60">Select an option or type a response</div>
+          </div>
+        </div>
         <button
           onClick={onReject}
-          className="text-[10px] text-zinc-400 hover:text-red-400 transition-colors px-2 py-0.5 rounded"
+          className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors px-2 py-1 rounded-md hover:bg-red-500/10"
           title="Dismiss question"
         >
           Dismiss
         </button>
       </div>
+
+      {/* Question groups */}
       {question.questions.map((q, qIdx) => (
-        <div key={qIdx} className="px-4 py-3 border-b border-zinc-700/30 last:border-b-0">
+        <div key={qIdx} className="px-4 py-4 border-b border-zinc-700/20 last:border-b-0">
           {q.header && (
-            <div className="text-xs font-semibold text-zinc-300 mb-1">{q.header}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-blue-400/70 mb-1">{q.header}</div>
           )}
-          <div className="text-sm text-zinc-200 mb-2">{q.question}</div>
-          <div className="flex flex-wrap gap-1.5">
+          {q.question && (
+            <div className="text-sm text-zinc-200 mb-3 leading-relaxed">{q.question}</div>
+          )}
+          <div className="grid gap-2" style={{ gridTemplateColumns: q.options.length > 4 ? 'repeat(auto-fill, minmax(140px, 1fr))' : `repeat(${Math.min(q.options.length, 3)}, 1fr)` }}>
             {q.options.map((opt, optIdx) => {
               const isSelected = (selections[qIdx] ?? []).includes(opt.label);
               return (
                 <button
                   key={optIdx}
                   onClick={() => handleOptionToggle(qIdx, opt.label, q.multiple)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                  className={`group relative text-left px-3 py-2.5 rounded-lg border transition-all duration-150 ${
                     isSelected
-                      ? 'bg-blue-600 border-blue-500 text-white'
-                      : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-blue-500/50 hover:bg-zinc-700'
+                      ? 'bg-blue-600/20 border-blue-500/60 ring-1 ring-blue-500/30'
+                      : 'bg-zinc-800/60 border-zinc-700/50 hover:border-blue-500/40 hover:bg-zinc-800'
                   }`}
-                  title={opt.description ?? opt.label}
                 >
-                  {q.multiple && (
-                    <span className="mr-1">{isSelected ? '☑' : '☐'}</span>
-                  )}
-                  {opt.label}
+                  <div className="flex items-start gap-2">
+                    {q.multiple && (
+                      <div className={`mt-0.5 w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected ? 'bg-blue-500 border-blue-400' : 'border-zinc-500'
+                      }`}>
+                        {isSelected && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
+                      </div>
+                    )}
+                    {!q.multiple && (
+                      <div className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected ? 'border-blue-400' : 'border-zinc-500'
+                      }`}>
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className={`text-xs font-medium leading-snug ${isSelected ? 'text-blue-200' : 'text-zinc-200'}`}>
+                        {opt.label}
+                      </div>
+                      {opt.description && (
+                        <div className="text-[10px] text-zinc-500 mt-0.5 leading-snug line-clamp-2">
+                          {opt.description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </button>
               );
             })}
-            {q.custom !== false && (
-              <button
-                onClick={() => setShowCustom((prev) => ({ ...prev, [qIdx]: !prev[qIdx] }))}
-                className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                  showCustom[qIdx]
-                    ? 'bg-zinc-700 border-zinc-500 text-zinc-200'
-                    : 'bg-zinc-800 border-zinc-600 text-zinc-400 hover:border-zinc-500'
-                }`}
-              >
-                Other…
-              </button>
-            )}
           </div>
+          {q.custom !== false && (
+            <button
+              onClick={() => setShowCustom((prev) => ({ ...prev, [qIdx]: !prev[qIdx] }))}
+              className={`mt-2 px-3 py-1.5 text-[11px] rounded-lg border transition-all ${
+                showCustom[qIdx]
+                  ? 'bg-zinc-700 border-zinc-500 text-zinc-200'
+                  : 'bg-zinc-800/40 border-zinc-700/40 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+              }`}
+            >
+              ✏️ Custom answer...
+            </button>
+          )}
           {showCustom[qIdx] && (
             <input
               type="text"
@@ -639,28 +690,36 @@ function QuestionPanel({
                 if (e.key === 'Enter' && hasSelection) handleSubmit();
               }}
               placeholder="Type your custom answer…"
-              className="mt-2 w-full px-3 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded-lg
-                text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+              className="mt-2 w-full px-3 py-2 text-sm bg-zinc-800/80 border border-zinc-600/50 rounded-lg
+                text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50"
               autoFocus
             />
           )}
         </div>
       ))}
-      <div className="px-4 py-2 bg-zinc-800/30 flex justify-end gap-2">
-        <button
-          onClick={onReject}
-          className="px-3 py-1.5 text-xs rounded-lg bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition-colors"
-        >
-          Skip
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={!hasSelection}
-          className="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-500
-            disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors"
-        >
-          Submit Answer
-        </button>
+
+      {/* Actions */}
+      <div className="px-4 py-3 bg-zinc-900/30 flex items-center justify-between">
+        <span className="text-[10px] text-zinc-600">
+          {Object.values(selections).flat().length} selected
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={onReject}
+            className="px-3 py-1.5 text-xs rounded-lg bg-zinc-800 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+          >
+            Skip
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!hasSelection}
+            className="px-5 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500
+              disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150
+              shadow-md shadow-blue-500/20 hover:shadow-blue-500/30"
+          >
+            Submit Answer →
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1557,6 +1616,21 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           <div className="flex-1 flex flex-col min-w-0">
             {/* Todos bar */}
             <TodosView todos={todos} />
+
+            {/* Session status bar — shows when AI is working */}
+            {isRunning && sessionStatus === 'busy' && (
+              <div className="shrink-0 px-4 py-2 bg-gradient-to-r from-blue-950/40 via-blue-950/20 to-transparent border-b border-blue-500/10">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center justify-center w-4 h-4">
+                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                  </div>
+                  <span className="text-xs text-blue-300/80 font-medium">Agent is working...</span>
+                  <div className="flex-1 h-0.5 bg-zinc-800 rounded-full overflow-hidden ml-2">
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-violet-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
