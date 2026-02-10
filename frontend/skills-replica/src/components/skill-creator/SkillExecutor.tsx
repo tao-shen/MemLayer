@@ -719,9 +719,17 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
       }
     }
 
-    // Add user entry
+    // Add user entry and an immediate assistant placeholder so the UI gives
+    // instant feedback even before the first streamed part arrives.
     const userEntry: UserEntry = { type: 'user', text, time: Date.now() };
-    setEntries((prev) => [...prev, userEntry]);
+    const pendingAssistantId = `pending-${Date.now()}`;
+    const pendingAssistantEntry: AssistantEntry = {
+      type: 'assistant',
+      messageId: pendingAssistantId,
+      parts: [],
+      isComplete: false,
+    };
+    setEntries((prev) => [...prev, userEntry, pendingAssistantEntry]);
 
     // Stream callbacks — with timestamp logging to diagnose real-time issues
     const cbT0 = performance.now();
@@ -778,6 +786,25 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
             newEntries[idx] = { ...entry, parts: newParts };
             return newEntries;
           } else {
+            // If we already have a pending placeholder bubble, bind it to this
+            // real messageID instead of appending a duplicate bubble.
+            const pendingIdx = prev.findIndex(
+              (e) =>
+                e.type === 'assistant' &&
+                !e.isComplete &&
+                e.messageId.startsWith('pending-')
+            );
+            if (pendingIdx >= 0) {
+              const pendingEntry = prev[pendingIdx] as AssistantEntry;
+              const next = [...prev];
+              next[pendingIdx] = {
+                ...pendingEntry,
+                messageId: part.messageID,
+                parts: [{ ...part }],
+              };
+              return next;
+            }
+
             // Create new assistant entry
             console.log(`[SkillExec] ${cbTs()} creating new assistant entry for messageId=${part.messageID}`);
             const newEntry: AssistantEntry = {
@@ -797,19 +824,37 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
         );
         if (message.role === 'assistant') {
           setEntries((prev) =>
-            prev.map((e) => {
-              if (e.type !== 'assistant') return e;
-              const aEntry = e as AssistantEntry;
-              if (aEntry.messageId === message.id) {
-                return {
-                  ...aEntry,
-                  isComplete: message.finish === 'stop',
-                  cost: (message.cost as number) ?? aEntry.cost,
-                  tokens: (message.tokens as AssistantEntry['tokens']) ?? aEntry.tokens,
-                };
-              }
-              return e;
-            })
+            {
+              const messageId = message.id as string | undefined;
+              const assistantMessageId = messageId ?? pendingAssistantId;
+
+              const exactIdx = messageId
+                ? prev.findIndex(
+                    (e) => e.type === 'assistant' && e.messageId === messageId
+                  )
+                : -1;
+
+              const pendingIdx = prev.findIndex(
+                (e) =>
+                  e.type === 'assistant' &&
+                  !e.isComplete &&
+                  e.messageId.startsWith('pending-')
+              );
+
+              const targetIdx = exactIdx >= 0 ? exactIdx : pendingIdx;
+              if (targetIdx < 0) return prev;
+
+              const next = [...prev];
+              const target = next[targetIdx] as AssistantEntry;
+              next[targetIdx] = {
+                ...target,
+                messageId: assistantMessageId,
+                isComplete: message.finish === 'stop',
+                cost: (message.cost as number) ?? target.cost,
+                tokens: (message.tokens as AssistantEntry['tokens']) ?? target.tokens,
+              };
+              return next;
+            }
           );
         }
       },
