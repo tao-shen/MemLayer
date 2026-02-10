@@ -250,9 +250,10 @@ export function Sidebar({
         {!collapsed && (
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 rounded-lg px-1"
+            aria-label="Go to home page"
           >
-            <span className="text-2xl leading-none">🍬</span>
+            <span className="text-2xl leading-none" aria-hidden="true">🍬</span>
             <span className="font-bold text-lg font-candy">~/Skills</span>
           </button>
         )}
