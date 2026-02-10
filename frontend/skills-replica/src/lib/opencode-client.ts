@@ -9,6 +9,23 @@ const OPENCODE_SERVER_URL =
   import.meta.env.VITE_API_BASE_URL ||
   'https://tao-shen-opencode.hf.space';
 
+const OPENCODE_USERNAME = import.meta.env.VITE_OPENCODE_USERNAME as
+  | string
+  | undefined;
+const OPENCODE_PASSWORD = import.meta.env.VITE_OPENCODE_PASSWORD as
+  | string
+  | undefined;
+
+function getBasicAuthHeader(): string | undefined {
+  // Do NOT hardcode credentials in the repo. Pass via env vars.
+  if (!OPENCODE_USERNAME || !OPENCODE_PASSWORD) return undefined;
+  try {
+    return `Basic ${btoa(`${OPENCODE_USERNAME}:${OPENCODE_PASSWORD}`)}`;
+  } catch {
+    return undefined;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Types – mirrors the OpenCode SDK part types
 // ---------------------------------------------------------------------------
@@ -165,11 +182,17 @@ class OpenCodeClient {
     const url = baseUrl || this.baseUrl;
 
     // Create the SDK client
-    this.client = createOpencodeClient({ baseUrl: url });
+    const auth = getBasicAuthHeader();
+    this.client = createOpencodeClient({
+      baseUrl: url,
+      headers: auth ? { Authorization: auth } : undefined,
+    });
 
     // Verify connectivity with a health check (SDK v1 has no global.health())
     try {
-      const resp = await fetch(`${url}/global/health`);
+      const resp = await fetch(`${url}/global/health`, {
+        headers: auth ? { Authorization: auth } : undefined,
+      });
       if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
       const data = await resp.json();
       const version = data?.version ?? 'unknown';
