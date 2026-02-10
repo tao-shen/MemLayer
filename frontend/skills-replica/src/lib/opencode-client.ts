@@ -1,492 +1,387 @@
 import { createOpencodeClient } from '@opencode-ai/sdk/client';
 
-export interface OpenCodeConfig {
-  baseUrl?: string;
-  directory?: string;
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+const OPENCODE_SERVER_URL =
+  import.meta.env.VITE_OPENCODE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
+
+// ---------------------------------------------------------------------------
+// Types – mirrors the OpenCode SDK part types
+// ---------------------------------------------------------------------------
+
+export interface TextPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'text';
+  text: string;
 }
 
-export interface SkillExecutionResult {
-  success: boolean;
-  output: string;
-  sessionId?: string;
-  error?: string;
+export interface ToolPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'tool';
+  tool: string;
+  callID: string;
+  state: 'pending' | 'running' | 'completed' | 'error';
+  metadata?: Record<string, unknown>;
 }
 
-export interface StreamCallbacks {
-  onChunk: (chunk: string) => void;
-  onComplete: () => void;
-  onError: (error: string) => void;
+export interface ReasoningPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'reasoning';
+  text: string;
 }
+
+export interface StepStartPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'step-start';
+  snapshot?: string;
+}
+
+export interface StepFinishPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'step-finish';
+  reason: string;
+  cost: number;
+  tokens: {
+    input: number;
+    output: number;
+    reasoning: number;
+    cache: { read: number; write: number };
+  };
+}
+
+export interface FilePart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'file';
+  mime: string;
+  filename?: string;
+  url: string;
+}
+
+export interface SnapshotPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'snapshot';
+  snapshot: string;
+}
+
+export interface PatchPart {
+  id: string;
+  sessionID: string;
+  messageID: string;
+  type: 'patch';
+  hash: string;
+  files: string[];
+}
+
+export type Part =
+  | TextPart
+  | ToolPart
+  | ReasoningPart
+  | StepStartPart
+  | StepFinishPart
+  | FilePart
+  | SnapshotPart
+  | PatchPart;
 
 export interface ModelConfig {
   providerID: string;
   modelID: string;
-  agent?: string;
 }
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://nngpveejjssh.eu-central-1.clawcloudrun.com';
+export interface SessionInfo {
+  id: string;
+  title: string;
+  time: { created: number; updated: number };
+}
 
-class OpenCodeService {
+export interface TodoItem {
+  id: string;
+  content: string;
+  status: string;
+  priority: string;
+}
+
+// ---------------------------------------------------------------------------
+// Stream callbacks
+// ---------------------------------------------------------------------------
+
+export interface StreamCallbacks {
+  onPartUpdated: (part: Part, delta?: string) => void;
+  onMessageUpdated: (message: Record<string, unknown>) => void;
+  onSessionStatus: (status: string) => void;
+  onComplete: () => void;
+  onError: (error: string) => void;
+  onPermission?: (permission: Record<string, unknown>) => void;
+  onTodos?: (todos: TodoItem[]) => void;
+}
+
+// ---------------------------------------------------------------------------
+// OpenCode Client
+// ---------------------------------------------------------------------------
+
+class OpenCodeClient {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any = null;
-  private sseAbortController: AbortController | null = null;
+  private abortController: AbortController | null = null;
+  private baseUrl: string;
 
-  async connect(config: OpenCodeConfig = {}): Promise<void> {
-    const baseUrl = config.baseUrl || BASE_URL;
-
-    try {
-      this.client = createOpencodeClient({
-        baseUrl,
-        directory: config.directory,
-      });
-
-      // Verify client is properly initialized by checking a simple property
-      // This ensures the client object is not null before returning
-      console.log('[OpenCode] Client created:', this.client);
-      console.log('[OpenCode] Connected to', baseUrl);
-    } catch (error) {
-      console.error('[OpenCode] Failed to connect:', error);
-      throw new Error('Failed to connect to OpenCode server');
-    }
+  constructor(baseUrl: string = OPENCODE_SERVER_URL) {
+    this.baseUrl = baseUrl;
   }
 
-  async executeSkillStream(
-    skillId: string,
-    systemPrompt: string,
-    userInput: string,
-    callbacks: StreamCallbacks,
-    sessionId?: string,
-    modelConfig?: ModelConfig
-  ): Promise<string | null> {
-    // Ensure client is connected before using SDK
-    if (!this.client) {
-      await this.connect();
-    }
-
-    let currentSessionId: string | null = sessionId ?? null;
-
-    // Create session if needed
-    if (!currentSessionId) {
-      try {
-        console.log('[OpenCode] Creating session with title:', `Skill: ${skillId}`);
-        const session = await this.client.session.create({
-          body: { title: `Skill: ${skillId}` },
-        });
-        console.log('[OpenCode] Session creation response:', session);
-        currentSessionId = session.id || session.data?.id || session.data?.session?.id || null;
-        if (!currentSessionId) {
-          console.error(
-            '[OpenCode] No session ID in response. Full response:',
-            JSON.stringify(session)
-          );
-          callbacks.onError('Failed to create session: No session ID in response');
-          return null;
-        }
-        console.log('[OpenCode] Created session:', currentSessionId);
-      } catch (error: any) {
-        console.error('[OpenCode] Session creation error:', error);
-        callbacks.onError(`Failed to create session: ${error.message}`);
-        return null;
-      }
-    }
-
-    try {
-      console.log('[OpenCode] Connecting to global event stream using SDK...');
-
-      // Clean up any existing connection
-      if (this.sseAbortController) {
-        this.sseAbortController.abort();
-      }
-
-      this.sseAbortController = new AbortController();
-      const abortController = this.sseAbortController;
-
-      // START STREAM BEFORE SENDING MESSAGE - ensures events are not missed
-      console.log('[OpenCode] Starting event stream listener...');
-
-      const stream = await this.client.event.subscribe();
-
-      console.log('[OpenCode] Event stream listener started');
-
-      let isCompleted = false;
-      let hasReceivedParts = false;
-      const seenParts = new Set<string>();
-
-      const processStream = async () => {
-        try {
-          for await (const eventListResponse of stream) {
-            if (abortController.signal.aborted) break;
-
-            console.log(
-              '[OpenCode] Raw event:',
-              JSON.stringify(eventListResponse).substring(0, 200)
-            );
-
-            // Extract event type and properties
-            const event = eventListResponse as any;
-            let eventType = event.type;
-            let eventProps = event.properties || {};
-
-            // Handle wrapped events (some servers send { payload: {...} })
-            if (!eventType && event.payload) {
-              eventType = event.payload.type;
-              eventProps = event.payload.properties || event.payload;
-            }
-
-            // Check if this event is for our session
-            const eventSessionId =
-              eventProps.sessionID ||
-              eventProps.info?.sessionID ||
-              eventProps.part?.sessionID ||
-              event.sessionID ||
-              eventProps.sessionId;
-
-            console.log(
-              '[OpenCode] Event type:',
-              eventType,
-              'Session:',
-              eventSessionId,
-              'Target:',
-              currentSessionId
-            );
-
-            if (eventSessionId && eventSessionId !== currentSessionId) {
-              console.log('[OpenCode] Skipping event for different session');
-              continue;
-            }
-
-            // Handle message.part.updated - this is the key to showing complete process!
-            if (eventType === 'message.part.updated') {
-              const part = eventProps.part;
-              if (!part) {
-                console.log('[OpenCode] No part in message.part.updated event');
-                continue;
-              }
-
-              // Get the message info to check if it's an assistant message
-              const messageInfo = eventProps.info;
-              const messageRole = messageInfo?.role;
-
-              // Only show assistant messages (skip user message echo)
-              if (messageRole && messageRole !== 'assistant') {
-                console.log('[OpenCode] Skipping non-assistant part (role:', messageRole, ')');
-                continue;
-              }
-
-              hasReceivedParts = true;
-
-              // Generate unique key for this part
-              const partKey = `${part.id || ''}-${part.type || ''}-${part.callID || ''}`;
-              if (seenParts.has(partKey)) {
-                console.log('[OpenCode] Duplicate part, skipping:', partKey);
-                continue;
-              }
-              seenParts.add(partKey);
-
-              // Extract content based on part type
-              let content = '';
-
-              if (part.type === 'text') {
-                content = part.text || part.content || '';
-              } else if (part.type === 'tool') {
-                const toolName = part.name || 'tool';
-                const toolState = part.state || 'pending';
-                const toolInput = part.input ? JSON.stringify(part.input, null, 2) : '';
-                const toolOutput = part.output || '';
-                const toolError = part.error || '';
-                const toolTitle = part.title || '';
-
-                content = `\n[Tool: ${toolName}]\n`;
-                content += `State: ${toolState}\n`;
-
-                if (toolTitle) {
-                  content += `Title: ${toolTitle}\n`;
-                }
-
-                if (toolInput) {
-                  content += `Input:\n${toolInput}\n`;
-                }
-
-                if (toolState === 'running') {
-                  content += `[Executing...]\n`;
-                } else if (toolState === 'completed') {
-                  content += `[Completed]\n`;
-                  if (toolOutput) {
-                    content += `Output:\n${toolOutput}\n`;
-                  }
-                } else if (toolState === 'error') {
-                  content += `[Error]\n`;
-                  if (toolError) {
-                    content += `${toolError}\n`;
-                  }
-                } else if (toolState === 'pending') {
-                  content += `[Pending...]\n`;
-                }
-
-                if (part.metadata && Object.keys(part.metadata).length > 0) {
-                  content += `Metadata: ${JSON.stringify(part.metadata, null, 2)}\n`;
-                }
-              } else if (part.type === 'reasoning') {
-                const reasoningText = part.text || part.content || '';
-                content = `\n[Thinking]\n${reasoningText}\n`;
-              } else if (part.type === 'step-start') {
-                content = `\n[Step Started]\n`;
-              } else if (part.type === 'step-finish') {
-                content = `\n[Step Finished]\n`;
-                if (part.cost !== undefined) {
-                  content += `Cost: ${part.cost}\n`;
-                }
-                if (part.tokens) {
-                  content += `Tokens - Input: ${part.tokens.input}, Output: ${part.tokens.output}, Reasoning: ${part.tokens.reasoning}\n`;
-                  if (part.tokens.cache) {
-                    content += `Cache - Read: ${part.tokens.cache.read}, Write: ${part.tokens.cache.write}\n`;
-                  }
-                }
-              } else if (part.type === 'file') {
-                const filename = part.filename || 'unknown';
-                const fileUrl = part.url || '';
-                const fileType = part.mime || '';
-
-                content = `\n[File Operation]\n`;
-                content += `File: ${filename}\n`;
-                content += `Type: ${fileType}\n`;
-                if (fileUrl) {
-                  content += `URL: ${fileUrl}\n`;
-                }
-              } else if (part.type === 'snapshot') {
-                content = `\n[Snapshot Created]\n`;
-                if (part.snapshot) {
-                  content += `Snapshot ID: ${part.snapshot.substring(0, 8)}...\n`;
-                }
-              } else if (part.type === 'patch') {
-                content = `\n[Code Patch]\n`;
-                if (part.hash) {
-                  content += `Hash: ${part.hash}\n`;
-                }
-                if (part.files && part.files.length > 0) {
-                  content += `Files modified: ${part.files.join(', ')}\n`;
-                }
-              }
-
-              if (content) {
-                console.log(`[OpenCode] ✅ Part received: ${part.type} (${content.length} chars)`);
-                callbacks.onChunk(content);
-              } else {
-                console.log(`[OpenCode] ⚠️ Empty content for part type: ${part.type}`);
-              }
-            }
-
-            // Handle message.updated - completion signal
-            else if (eventType === 'message.updated') {
-              const messageInfo = eventProps.info || eventProps;
-              const role = messageInfo?.role;
-              const finish = messageInfo?.finish;
-
-              console.log('[OpenCode] message.updated - role:', role, 'finish:', finish);
-
-              // Only complete when assistant message has finish=stop
-              if (role === 'assistant' && finish === 'stop') {
-                console.log('[OpenCode] ✓ Message completed (finish=stop)');
-                isCompleted = true;
-                abortController.abort();
-                stream.controller.abort();
-                callbacks.onComplete();
-                return;
-              }
-            }
-
-            // Handle session status changes
-            else if (eventType === 'session.status') {
-              const status = eventProps.status?.type;
-              console.log('[OpenCode] Session status:', status);
-              if (status === 'idle' && hasReceivedParts) {
-                console.log('[OpenCode] ✓ Session idle, completing');
-                isCompleted = true;
-                abortController.abort();
-                stream.controller.abort();
-                callbacks.onComplete();
-                return;
-              }
-            }
-          }
-
-          if (!isCompleted) {
-            console.log('[OpenCode] Stream ended');
-            if (hasReceivedParts) {
-              callbacks.onComplete();
-            } else {
-              callbacks.onError('Stream ended without receiving any parts');
-            }
-          }
-        } catch (error: any) {
-          if (error.name === 'AbortError' || abortController.signal.aborted) {
-            return;
-          }
-          console.error('[OpenCode] Stream processing error:', error);
-          callbacks.onError(error.message);
-        }
-      };
-
-      // Start processing stream in background
-      processStream();
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      console.log('[OpenCode] Sending message to session...');
-      console.log(
-        '[OpenCode] User input:',
-        userInput.length > 100 ? userInput.substring(0, 100) + '...' : userInput
-      );
-      if (systemPrompt) {
-        console.log(
-          '[OpenCode] System prompt:',
-          systemPrompt.length > 100 ? systemPrompt.substring(0, 100) + '...' : systemPrompt
-        );
-      }
-
-      const model = modelConfig || {
-        providerID: 'anthropic',
-        modelID: 'claude-3-5-sonnet-20241022',
-      };
-
-      console.log('[OpenCode] Using model:', model.providerID, '/', model.modelID);
-
-      const messageBody: any = {
-        model: {
-          providerID: model.providerID,
-          modelID: model.modelID,
-        },
-        parts: [{ type: 'text', text: userInput }],
-      };
-
-      if (systemPrompt) {
-        messageBody.system = systemPrompt;
-      }
-
-      if (model.agent || modelConfig?.agent) {
-        messageBody.agent = model.agent || modelConfig?.agent;
-        console.log('[OpenCode] Using agent:', messageBody.agent);
-      }
-
-      await this.client.session.message(currentSessionId, {
-        body: messageBody,
-      });
-
-      console.log('[OpenCode] Message sent, waiting for streaming parts...');
-
-      // Timeout fallback
-      setTimeout(() => {
-        if (!abortController.signal.aborted && !isCompleted) {
-          console.log('[OpenCode] Timeout, completing');
-          abortController.abort();
-          if (hasReceivedParts) {
-            callbacks.onComplete();
-          } else {
-            callbacks.onError('Timeout: No response received');
-          }
-        }
-      }, 120000); // 2 minutes
-
-      return currentSessionId;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return currentSessionId;
-      }
-      console.error('[OpenCode] Execution error:', error);
-      callbacks.onError(error.message);
-      return currentSessionId;
-    }
-  }
-
-  // Fallback non-streaming method using SDK
-  async executeSkill(
-    skillId: string,
-    systemPrompt: string,
-    userInput: string,
-    sessionId?: string
-  ): Promise<SkillExecutionResult> {
-    if (!this.client) {
-      await this.connect();
-    }
-
-    let currentSessionId = sessionId;
-
-    if (!currentSessionId) {
-      try {
-        const createResp = await this.client.session.create({
-          body: { title: `Skill: ${skillId}` },
-        });
-        currentSessionId = createResp.id || createResp.data?.id || '';
-      } catch (error: any) {
-        return { success: false, output: '', error: `Failed to create session: ${error.message}` };
-      }
-    }
-
-    try {
-      if (systemPrompt) {
-        await this.client.session.prompt({
-          sessionId: currentSessionId,
-          body: { parts: [{ type: 'text', text: systemPrompt }] },
-        });
-      }
-
-      await this.client.session.prompt({
-        sessionId: currentSessionId,
-        body: { parts: [{ type: 'text', text: userInput }] },
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      const msgsResp = await this.client.session.messages(currentSessionId);
-      const messages = msgsResp.data || [];
-
-      const lastAssistant = messages.filter((m: any) => m.info?.role === 'assistant').pop();
-
-      const output = lastAssistant?.info?.parts?.[0]?.text || 'No output';
-
-      return { success: true, output, sessionId: currentSessionId };
-    } catch (error: any) {
-      console.error('[OpenCode] Execution error:', error);
-      return { success: false, output: '', sessionId: currentSessionId, error: error.message };
-    }
-  }
-
-  isConnected(): boolean {
+  get connected(): boolean {
     return this.client !== null;
   }
 
-  cleanup() {
-    if (this.sseAbortController) {
-      this.sseAbortController.abort();
-      this.sseAbortController = null;
+  // ── Connect ─────────────────────────────────────────────────────────────
+
+  async connect(baseUrl?: string): Promise<{ version: string }> {
+    const url = baseUrl || this.baseUrl;
+    this.client = createOpencodeClient({ baseUrl: url });
+
+    // Verify with a health check
+    const health = await this.client.global.health();
+    const version = health?.data?.version ?? health?.version ?? 'unknown';
+    console.log('[OpenCode] Connected to', url, '– version', version);
+    return { version };
+  }
+
+  // ── Sessions ────────────────────────────────────────────────────────────
+
+  async createSession(title: string): Promise<SessionInfo> {
+    this.ensureClient();
+    const resp = await this.client.session.create({ body: { title } });
+    const session = resp?.data ?? resp;
+    return {
+      id: session.id,
+      title: session.title ?? title,
+      time: session.time ?? { created: Date.now(), updated: Date.now() },
+    };
+  }
+
+  async listSessions(): Promise<SessionInfo[]> {
+    this.ensureClient();
+    const resp = await this.client.session.list();
+    const list = resp?.data ?? resp ?? [];
+    return (Array.isArray(list) ? list : []).map((s: Record<string, unknown>) => ({
+      id: s.id as string,
+      title: (s.title as string) ?? '',
+      time: (s.time as { created: number; updated: number }) ?? { created: 0, updated: 0 },
+    }));
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    this.ensureClient();
+    await this.client.session.delete({ path: { id } });
+  }
+
+  async abortSession(id: string): Promise<void> {
+    this.ensureClient();
+    await this.client.session.abort({ path: { id } });
+  }
+
+  // ── Providers / Models ──────────────────────────────────────────────────
+
+  async getProviders(): Promise<unknown> {
+    this.ensureClient();
+    const resp = await this.client.config.providers();
+    return resp?.data ?? resp;
+  }
+
+  // ── Send message with streaming ─────────────────────────────────────────
+
+  async sendMessage(
+    sessionId: string,
+    text: string,
+    callbacks: StreamCallbacks,
+    options?: {
+      model?: ModelConfig;
+      system?: string;
+    }
+  ): Promise<void> {
+    this.ensureClient();
+
+    // Clean up any prior stream
+    this.cleanup();
+    this.abortController = new AbortController();
+    const ac = this.abortController;
+
+    let isCompleted = false;
+    let hasReceivedParts = false;
+
+    // 1. Subscribe to the global event stream BEFORE sending the prompt
+    const subscription = await this.client.event.subscribe();
+    // The SDK may expose `subscription.stream` (async iterable) or be iterable directly
+    const eventStream = subscription?.stream ?? subscription;
+
+    const processEvents = async () => {
+      try {
+        for await (const event of eventStream) {
+          if (ac.signal.aborted) break;
+
+          const eventType: string = event.type ?? event?.payload?.type;
+          const props: Record<string, unknown> =
+            event.properties ?? event?.payload?.properties ?? event?.payload ?? {};
+
+          // Filter: only process events for our session
+          const evtSid =
+            (props.sessionID as string) ??
+            ((props.info as Record<string, unknown>)?.sessionID as string) ??
+            ((props.part as Record<string, unknown>)?.sessionID as string);
+
+          if (evtSid && evtSid !== sessionId) continue;
+
+          switch (eventType) {
+            // ── Part updates ────────────────────────────────────────────
+            case 'message.part.updated': {
+              const part = props.part as Part | undefined;
+              if (!part) break;
+              hasReceivedParts = true;
+              callbacks.onPartUpdated(part, props.delta as string | undefined);
+              break;
+            }
+
+            // ── Message lifecycle ───────────────────────────────────────
+            case 'message.updated': {
+              const info = (props.info ?? props) as Record<string, unknown>;
+              callbacks.onMessageUpdated(info);
+              if (info.role === 'assistant' && info.finish === 'stop') {
+                isCompleted = true;
+                ac.abort();
+                try { subscription?.controller?.abort(); } catch { /* ignore */ }
+                callbacks.onComplete();
+                return;
+              }
+              break;
+            }
+
+            // ── Session status ──────────────────────────────────────────
+            case 'session.status': {
+              const statusObj = props.status as Record<string, unknown> | string | undefined;
+              const status = typeof statusObj === 'string' ? statusObj : (statusObj?.type as string) ?? '';
+              callbacks.onSessionStatus(status);
+              if (status === 'idle' && hasReceivedParts) {
+                isCompleted = true;
+                ac.abort();
+                try { subscription?.controller?.abort(); } catch { /* ignore */ }
+                callbacks.onComplete();
+                return;
+              }
+              break;
+            }
+
+            // ── Permission requests ─────────────────────────────────────
+            case 'permission.updated': {
+              callbacks.onPermission?.(props);
+              break;
+            }
+
+            // ── Todos ───────────────────────────────────────────────────
+            case 'todo.updated': {
+              callbacks.onTodos?.(props.todos as TodoItem[]);
+              break;
+            }
+          }
+        }
+
+        // Stream ended naturally
+        if (!isCompleted) {
+          if (hasReceivedParts) {
+            callbacks.onComplete();
+          } else {
+            callbacks.onError('Event stream ended without receiving any parts');
+          }
+        }
+      } catch (err: unknown) {
+        const e = err as Error;
+        if (e.name === 'AbortError' || ac.signal.aborted) return;
+        console.error('[OpenCode] Event processing error:', e);
+        callbacks.onError(e.message ?? 'Unknown stream error');
+      }
+    };
+
+    // Start processing events in the background
+    processEvents();
+
+    // Small delay to ensure the event listener is active
+    await new Promise((r) => setTimeout(r, 200));
+
+    // 2. Send the prompt
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body: Record<string, any> = {
+        parts: [{ type: 'text', text }],
+      };
+      if (options?.model) {
+        body.model = { providerID: options.model.providerID, modelID: options.model.modelID };
+      }
+      if (options?.system) {
+        body.system = options.system;
+      }
+
+      await this.client.session.prompt({
+        path: { id: sessionId },
+        body,
+      });
+    } catch (err: unknown) {
+      const e = err as Error;
+      if (e.name !== 'AbortError' && !ac.signal.aborted) {
+        console.error('[OpenCode] Prompt send error:', e);
+        callbacks.onError(`Failed to send message: ${e.message}`);
+      }
+    }
+
+    // 3. Safety timeout (5 minutes)
+    setTimeout(() => {
+      if (!ac.signal.aborted && !isCompleted) {
+        ac.abort();
+        try { subscription?.controller?.abort(); } catch { /* ignore */ }
+        if (hasReceivedParts) {
+          callbacks.onComplete();
+        } else {
+          callbacks.onError('Timeout: no response received after 5 minutes');
+        }
+      }
+    }, 300_000);
+  }
+
+  // ── Cleanup ─────────────────────────────────────────────────────────────
+
+  cleanup(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+  }
+
+  // ── Internal ────────────────────────────────────────────────────────────
+
+  private ensureClient(): void {
+    if (!this.client) {
+      throw new Error('OpenCode client is not connected. Call connect() first.');
     }
   }
 }
 
-export const opencodeService = new OpenCodeService();
+// ---------------------------------------------------------------------------
+// Singleton export
+// ---------------------------------------------------------------------------
 
-import { useState, useCallback } from 'react';
-
-export function useOpenCode() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const executeSkill = useCallback(
-    async (skillId: string, systemPrompt: string, userInput: string) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await opencodeService.executeSkill(skillId, systemPrompt, userInput);
-        if (!result.success) setError(result.error || 'Execution failed');
-        return result;
-      } catch (err: any) {
-        setError(err.message);
-        return { success: false, output: '', error: err.message };
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
-  return { isConnected: opencodeService.isConnected(), isLoading, error, executeSkill };
-}
+export const opencode = new OpenCodeClient();

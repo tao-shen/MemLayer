@@ -362,9 +362,15 @@ importers:
       react-dropzone:
         specifier: ^14.3.8
         version: 14.3.8(react@19.2.4)
+      react-markdown:
+        specifier: ^9.1.0
+        version: 9.1.0(@types/react@19.2.10)(react@19.2.4)
       react-router-dom:
         specifier: ^7.13.0
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -682,7 +688,7 @@ importers:
         version: 9.0.10
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/embedding-service:
     dependencies:
@@ -710,7 +716,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/management-service:
     dependencies:
@@ -744,7 +750,7 @@ importers:
         version: 3.0.11
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/reflection-service:
     dependencies:
@@ -781,7 +787,7 @@ importers:
         version: 9.0.8
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/retrieval-service:
     dependencies:
@@ -806,7 +812,7 @@ importers:
         version: 4.17.25
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/skill-creator-service:
     dependencies:
@@ -919,7 +925,7 @@ importers:
         version: 8.15.6
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.10.9)(typescript@5.9.3)
+        version: 2.0.0(@types/node@20.19.24)(typescript@5.9.3)
 
   services/visualization-service:
     dependencies:
@@ -5303,7 +5309,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   globals@13.24.0:
     resolution: {integrity: sha512-AhO5QUcj8llrbG09iWhPU2B204J1xnPeL8kQmVorSsy+Sjj1sk8gIyh6cUocGmH4L0UuhAJy+hJMRA4mgA4mFQ==}
@@ -16754,6 +16760,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  react-markdown@9.1.0(@types/react@19.2.10)(react@19.2.4):
+    dependencies:
+      '@types/hast': 3.0.4
+      '@types/mdast': 4.0.4
+      '@types/react': 19.2.10
+      devlop: 1.1.0
+      hast-util-to-jsx-runtime: 2.3.6
+      html-url-attributes: 3.0.1
+      mdast-util-to-hast: 13.2.1
+      react: 19.2.4
+      remark-parse: 11.0.0
+      remark-rehype: 11.1.2
+      unified: 11.0.5
+      unist-util-visit: 5.1.0
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
   react-modal@3.16.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       exenv: 1.2.2
@@ -17651,7 +17675,7 @@ snapshots:
 
   ts-mixer@6.0.4: {}
 
-  ts-node-dev@2.0.0(@types/node@24.10.9)(typescript@5.9.3):
+  ts-node-dev@2.0.0(@types/node@20.19.24)(typescript@5.9.3):
     dependencies:
       chokidar: 3.6.0
       dynamic-dedupe: 0.3.0
@@ -17661,7 +17685,7 @@ snapshots:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 10.9.2(@types/node@24.10.9)(typescript@5.9.3)
+      ts-node: 10.9.2(@types/node@20.19.24)(typescript@5.9.3)
       tsconfig: 7.0.0
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -17704,6 +17728,7 @@ snapshots:
       typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    optional: true
 
   tsconfig@7.0.0:
     dependencies:
