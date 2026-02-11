@@ -17,6 +17,8 @@ import {
   Wrench,
   Brain,
   FileText,
+  Folder,
+  FolderOpen,
   GitBranch,
   Camera,
   ListTodo,
@@ -91,6 +93,22 @@ function safeString(v: unknown): string {
   if (v == null) return '';
   if (typeof v === 'string') return v;
   try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+}
+
+/** Parse skill Md URL to get path segments for file tree (e.g. ["skills", "find-skills", "SKILL.md"]). */
+function getSkillPathSegments(skillMdUrl: string | undefined): string[] {
+  if (!skillMdUrl) return [];
+  try {
+    // raw: .../owner/repo/main/path/to/SKILL.md  or  .../owner/repo/branch/path/SKILL.md
+    const rawMatch = skillMdUrl.match(/githubusercontent\.com\/[^/]+\/[^/]+\/([^/]+)\/(.+)$/);
+    if (rawMatch) return rawMatch[2].split('/').filter(Boolean);
+    // jsDelivr: .../gh/owner/repo@main/path/to/SKILL.md
+    const cdnMatch = skillMdUrl.match(/jsdelivr\.net\/gh\/[^/]+\/[^/]+@[^/]+\/(.+)$/);
+    if (cdnMatch) return cdnMatch[1].split('/').filter(Boolean);
+  } catch {
+    /* ignore */
+  }
+  return [];
 }
 
 /**
@@ -1752,11 +1770,55 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                       </button>
                     )}
                   </div>
-                  {showViewInstructions && skillInstructions && (
-                    <div className="border-t border-white/10 max-h-64 overflow-y-auto">
-                      <pre className="p-4 text-xs whitespace-pre-wrap font-sans opacity-90">
-                        {skillInstructions}
-                      </pre>
+                  {showViewInstructions && (skillInstructions || skill.skillMdUrl) && (
+                    <div className="border-t border-white/10 overflow-hidden flex flex-col">
+                      {(() => {
+                        const segments =
+                          getSkillPathSegments(skill.skillMdUrl).length > 0
+                            ? getSkillPathSegments(skill.skillMdUrl)
+                            : skill.id
+                              ? [String(skill.id).replace(/^store-/, ''), 'SKILL.md']
+                              : [];
+                        return (
+                          <>
+                            {segments.length > 0 && (
+                              <div className="px-4 py-3 bg-white/5 border-b border-white/10">
+                                <div className="text-xs font-medium opacity-80 mb-2">File structure</div>
+                                <div className="font-mono text-xs space-y-0.5">
+                                  {segments.map((name, i) => {
+                                    const isFile = i === segments.length - 1;
+                                    const depth = i;
+                                    return (
+                                      <div
+                                        key={i}
+                                        className="flex items-center gap-1.5"
+                                        style={{ paddingLeft: depth * 12 }}
+                                      >
+                                        {isFile ? (
+                                          <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                        ) : depth === 0 ? (
+                                          <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                        ) : (
+                                          <Folder className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                        )}
+                                        <span className={isFile ? 'text-amber-200/90' : 'opacity-90'}>{name}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {skillInstructions && (
+                              <div className="flex-1 min-h-0 max-h-64 overflow-y-auto">
+                                <div className="text-xs font-medium opacity-80 px-4 pt-3 pb-1">Content</div>
+                                <pre className="p-4 pt-0 text-xs whitespace-pre-wrap font-sans opacity-90">
+                                  {skillInstructions}
+                                </pre>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
