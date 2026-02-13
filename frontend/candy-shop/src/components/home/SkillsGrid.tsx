@@ -26,11 +26,31 @@ export function SkillsGrid({
   onRunSkill,
 }: SkillsGridProps) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-  const [likedSkills, setLikedSkills] = useState<Set<string>>(new Set());
+  // Use lazy initializer to load liked skills from storage
+  const [likedSkills, setLikedSkills] = useState<Set<string>>(() => new Set(storageUtils.getLikes()));
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [visibleCount, setVisibleCount] = useState(12); // Initial items to show
   const ITEMS_PER_LOAD = 12;
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  // Track the base visible count - resets when filters change
+  const baseVisibleCount = 12;
+  // Track additional items loaded beyond base
+  const [additionalLoaded, setAdditionalLoaded] = useState(0);
+
+  // Calculate total visible count using useMemo
+  const actualVisibleCount = useMemo(() => {
+    return baseVisibleCount + additionalLoaded;
+  }, [additionalLoaded]);
+
+  // Reset additional loaded count when filters change
+  const prevFiltersRef = useRef({ searchQuery, categoryFilter });
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    if (prev.searchQuery !== searchQuery || prev.categoryFilter !== categoryFilter) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAdditionalLoaded(0);
+      prevFiltersRef.current = { searchQuery, categoryFilter };
+    }
+  }, [searchQuery, categoryFilter]);
 
   // Cmd+K / Ctrl+K keyboard shortcut to focus search
   useEffect(() => {
@@ -44,18 +64,13 @@ export function SkillsGrid({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    // Load liked skills from storage
-    const likes = storageUtils.getLikes();
-    setLikedSkills(new Set(likes));
-  }, []);
-
   // Intersection Observer for infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => prev + ITEMS_PER_LOAD);
+           
+          setAdditionalLoaded((prev) => prev + ITEMS_PER_LOAD);
         }
       },
       { threshold: 0.1 }
@@ -67,11 +82,6 @@ export function SkillsGrid({
 
     return () => observer.disconnect();
   }, []);
-
-  // Reset visible count when search or category filter changes
-  useEffect(() => {
-    setVisibleCount(ITEMS_PER_LOAD);
-  }, [searchQuery, categoryFilter]);
 
   const handleLike = (skillId: string) => {
     const isLiked = likedSkills.has(skillId);
@@ -155,7 +165,7 @@ export function SkillsGrid({
 
           {/* Grid - SkillsMP Style */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSkills.slice(0, visibleCount).map((skill) => (
+            {filteredSkills.slice(0, actualVisibleCount).map((skill) => (
               <div
                 key={skill.id}
                 onClick={() => setSelectedSkill(skill)}
@@ -294,7 +304,7 @@ export function SkillsGrid({
           </div>
 
           {/* Load More Trigger */}
-          {visibleCount < filteredSkills.length && (
+          {actualVisibleCount < filteredSkills.length && (
             <div
               ref={loadMoreRef}
               className="flex justify-center items-center py-8"

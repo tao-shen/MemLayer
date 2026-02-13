@@ -7,7 +7,6 @@ interface HeroProps {
 
 export function Hero({ onOpenDocs }: HeroProps) {
   const [displayText, setDisplayText] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
   const fullText = "AI is simple like candy";
 
   useEffect(() => {
@@ -19,7 +18,6 @@ export function Hero({ onOpenDocs }: HeroProps) {
         setDisplayText(fullText.slice(0, index));
         index++;
       } else {
-        setIsTyping(false);
         clearInterval(timer);
       }
     }, typingSpeed);
