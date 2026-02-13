@@ -315,7 +315,7 @@ importers:
         specifier: ^7.2.4
         version: 7.3.1(@types/node@24.10.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  frontend/skills-replica:
+  frontend/candy-shop:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.30.1

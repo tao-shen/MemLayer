@@ -8,7 +8,7 @@ const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const PROJECT_DIR = '/Users/tao.shen/Tacits/frontend/skills-replica';
+const PROJECT_DIR = '/Users/tao.shen/Tacits/frontend/candy-shop';
 const DEV_PORT = 5173;
 const TEST_URL = `http://localhost:${DEV_PORT}`;
 

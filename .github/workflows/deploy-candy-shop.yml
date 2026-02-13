@@ -1,4 +1,4 @@
-name: Deploy Skills Replica
+name: Deploy Candy Shop
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
       - master
     paths:
-      - 'frontend/skills-replica/**'
+      - 'frontend/candy-shop/**'
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend/skills-replica
+        working-directory: frontend/candy-shop
 
     steps:
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/skills-replica/dist
+          folder: frontend/candy-shop/dist
           branch: gh-pages
           target-folder: .
           clean: true
