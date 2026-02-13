@@ -1,10 +1,31 @@
 import { Search, FileText, Code2, TrendingUp, Sparkles, Candy } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface HeroProps {
   onOpenDocs: () => void;
 }
 
 export function Hero({ onOpenDocs }: HeroProps) {
+  const [displayText, setDisplayText] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
+  const fullText = "AI is simple like candy";
+
+  useEffect(() => {
+    let index = 0;
+    const typingSpeed = 80; // ms per character
+
+    const timer = setInterval(() => {
+      if (index <= fullText.length) {
+        setDisplayText(fullText.slice(0, index));
+        index++;
+      } else {
+        setIsTyping(false);
+        clearInterval(timer);
+      }
+    }, typingSpeed);
+
+    return () => clearInterval(timer);
+  }, []);
   return (
     <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-32">
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
@@ -17,9 +38,8 @@ export function Hero({ onOpenDocs }: HeroProps) {
 
           <div className="relative">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-candy font-bold tracking-tight text-foreground leading-[1.1]">
-              AI is simple <br />
-              like candy
-              <span className="inline-block w-3 h-10 ml-2 -mb-1 bg-primary animate-pulse"></span>
+              {displayText}
+              <span className="inline-block w-3 h-10 ml-1 -mb-1 bg-primary animate-pulse"></span>
             </h1>
             <p className="mt-4 text-xl text-foreground-secondary font-mono">
               <span className="text-primary">{'>'} npm install intelligence</span>

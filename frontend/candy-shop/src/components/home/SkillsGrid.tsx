@@ -28,6 +28,9 @@ export function SkillsGrid({
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [likedSkills, setLikedSkills] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [visibleCount, setVisibleCount] = useState(12); // Initial items to show
+  const ITEMS_PER_LOAD = 12;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Cmd+K / Ctrl+K keyboard shortcut to focus search
   useEffect(() => {
@@ -46,6 +49,29 @@ export function SkillsGrid({
     const likes = storageUtils.getLikes();
     setLikedSkills(new Set(likes));
   }, []);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + ITEMS_PER_LOAD);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Reset visible count when search or category filter changes
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_LOAD);
+  }, [searchQuery, categoryFilter]);
 
   const handleLike = (skillId: string) => {
     const isLiked = likedSkills.has(skillId);
@@ -129,7 +155,7 @@ export function SkillsGrid({
 
           {/* Grid - SkillsMP Style */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSkills.map((skill) => (
+            {filteredSkills.slice(0, visibleCount).map((skill) => (
               <div
                 key={skill.id}
                 onClick={() => setSelectedSkill(skill)}
@@ -266,6 +292,21 @@ export function SkillsGrid({
               </div>
             ))}
           </div>
+
+          {/* Load More Trigger */}
+          {visibleCount < filteredSkills.length && (
+            <div
+              ref={loadMoreRef}
+              className="flex justify-center items-center py-8"
+            >
+              <div className="flex items-center gap-3 text-muted-foreground font-mono text-sm">
+                <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
+                <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <span className="ml-2">Loading more skills...</span>
+              </div>
+            </div>
+          )}
 
           {filteredSkills.length === 0 && (
             <div className="text-center py-20 text-muted-foreground font-mono">
