@@ -1,8 +1,11 @@
 import { Folder, ArrowRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { SKILLS_DATA, SKILL_CATEGORIES } from '../../data/skillsData';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export function Categories({ onSelectCategory }: { onSelectCategory: (cat: string) => void }) {
+  const { t } = useLanguage();
+
   // Dynamically calculate category counts from actual skill data
   const categories = useMemo(() => {
     return SKILL_CATEGORIES.map(cat => {
@@ -22,7 +25,7 @@ export function Categories({ onSelectCategory }: { onSelectCategory: (cat: strin
       <div className="container max-w-7xl mx-auto px-4">
         <h2 className="text-2xl font-bold mb-8 font-candy flex items-center gap-3 text-foreground">
           <Folder className="w-6 h-6 text-primary" />
-          <span>Skill Directories</span>
+          <span>{t('categories.title')}</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

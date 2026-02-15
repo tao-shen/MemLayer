@@ -1,13 +1,15 @@
 import { Search, FileText, Code2, TrendingUp, Sparkles, Candy } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HeroProps {
   onOpenDocs: () => void;
 }
 
 export function Hero({ onOpenDocs }: HeroProps) {
+  const { t } = useLanguage();
   const [displayText, setDisplayText] = useState('');
-  const fullText = "AI is simple like candy";
+  const fullText = t('hero.tagline');
 
   useEffect(() => {
     let index = 0;
@@ -45,8 +47,7 @@ export function Hero({ onOpenDocs }: HeroProps) {
           </div>
 
           <p className="text-lg text-foreground-secondary max-w-lg leading-relaxed font-body">
-            Powerful AI skills at your fingertips. Simple, accessible, and ready to use. No
-            complexity, just results.
+            {t('hero.subtitle')}
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -57,14 +58,14 @@ export function Hero({ onOpenDocs }: HeroProps) {
               className="h-12 px-6 bg-primary text-primary-foreground rounded-md font-mono font-medium hover:bg-primary-hover transition-all duration-200 flex items-center gap-2 shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 hover:shadow-xl hover:shadow-primary/10"
             >
               <Search className="w-4 h-4" />
-              Browse Skills
+              {t('hero.browseSkills')}
             </button>
             <button
               onClick={onOpenDocs}
               className="h-12 px-6 bg-background border border-border text-foreground rounded-md font-mono font-medium hover:bg-secondary transition-all duration-200 flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-border"
             >
               <FileText className="w-4 h-4 text-foreground-secondary" />
-              Documentation
+              {t('hero.docs')}
             </button>
           </div>
 
@@ -106,9 +107,9 @@ export function Hero({ onOpenDocs }: HeroProps) {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <div className="text-sm text-foreground-secondary font-mono mb-1">
-                    Active Skills
+                    {t('hero.activeSkills')}
                   </div>
-                  <div className="text-2xl font-bold font-candy text-primary">127 Ready</div>
+                  <div className="text-2xl font-bold font-candy text-primary">127 {t('hero.ready')}</div>
                 </div>
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <TrendingUp className="w-5 h-5 text-primary" />
@@ -142,7 +143,7 @@ export function Hero({ onOpenDocs }: HeroProps) {
               <span className="text-[#f9e2af]">useSkill</span>();
             </div>
             <div className="text-[#6c7086] text-xs mt-1 flex items-center gap-1">
-              // simple as candy <Candy className="w-3 h-3 inline text-[#f38ba8]" />
+              {t('hero.comment')} <Candy className="w-3 h-3 inline text-[#f38ba8]" />
             </div>
           </div>
         </div>

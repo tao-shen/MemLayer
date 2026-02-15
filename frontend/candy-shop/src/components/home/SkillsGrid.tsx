@@ -5,6 +5,7 @@ import { SkillModal } from '../common/SkillModal';
 import { storageUtils } from '../../utils/storage';
 import { cn } from '../../utils/cn';
 import { toast } from 'sonner';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface SkillsGridProps {
   searchQuery: string;
@@ -25,6 +26,7 @@ export function SkillsGrid({
   onToggleCart,
   onRunSkill,
 }: SkillsGridProps) {
+  const { t } = useLanguage();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   // Use lazy initializer to load liked skills from storage
   const [likedSkills, setLikedSkills] = useState<Set<string>>(() => new Set(storageUtils.getLikes()));
@@ -127,7 +129,7 @@ export function SkillsGrid({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <h2 className="text-3xl font-candy font-bold mb-2 text-foreground">
-                {categoryFilter ? `${categoryFilter} Modules` : 'Freshly Baked Skills'}
+                {categoryFilter ? t('skills.categoryModules', { category: categoryFilter }) : t('skills.freshlyBaked')}
               </h2>
               <div className="flex items-center gap-2 text-muted-foreground font-mono text-sm">
                 <span>$ ls ./inventory</span>
@@ -151,7 +153,7 @@ export function SkillsGrid({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search skills... (⌘K)"
+                  placeholder={t('skills.search')}
                   className={cn(
                     'w-full h-10 pl-10 pr-4 bg-background border border-input rounded-lg text-sm font-mono',
                     'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -235,7 +237,7 @@ export function SkillsGrid({
                 >
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3" />
-                    <span>Updated today</span>
+                    <span>{t('skills.updatedToday')}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -283,17 +285,17 @@ export function SkillsGrid({
                           ? 'bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20'
                           : 'bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
                       )}
-                      aria-label={cart.has(skill.id) ? `Remove ${skill.name} from bag` : `Add ${skill.name} to bag`}
+                      aria-label={cart.has(skill.id) ? t('skills.removeFromBag', { name: skill.name }) : t('skills.addToBag', { name: skill.name })}
                     >
                       {cart.has(skill.id) ? (
                         <>
                           <Check className="w-3 h-3" />
-                          <span>In Bag</span>
+                          <span>{t('skills.inBag')}</span>
                         </>
                       ) : (
                         <>
                           <ShoppingBag className="w-3 h-3" />
-                          <span>Add</span>
+                          <span>{t('skills.add')}</span>
                         </>
                       )}
                     </button>
@@ -313,14 +315,14 @@ export function SkillsGrid({
                 <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
                 <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <span className="ml-2">Loading more skills...</span>
+                <span className="ml-2">{t('skills.loadingMore')}</span>
               </div>
             </div>
           )}
 
           {filteredSkills.length === 0 && (
             <div className="text-center py-20 text-muted-foreground font-mono">
-              No skills found matching "{searchQuery}" :(
+              {t('skills.noResults', { query: searchQuery })}
             </div>
           )}
         </div>

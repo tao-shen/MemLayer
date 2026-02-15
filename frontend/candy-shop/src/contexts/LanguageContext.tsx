@@ -5,7 +5,7 @@ type Language = 'en' | 'zh';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -45,6 +45,58 @@ const translations: Record<Language, Record<string, string>> = {
     'theme.amber.desc': 'Warm & Energetic',
     'theme.rose.desc': 'Bold & Vibrant',
     'theme.violet.desc': 'Creative & Elegant',
+
+    // Hero
+    'hero.tagline': 'AI is simple like candy',
+    'hero.subtitle': 'Powerful AI skills at your fingertips. Simple, accessible, and ready to use. No complexity, just results.',
+    'hero.cli': '> npm install intelligence',
+    'hero.browseSkills': 'Browse Skills',
+    'hero.docs': 'Documentation',
+    'hero.activeSkills': 'Active Skills',
+    'hero.ready': 'Ready',
+    'hero.comment': '// simple as candy',
+
+    // Categories
+    'categories.title': 'Skill Directories',
+
+    // Skills Grid
+    'skills.freshlyBaked': 'Freshly Baked Skills',
+    'skills.categoryModules': '{category} Modules',
+    'skills.search': 'Search skills... (⌘K)',
+    'skills.loadingMore': 'Loading more skills...',
+    'skills.noResults': 'No skills found matching "{query}" :(',
+    'skills.inBag': 'In Bag',
+    'skills.add': 'Add',
+    'skills.addToBag': 'Add {name} to bag',
+    'skills.removeFromBag': 'Remove {name} from bag',
+    'skills.runSkill': 'Run skill',
+    'skills.likeSkill': 'Like skill',
+    'skills.unlikeSkill': 'Unlike skill',
+    'skills.updatedToday': 'Updated today',
+
+    // External Resources
+    'external.title': 'Community Skills (External)',
+    'external.anthropic': 'Anthropic Skills',
+    'external.anthropicDesc': 'Official Agent Skills from Anthropic. The gold standard for extending Claude.',
+    'external.obra': 'Obra Superpowers',
+    'external.obraDesc': 'Core skills library to make Claude Code smarter, focused on TDD and planning.',
+    'external.awesome': 'Awesome Claude Skills',
+    'external.awesomeDesc': 'Curated list of best community-driven skills and prompts.',
+
+    // FAQ
+    'faq.title': '# Frequently Asked Questions',
+    'faq.q1': 'Is this sugar-free?',
+    'faq.a1': 'We have a dedicated module for sugar-free options. Run `$ npm install @candy/sugar-free` to verify.',
+    'faq.q2': 'Do you ship internationally?',
+    'faq.a2': 'Yes! We deploy happiness globally. Check our shipping manifest for restricted regions.',
+    'faq.q3': 'Can I return open wrappers?',
+    'faq.a3': 'Negative. Once executed, consumption is irreversible. Please review our `REFUND_POLICY.md`.',
+    'faq.q4': 'Bulk API access?',
+    'faq.a4': 'For wholesale orders, please authenticate as an enterprise partner using our Wholesale API.',
+
+    // Footer
+    'footer.tagline': 'AI is simple like candy',
+    'footer.backToTop': 'Back to top',
   },
   zh: {
     // Sidebar
@@ -79,6 +131,58 @@ const translations: Record<Language, Record<string, string>> = {
     'theme.amber.desc': '温暖活力',
     'theme.rose.desc': '大胆鲜艳',
     'theme.violet.desc': '创意优雅',
+
+    // Hero
+    'hero.tagline': 'AI 简单如糖果',
+    'hero.subtitle': '强大的 AI 技能触手可及。简单、易用、随时可用。没有复杂，只有结果。',
+    'hero.cli': '> npm 安装 智能',
+    'hero.browseSkills': '浏览技能',
+    'hero.docs': '使用文档',
+    'hero.activeSkills': '活跃技能',
+    'hero.ready': '就绪',
+    'hero.comment': '// 简单如糖果',
+
+    // Categories
+    'categories.title': '技能目录',
+
+    // Skills Grid
+    'skills.freshlyBaked': '新鲜出炉的技能',
+    'skills.categoryModules': '{category} 模块',
+    'skills.search': '搜索技能... (⌘K)',
+    'skills.loadingMore': '正在加载更多技能...',
+    'skills.noResults': '没有找到匹配 "{query}" 的技能 :(',
+    'skills.inBag': '已添加',
+    'skills.add': '添加',
+    'skills.addToBag': '将 {name} 加入购物车',
+    'skills.removeFromBag': '将 {name} 移出购物车',
+    'skills.runSkill': '运行技能',
+    'skills.likeSkill': '喜欢技能',
+    'skills.unlikeSkill': '取消喜欢',
+    'skills.updatedToday': '今日更新',
+
+    // External Resources
+    'external.title': '社区技能 (外部资源)',
+    'external.anthropic': 'Anthropic 技能',
+    'external.anthropicDesc': '来自 Anthropic 的官方代理技能。扩展 Claude 的黄金标准。',
+    'external.obra': 'Obra 超能力',
+    'external.obraDesc': '让 Claude Code 更智能的核心技能库，专注于 TDD 和规划。',
+    'external.awesome': '精选 Claude 技能',
+    'external.awesomeDesc': '最佳社区驱动技能和提示的精选列表。',
+
+    // FAQ
+    'faq.title': '# 常见问题',
+    'faq.q1': '这是无糖的吗？',
+    'faq.a1': '我们有专门的无糖选项模块。运行 `$ npm install @candy/sugar-free` 来验证。',
+    'faq.q2': '你们国际配送吗？',
+    'faq.a2': '是的！我们向全球部署快乐。请查看我们的配送清单了解受限地区。',
+    'faq.q3': '可以退换已拆封的吗？',
+    'faq.a3': '不可以。一旦执行，消费是不可逆的。请查看我们的 `REFUND_POLICY.md`。',
+    'faq.q4': '批量 API 访问？',
+    'faq.a4': '如需批量订购，请使用我们的批发 API 验证为企业合作伙伴。',
+
+    // Footer
+    'footer.tagline': 'AI 简单如糖果',
+    'footer.backToTop': '返回顶部',
   },
 };
 
@@ -96,8 +200,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
   };
 
-  const t = (key: string): string => {
-    return translations[language][key] || key;
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let text = translations[language][key] || key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
   };
 
   return (
