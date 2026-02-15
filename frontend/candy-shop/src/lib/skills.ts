@@ -7,6 +7,7 @@ export interface Skill {
   name: string;
   description: string;
   instructions: string;
+  greeting?: string;
 }
 
 export function parseSkill(markdown: string): Skill {
@@ -16,6 +17,7 @@ export function parseSkill(markdown: string): Skill {
 
   let name = 'Unknown Skill';
   let description = '';
+  let greeting = '';
   let instructions = markdown;
 
   if (match) {
@@ -28,11 +30,15 @@ export function parseSkill(markdown: string): Skill {
 
     const descMatch = frontmatter.match(/^description:\s*(.*)$/m);
     if (descMatch) description = descMatch[1].trim();
+
+    const greetingMatch = frontmatter.match(/^greeting:\s*(.*)$/m);
+    if (greetingMatch) greeting = greetingMatch[1].trim();
   }
 
   return {
     name,
     description,
+    greeting,
     instructions
   };
 }

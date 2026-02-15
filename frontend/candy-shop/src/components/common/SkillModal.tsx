@@ -85,9 +85,26 @@ export function SkillModal({ skill, onClose, onRun }: SkillModalProps) {
           </div>
 
           <h2 className="text-3xl font-candy font-bold text-foreground mb-2">{skill.name}</h2>
-          <p className="text-foreground-secondary text-lg mb-8 font-body leading-relaxed">
+          <p className="text-foreground-secondary text-lg mb-4 font-body leading-relaxed">
             {skill.description}
           </p>
+
+          {/* Greeting Message */}
+          {skill.greeting && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl" aria-hidden="true">👋</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                    Hi there! I'm {skill.name}
+                  </p>
+                  <p className="text-foreground-secondary text-sm leading-relaxed">
+                    {skill.greeting}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Install Command */}
           <div className="mb-8">

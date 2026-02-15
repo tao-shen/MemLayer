@@ -21,6 +21,7 @@ export interface Skill {
   repo: string;
   skillMdUrl: string;
   config: Record<string, unknown>;
+  greeting?: string;
 }
 
 // Helper to build raw GitHub URL for SKILL.md

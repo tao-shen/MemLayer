@@ -24,6 +24,7 @@ export interface Skill {
   popularity: number;
   repo?: string;
   skillMdUrl?: string;
+  greeting?: string;
 
   // Timestamps
   createdAt: Date;
