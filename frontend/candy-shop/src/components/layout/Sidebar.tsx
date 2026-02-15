@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { cn } from '../../utils/cn';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface SidebarProps {
   onOpenAuth: () => void;
@@ -37,14 +38,14 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'find', label: 'find --sweet', icon: Search, action: 'find' },
-  { id: 'cd', label: 'cd /chocolates', icon: Grid3X3, action: 'cd' },
-  { id: 'man', label: 'man recipes', icon: BookOpen, action: 'man' },
+  { id: 'find', labelKey: 'nav.find', icon: Search, action: 'find' },
+  { id: 'cd', labelKey: 'nav.cd', icon: Grid3X3, action: 'cd' },
+  { id: 'man', labelKey: 'nav.man', icon: BookOpen, action: 'man' },
 ];
 
 const userNavItems = [
-  { id: 'create', label: 'create skills', icon: Plus, action: 'create' },
-  { id: 'library', label: 'my skills', icon: Library, action: 'library' },
+  { id: 'create', labelKey: 'nav.create', icon: Plus, action: 'create' },
+  { id: 'library', labelKey: 'nav.library', icon: Library, action: 'library' },
 ];
 
 // 主题配置
@@ -101,6 +102,7 @@ export function Sidebar({
   onChangeTheme,
 }: SidebarProps) {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -157,11 +159,11 @@ export function Sidebar({
         'focus:outline-none focus:ring-2 focus:ring-primary/30',
         collapsed ? 'justify-center' : 'justify-start'
       )}
-      title={collapsed ? item.label : undefined}
-      aria-label={item.label}
+      title={collapsed ? t(item.labelKey) : undefined}
+      aria-label={t(item.labelKey)}
     >
       <item.icon className={cn('w-5 h-5 flex-shrink-0 text-foreground-secondary')} />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
     </button>
   );
 
@@ -176,13 +178,13 @@ export function Sidebar({
           'focus:outline-none focus:ring-2 focus:ring-primary/30',
           collapsed ? 'justify-center' : 'justify-between'
         )}
-        title={collapsed ? 'Theme' : undefined}
+        title={collapsed ? t('theme') : undefined}
         aria-label="Select theme"
         aria-expanded={showThemeSelector}
       >
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
           <Palette className="w-5 h-5 text-foreground-secondary" />
-          {!collapsed && <span>Theme</span>}
+          {!collapsed && <span>{t('theme')}</span>}
         </div>
         {!collapsed && (
           <ChevronDown
@@ -206,7 +208,7 @@ export function Sidebar({
           style={collapsed ? { left: '50%', transform: 'translateX(-50%)' } : {}}
         >
           <div className="px-3 py-1.5 text-xs font-mono text-foreground-secondary uppercase tracking-wider">
-            Choose Theme
+            {t('chooseTheme')}
           </div>
           {themes.map((theme) => (
             <button
@@ -225,9 +227,9 @@ export function Sidebar({
                 {currentTheme === theme.id && <Check className="w-3 h-3 text-white" />}
               </div>
               <div className="flex-1 text-left">
-                <div className="text-sm font-medium text-foreground">{theme.name}</div>
+                <div className="text-sm font-medium text-foreground">{t(`theme.${theme.id}`)}</div>
                 {!collapsed && (
-                  <div className="text-xs text-foreground-secondary">{theme.description}</div>
+                  <div className="text-xs text-foreground-secondary">{t(`theme.${theme.id}.desc`)}</div>
                 )}
               </div>
               {currentTheme === theme.id && <Check className="w-4 h-4 text-primary" />}
@@ -301,14 +303,31 @@ export function Sidebar({
             'hover:bg-secondary',
             collapsed ? 'justify-center' : 'justify-start'
           )}
-          title={collapsed ? (isDarkMode ? 'Light' : 'Dark') : undefined}
+          title={collapsed ? (isDarkMode ? t('lightMode') : t('darkMode')) : undefined}
         >
           {isDarkMode ? (
             <Sun className="w-5 h-5 text-foreground-secondary" />
           ) : (
             <Moon className="w-5 h-5 text-foreground-secondary" />
           )}
-          {!collapsed && <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+          {!collapsed && <span>{isDarkMode ? t('lightMode') : t('darkMode')}</span>}
+        </button>
+
+        {/* Language Toggle */}
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
+            'text-sm font-mono transition-all duration-200',
+            'hover:bg-secondary',
+            collapsed ? 'justify-center' : 'justify-start'
+          )}
+          title={collapsed ? t('language') : undefined}
+        >
+          <span className="w-5 h-5 flex items-center justify-center text-foreground-secondary text-xs font-bold">
+            {language === 'en' ? '中' : 'EN'}
+          </span>
+          {!collapsed && <span>{t('language')}</span>}
         </button>
 
         {/* Cart */}
@@ -320,7 +339,7 @@ export function Sidebar({
             'hover:bg-secondary',
             collapsed ? 'justify-center' : 'justify-start'
           )}
-          title={collapsed ? 'Cart' : undefined}
+          title={collapsed ? t('cart') : undefined}
         >
           <div className="relative">
             <ShoppingBag className="w-5 h-5 text-foreground-secondary" />
@@ -330,7 +349,7 @@ export function Sidebar({
               </span>
             )}
           </div>
-          {!collapsed && <span>Cart</span>}
+          {!collapsed && <span>{t('cart')}</span>}
         </button>
 
         {/* User Section */}
@@ -383,7 +402,7 @@ export function Sidebar({
               <button
                 onClick={handleSignOut}
                 className="p-1.5 text-foreground-secondary hover:text-error hover:bg-error/10 rounded-full transition-colors"
-                title="Sign Out"
+                title={t('logout')}
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -398,10 +417,10 @@ export function Sidebar({
               'bg-primary text-primary-foreground hover:bg-primary-hover',
               collapsed ? 'justify-center' : 'justify-start'
             )}
-            title={collapsed ? 'Login' : undefined}
+            title={collapsed ? t('login') : undefined}
           >
             <User className="w-5 h-5" />
-            {!collapsed && <span>Login</span>}
+            {!collapsed && <span>{t('login')}</span>}
           </button>
         )}
 
@@ -414,14 +433,14 @@ export function Sidebar({
             'hover:bg-secondary',
             collapsed ? 'justify-center' : 'justify-start'
           )}
-          title={collapsed ? 'Expand' : 'Collapse'}
+          title={collapsed ? t('expand') : t('collapse')}
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5 text-foreground-secondary" />
           ) : (
             <>
               <ChevronLeft className="w-5 h-5 text-foreground-secondary" />
-              <span className="text-foreground-secondary">Collapse</span>
+              <span className="text-foreground-secondary">{t('collapse')}</span>
             </>
           )}
         </button>

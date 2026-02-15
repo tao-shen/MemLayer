@@ -19,6 +19,7 @@ import type { Skill, SkillCategory } from './types/skill-creator';
 import { storageUtils } from './utils/storage';
 import { SKILLS_DATA } from './data/skillsData';
 import { toast } from 'sonner';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // ---------------------------------------------------------------------------
 // Error Boundary — prevents blank screen on unhandled errors
@@ -418,18 +419,20 @@ function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <AppContent />
-        <Toaster
-          position="bottom-right"
-          theme="dark"
-          toastOptions={{
-            style: {
-              background: 'var(--color-card)',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-foreground)',
-            },
-          }}
-        />
+        <LanguageProvider>
+          <AppContent />
+          <Toaster
+            position="bottom-right"
+            theme="dark"
+            toastOptions={{
+              style: {
+                background: 'var(--color-card)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-foreground)',
+              },
+            }}
+          />
+        </LanguageProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );
