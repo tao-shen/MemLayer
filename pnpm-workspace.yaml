@@ -7,3 +7,11 @@ onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - prisma
+  - esbuild
+  - '@stellar/stellar-sdk'
+  - blake-hash
+  - bufferutil
+  - protobufjs
+  - tiny-secp256k1
+  - usb
+  - utf-8-validate
