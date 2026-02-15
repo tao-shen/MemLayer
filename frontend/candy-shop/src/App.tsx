@@ -20,6 +20,10 @@ import { storageUtils } from './utils/storage';
 import { SKILLS_DATA } from './data/skillsData';
 import { toast } from 'sonner';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { VersionModeProvider, useVersionMode } from './contexts/VersionModeContext';
+import { NormalLayout } from './components/normal-mode/Layout';
+import { NormalHero } from './components/normal-mode/Hero';
+import { NormalSkillsGrid } from './components/normal-mode/SkillsGrid';
 
 // ---------------------------------------------------------------------------
 // Error Boundary — prevents blank screen on unhandled errors
@@ -123,6 +127,7 @@ function HomePage({
   onOpenDocs,
   onRunSkill,
 }: any) {
+  const { mode } = useVersionMode();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
@@ -135,6 +140,30 @@ function HomePage({
     document.getElementById('categories-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Normal Mode (卡片式设计)
+  if (mode === 'normal') {
+    return (
+      <NormalLayout
+        onOpenAuth={onOpenAuth}
+        onOpenCart={onOpenCart}
+        user={user}
+        cartCount={cart.size}
+      >
+        <NormalHero onOpenDocs={onOpenDocs} />
+        <NormalSkillsGrid
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          cart={cart}
+          onToggleCart={onToggleCart}
+          onRunSkill={onRunSkill}
+        />
+      </NormalLayout>
+    );
+  }
+
+  // Pro Mode (原始设计)
   return (
     <Layout
       onOpenAuth={onOpenAuth}
@@ -420,18 +449,20 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <LanguageProvider>
-          <AppContent />
-          <Toaster
-            position="bottom-right"
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: 'var(--color-card)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-foreground)',
-              },
-            }}
-          />
+          <VersionModeProvider>
+            <AppContent />
+            <Toaster
+              position="bottom-right"
+              theme="dark"
+              toastOptions={{
+                style: {
+                  background: 'var(--color-card)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-foreground)',
+                },
+              }}
+            />
+          </VersionModeProvider>
         </LanguageProvider>
       </BrowserRouter>
     </ErrorBoundary>

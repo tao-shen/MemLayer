@@ -18,10 +18,13 @@ import {
   Palette,
   Check,
   ChevronDown,
+  Sparkles,
+  Home,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { cn } from '../../utils/cn';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useVersionMode } from '../../contexts/VersionModeContext';
 
 interface SidebarProps {
   onOpenAuth: () => void;
@@ -103,6 +106,7 @@ export function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
+  const { mode, toggleMode } = useVersionMode();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -423,6 +427,31 @@ export function Sidebar({
             {!collapsed && <span>{t('login')}</span>}
           </button>
         )}
+
+        {/* Mode Switcher - Pro/Normal */}
+        <button
+          onClick={toggleMode}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
+            'text-sm font-mono transition-all duration-200',
+            'bg-gradient-to-r from-rose-500/10 to-amber-500/10',
+            'hover:from-rose-500/20 hover:to-amber-500/20',
+            'border border-rose-500/20 hover:border-rose-500/30',
+            collapsed ? 'justify-center' : 'justify-start'
+          )}
+          title={collapsed ? (mode === 'pro' ? 'Switch to Normal Mode' : 'Switch to Pro Mode') : undefined}
+        >
+          {mode === 'pro' ? (
+            <Home className="w-5 h-5 text-rose-500" />
+          ) : (
+            <Sparkles className="w-5 h-5 text-rose-500" />
+          )}
+          {!collapsed && (
+            <span className="text-rose-500 dark:text-rose-400">
+              {mode === 'pro' ? 'Normal Mode' : 'Pro Mode'}
+            </span>
+          )}
+        </button>
 
         {/* Collapse Toggle - Desktop */}
         <button

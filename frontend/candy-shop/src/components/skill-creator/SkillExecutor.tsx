@@ -26,9 +26,12 @@ import {
   Plus,
   MessageSquare,
   ExternalLink,
+  Save,
+  Edit2,
 } from 'lucide-react';
 import type { Skill } from '../../types/skill-creator';
 import { SKILLS_DATA } from '../../data/skillsData';
+import { storageUtils } from '../../utils/storage';
 import {
   opencode,
   fetchSkillMd,
@@ -859,6 +862,11 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
   const [showSkillBanner, setShowSkillBanner] = useState(true);
   const [showViewInstructions, setShowViewInstructions] = useState(false);
 
+  // Edit & Save modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Partial<Skill>>({});
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -1456,6 +1464,38 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
     );
   }, [currentSessionId]);
 
+  // ── Edit & Save as My Skill ────────────────────────────────────────────
+
+  const handleOpenEditModal = () => {
+    setEditingSkill({
+      id: `custom-${skill.id}-${Date.now()}`,
+      name: skill.name,
+      description: skill.description,
+      category: skill.category,
+      icon: skill.icon,
+      color: skill.color,
+      config: skill.config,
+      systemPrompt: skillInstructions || skill.config?.systemPrompt || skill.description,
+      origin: 'created' as const,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveAsMySkill = async () => {
+    setSaveStatus('saving');
+    try {
+      storageUtils.saveSkill(editingSkill);
+      setSaveStatus('success');
+      setTimeout(() => {
+        setShowEditModal(false);
+        setSaveStatus('idle');
+      }, 1500);
+    } catch (error) {
+      console.error('Failed to save skill:', error);
+      setSaveStatus('error');
+    }
+  };
+
   // ── Keyboard ────────────────────────────────────────────────────────────
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1739,24 +1779,13 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
                               {showViewInstructions ? 'Hide instructions' : 'View full instructions'}
                             </button>
                           )}
-                          {skill.skillMdUrl && (() => {
-                            const blobUrl = skill.skillMdUrl!.replace(
-                              /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/,
-                              'https://github.com/$1/$2/blob/$3/$4'
-                            );
-                            if (blobUrl === skill.skillMdUrl) return null;
-                            return (
-                              <a
-                                href={blobUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-medium opacity-90 hover:opacity-100 underline underline-offset-2"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Edit on GitHub
-                              </a>
-                            );
-                          })()}
+                          <button
+                            onClick={handleOpenEditModal}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium opacity-90 hover:opacity-100 underline underline-offset-2 cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Edit & Save as My Skill
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2108,6 +2137,130 @@ export function SkillExecutor({ skill, onClose }: SkillExecutorProps) {
           </div>
         </div>
       </div>
+
+      {/* Edit & Save as My Skill Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Edit & Save as My Skill</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Skill Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Skill Name</label>
+                <input
+                  type="text"
+                  value={editingSkill.name || ''}
+                  onChange={(e) => setEditingSkill({ ...editingSkill, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Data Analysis Expert"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={editingSkill.description || ''}
+                  onChange={(e) => setEditingSkill({ ...editingSkill, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Describe what this skill can do..."
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={editingSkill.category || 'Custom'}
+                  onChange={(e) => setEditingSkill({ ...editingSkill, category: e.target.value as any })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Knowledge">Knowledge</option>
+                  <option value="Analysis">Analysis</option>
+                  <option value="Development">Development</option>
+                  <option value="Design">Design</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Productivity">Productivity</option>
+                  <option value="Tools">Tools</option>
+                  <option value="Research">Research</option>
+                  <option value="Custom">Custom</option>
+                </select>
+              </div>
+
+              {/* System Prompt */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">System Prompt</label>
+                <textarea
+                  value={editingSkill.systemPrompt || editingSkill.config?.systemPrompt || ''}
+                  onChange={(e) => setEditingSkill({
+                    ...editingSkill,
+                    systemPrompt: e.target.value,
+                    config: { ...editingSkill.config, systemPrompt: e.target.value }
+                  })}
+                  rows={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+                  placeholder="Enter the system prompt for this skill..."
+                />
+              </div>
+
+              {/* Status Messages */}
+              {saveStatus === 'success' && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">Skill saved successfully!</p>
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">Failed to save skill. Please try again.</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  disabled={saveStatus === 'saving'}
+                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAsMySkill}
+                  disabled={saveStatus === 'saving' || !editingSkill.name?.trim()}
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {saveStatus === 'saving' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : saveStatus === 'success' ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Saved!
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save as My Skill
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

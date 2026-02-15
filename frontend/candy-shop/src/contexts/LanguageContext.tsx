@@ -56,6 +56,20 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.ready': 'Ready',
     'hero.comment': '// simple as candy',
 
+    // Hero Normal Mode
+    'hero.badge': 'Trusted by 5,000+ happy users',
+    'hero.title': 'Discover Amazing',
+    'hero.title2': 'AI Skills',
+    'hero.subtitleNormal': 'Enhance your productivity and creativity with our curated collection of AI-powered skills.',
+    'hero.exploreBtn': 'Explore Skills',
+    'hero.learnMoreBtn': 'Learn More',
+    'hero.feature1.title': 'Smart AI Skills',
+    'hero.feature1.description': 'Discover intelligent AI capabilities tailored for you',
+    'hero.feature2.title': 'Lightning Fast',
+    'hero.feature2.description': 'Instant deployment and execution of your skills',
+    'hero.feature3.title': 'User Friendly',
+    'hero.feature3.description': 'Simple and intuitive interface for everyone',
+
     // Categories
     'categories.title': 'Skill Directories',
 
@@ -97,6 +111,12 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     'footer.tagline': 'AI is simple like candy',
     'footer.backToTop': 'Back to top',
+    'footer.description': 'Discover amazing AI skills to enhance your productivity and creativity.',
+
+    // Navigation Normal Mode
+    'nav.features': 'Features',
+    'nav.skills': 'Skills',
+    'nav.faq': 'FAQ',
   },
   zh: {
     // Sidebar
@@ -142,6 +162,20 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.ready': '就绪',
     'hero.comment': '// 简单如糖果',
 
+    // Hero Normal Mode
+    'hero.badge': '被5,000+用户信赖',
+    'hero.title': '发现',
+    'hero.title2': '精彩的AI技能',
+    'hero.subtitleNormal': '通过我们精心策划的AI技能集合，提升您的生产力和创造力。',
+    'hero.exploreBtn': '探索技能',
+    'hero.learnMoreBtn': '了解更多',
+    'hero.feature1.title': '智能AI技能',
+    'hero.feature1.description': '发现为您量身定制的智能AI功能',
+    'hero.feature2.title': '闪电般快速',
+    'hero.feature2.description': '即时部署和执行您的技能',
+    'hero.feature3.title': '用户友好',
+    'hero.feature3.description': '简单直观的界面，适合每个人',
+
     // Categories
     'categories.title': '技能目录',
 
@@ -183,6 +217,12 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     'footer.tagline': 'AI 简单如糖果',
     'footer.backToTop': '返回顶部',
+    'footer.description': '发现令人惊叹的AI技能，提升您的生产力和创造力。',
+
+    // Navigation Normal Mode
+    'nav.features': '功能',
+    'nav.skills': '技能',
+    'nav.faq': '常见问题',
   },
 };
 
