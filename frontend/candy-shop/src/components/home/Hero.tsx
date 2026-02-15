@@ -7,13 +7,16 @@ interface HeroProps {
 }
 
 export function Hero({ onOpenDocs }: HeroProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [displayText, setDisplayText] = useState('');
   const fullText = t('hero.tagline');
 
   useEffect(() => {
     let index = 0;
     const typingSpeed = 80; // ms per character
+
+    // Reset display text when language changes
+    setDisplayText('');
 
     const timer = setInterval(() => {
       if (index <= fullText.length) {
@@ -25,7 +28,7 @@ export function Hero({ onOpenDocs }: HeroProps) {
     }, typingSpeed);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [fullText, language]); // Re-run typing effect when language changes
   return (
     <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-32">
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
