@@ -2,7 +2,6 @@ import { useState, useEffect, Component, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { supabase } from './lib/supabaseClient';
-import { I18nProvider } from './i18n';
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
 import { SkillsGrid } from './components/home/SkillsGrid';
@@ -418,22 +417,20 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <I18nProvider>
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <AppContent />
-          <Toaster
-            position="bottom-right"
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: 'var(--color-card)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-foreground)',
-              },
-            }}
-          />
-        </BrowserRouter>
-      </I18nProvider>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <AppContent />
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          toastOptions={{
+            style: {
+              background: 'var(--color-card)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-foreground)',
+            },
+          }}
+        />
+      </BrowserRouter>
     </ErrorBoundary>
   );
 }
